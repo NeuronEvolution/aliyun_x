@@ -2,7 +2,9 @@ package main
 
 import (
 	"fmt"
-	"github.com/NeuronEvolution/aliyun_x/clound"
+	"github.com/NeuronEvolution/aliyun_x/cloud"
+	"github.com/NeuronEvolution/aliyun_x/strategies"
+	"time"
 )
 
 const appInterferenceFile = "./data/scheduling_preliminary_app_interference_20180606.csv"
@@ -41,7 +43,10 @@ func main() {
 	fmt.Println("machineResourceDataList", len(machineResourceDataList))
 
 	//导入机器数据
-	r := clound.NewResourceManagement()
+	r := cloud.NewResourceManagement()
+	r.SetStrategy(strategies.NewAllocMachineIfDeployFailedStrategy(r))
+	//r.SetStrategy(strategies.NewFreeSmallerStrategy(r))
+
 	for _, v := range machineResourceDataList {
 		r.AddMachine(v)
 	}
@@ -56,18 +61,28 @@ func main() {
 		r.SaveAppInterferenceConfig(v)
 	}
 
-	clound.SetDebug(true)
-
-	//一个一个部署
-	for i, v := range instanceDeployDataList {
-		err = r.AddInstance(v.InstanceId, v.AppId)
-		if err != nil {
-			fmt.Printf("AddInstance %d failed %s", i, err)
-			break
-		}
-
-		if i >= 100 {
-			break
+	instanceList := make([]*cloud.InstanceDeployConfig, 0)
+	instanceMachineList := make([]*cloud.InstanceDeployConfig, 0)
+	for _, v := range instanceDeployDataList {
+		if v.MachineId == 0 {
+			instanceList = append(instanceList, v)
+		} else {
+			instanceMachineList = append(instanceMachineList, v)
 		}
 	}
+
+	begin := time.Now()
+
+	cloud.SetDebug(true)
+	//r.InitInstanceDeploy(instanceMachineList)
+
+	r.ResetCommandHistory()
+
+	r.BatchAddInstance(instanceDeployDataList)
+	end := time.Now()
+
+	r.DebugDeployStatus()
+	fmt.Printf("%d %d %d\n", len(instanceMachineList), len(instanceList), len(instanceDeployDataList))
+	fmt.Printf("time %10.2f\n", end.Sub(begin).Minutes())
+	fmt.Println("cost", r.CalculateTotalCostScore())
 }

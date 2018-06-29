@@ -3,11 +3,23 @@ package main
 import (
 	"encoding/csv"
 	"fmt"
-	"github.com/NeuronEvolution/aliyun_x/clound"
+	"github.com/NeuronEvolution/aliyun_x/cloud"
 	"os"
 	"strconv"
 	"strings"
 )
+
+func trimApp(s string) string {
+	return s[4:]
+}
+
+func trimMachine(s string) string {
+	return s[8:]
+}
+
+func trimInstance(s string) string {
+	return s[5:]
+}
 
 func loadCsv(file string) (data [][]string, err error) {
 	f, err := os.Open(file)
@@ -28,25 +40,31 @@ func loadCsv(file string) (data [][]string, err error) {
 	return data, nil
 }
 
-func loadAppInterferenceData(file string) (result []*clound.AppInterferenceConfig, err error) {
+func loadAppInterferenceData(file string) (result []*cloud.AppInterferenceConfig, err error) {
 	data, err := loadCsv(file)
 	if err != nil {
 		return nil, err
 	}
 
-	result = make([]*clound.AppInterferenceConfig, len(data))
+	result = make([]*cloud.AppInterferenceConfig, len(data))
 	for i, v := range data {
 		if len(v) < 3 {
 			return nil, fmt.Errorf("loadAppInterference data row len<3")
 		}
 
-		item := &clound.AppInterferenceConfig{}
+		item := &cloud.AppInterferenceConfig{}
 		column := 0
 
-		item.AppId1 = v[column]
+		item.AppId1, err = strconv.Atoi(trimApp(v[column]))
+		if err != nil {
+			return nil, err
+		}
 		column++
 
-		item.AppId2 = v[column]
+		item.AppId2, err = strconv.Atoi(trimApp(v[column]))
+		if err != nil {
+			return nil, err
+		}
 		column++
 
 		item.Interference, err = strconv.Atoi(v[column])
@@ -60,22 +78,25 @@ func loadAppInterferenceData(file string) (result []*clound.AppInterferenceConfi
 	return result, nil
 }
 
-func loadAppResourceData(file string) (result []*clound.AppResourcesConfig, err error) {
+func loadAppResourceData(file string) (result []*cloud.AppResourcesConfig, err error) {
 	data, err := loadCsv(file)
 	if err != nil {
 		return nil, err
 	}
 
-	result = make([]*clound.AppResourcesConfig, len(data))
+	result = make([]*cloud.AppResourcesConfig, len(data))
 	for i, v := range data {
 		if len(v) < 6 {
 			return nil, fmt.Errorf("loadAppResource data row len<6")
 		}
 
-		item := &clound.AppResourcesConfig{}
+		item := &cloud.AppResourcesConfig{}
 		column := 0
 
-		item.AppId = v[column]
+		item.AppId, err = strconv.Atoi(trimApp(v[column]))
+		if err != nil {
+			return nil, err
+		}
 		column++
 
 		cpuTokens := strings.Split(v[column], "|")
@@ -134,24 +155,36 @@ func loadAppResourceData(file string) (result []*clound.AppResourcesConfig, err 
 	return result, nil
 }
 
-func loadInstanceDeployData(file string) (result []*clound.InstanceDeployConfig, err error) {
+func loadInstanceDeployData(file string) (result []*cloud.InstanceDeployConfig, err error) {
 	data, err := loadCsv(file)
 	if err != nil {
 		return nil, err
 	}
 
-	result = make([]*clound.InstanceDeployConfig, len(data))
+	result = make([]*cloud.InstanceDeployConfig, len(data))
 	for i, v := range data {
-		item := &clound.InstanceDeployConfig{}
+		item := &cloud.InstanceDeployConfig{}
 		column := 0
 
-		item.InstanceId = v[column]
+		item.InstanceId, err = strconv.Atoi(trimInstance(v[column]))
+		if err != nil {
+			return nil, err
+		}
 		column++
 
-		item.AppId = v[column]
+		item.AppId, err = strconv.Atoi(trimApp(v[column]))
+		if err != nil {
+			return nil, err
+		}
 		column++
 
-		item.MachineId = v[column]
+		if v[column] != "" {
+			item.MachineId, err = strconv.Atoi(trimMachine(v[column]))
+			if err != nil {
+				return nil, err
+			}
+		}
+
 		column++
 
 		result[i] = item
@@ -160,18 +193,21 @@ func loadInstanceDeployData(file string) (result []*clound.InstanceDeployConfig,
 	return result, nil
 }
 
-func loadMachineResourcesData(file string) (result []*clound.MachineResourcesConfig, err error) {
+func loadMachineResourcesData(file string) (result []*cloud.MachineResourcesConfig, err error) {
 	data, err := loadCsv(file)
 	if err != nil {
 		return nil, err
 	}
 
-	result = make([]*clound.MachineResourcesConfig, len(data))
+	result = make([]*cloud.MachineResourcesConfig, len(data))
 	for i, v := range data {
-		item := &clound.MachineResourcesConfig{}
+		item := &cloud.MachineResourcesConfig{}
 		column := 0
 
-		item.MachineId = v[column]
+		item.MachineId, err = strconv.Atoi(trimMachine(v[column]))
+		if err != nil {
+			return nil, err
+		}
 		column++
 
 		item.Cpu, err = strconv.ParseFloat(v[column], 64)
@@ -204,7 +240,7 @@ func loadMachineResourcesData(file string) (result []*clound.MachineResourcesCon
 		}
 		column++
 
-		item.P, err = strconv.Atoi(v[column])
+		item.PM, err = strconv.Atoi(v[column])
 		if err != nil {
 			return nil, err
 		}

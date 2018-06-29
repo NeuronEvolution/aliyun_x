@@ -1,4 +1,4 @@
-package clound
+package cloud
 
 import "fmt"
 

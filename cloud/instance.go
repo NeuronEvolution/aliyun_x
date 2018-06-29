@@ -1,16 +1,18 @@
-package clound
+package cloud
 
 type Instance struct {
 	ResourceManagement *ResourceManagement
-	InstanceId         string
+	InstanceId         int
 	Config             *AppResourcesConfig
+	CostEval           float64
 }
 
-func NewInstance(r *ResourceManagement, instanceId string, config *AppResourcesConfig) *Instance {
+func NewInstance(r *ResourceManagement, instanceId int, config *AppResourcesConfig) *Instance {
 	i := &Instance{}
 	i.ResourceManagement = r
 	i.InstanceId = instanceId
 	i.Config = config
+	i.CostEval = config.CostEval
 
 	return i
 }
@@ -22,7 +24,7 @@ func (p InstanceArray) Len() int {
 }
 
 func (p InstanceArray) Less(i, j int) bool {
-	return p[i].Config.TotalCost > p[j].Config.TotalCost
+	return p[i].CostEval > p[j].CostEval
 }
 
 func (p InstanceArray) Swap(i, j int) {

@@ -1,4 +1,4 @@
-package clound
+package cloud
 
 import (
 	"fmt"
@@ -6,26 +6,26 @@ import (
 )
 
 type MachineLevelDeploy struct {
-	LevelConfig *MachineLevelConfig
-	MachineMap  map[string]*Machine
+	LevelConfig       *MachineLevelConfig
+	MachineCollection *MachineCollection
 }
 
 func NewMachineLevelDeploy(level *MachineLevelConfig) *MachineLevelDeploy {
 	p := &MachineLevelDeploy{}
 	p.LevelConfig = level
-	p.MachineMap = make(map[string]*Machine)
+	p.MachineCollection = NewMachineCollection()
 
 	return p
 }
 
 func (p *MachineLevelDeploy) AddMachine(m *Machine) {
-	debugLog("MachineLevelDeploy.AddMachine %s %v", m.MachineId, p.LevelConfig)
-	p.MachineMap[m.MachineId] = m
+	//debugLog("MachineLevelDeploy.AddMachine %s %v", m.MachineId, p.LevelConfig)
+	p.MachineCollection.Add(m)
 }
 
-func (p *MachineLevelDeploy) RemoveMachine(machineId string) {
-	debugLog("MachineLevelDeploy.RemoveMachine %s %v", machineId, p.LevelConfig)
-	delete(p.MachineMap, machineId)
+func (p *MachineLevelDeploy) RemoveMachine(machineId int) {
+	//debugLog("MachineLevelDeploy.RemoveMachine %s %v", machineId, p.LevelConfig)
+	p.MachineCollection.Remove(machineId)
 }
 
 type MachineLevelDeployArray []*MachineLevelDeploy
@@ -44,20 +44,36 @@ func (p MachineLevelDeployArray) Swap(i, j int) {
 	p[j] = temp
 }
 
+func (p MachineLevelDeployArray) First() *MachineLevelDeploy {
+	if len(p) == 0 {
+		return nil
+	}
+
+	return p[0]
+}
+
+func (p MachineLevelDeployArray) Last() *MachineLevelDeploy {
+	if len(p) == 0 {
+		return nil
+	}
+
+	return p[len(p)-1]
+}
+
 type MachineDeployPool struct {
-	MachineMap              map[string]*Machine
+	MachineMap              map[int]*Machine
 	MachineLevelDeployArray MachineLevelDeployArray
 }
 
 func NewMachineDeployPool() *MachineDeployPool {
 	p := &MachineDeployPool{}
-	p.MachineMap = make(map[string]*Machine)
+	p.MachineMap = make(map[int]*Machine)
 
 	return p
 }
 
 func (p *MachineDeployPool) AddMachine(m *Machine) {
-	debugLog("MachineDeployPool.AddMachine %s", m.MachineId)
+	//debugLog("MachineDeployPool.AddMachine %s", m.MachineId)
 	p.MachineMap[m.MachineId] = m
 
 	var pool *MachineLevelDeploy
@@ -79,15 +95,31 @@ func (p *MachineDeployPool) AddMachine(m *Machine) {
 	pool.AddMachine(m)
 }
 
-func (p *MachineDeployPool) RemoveMachine(machineId string) {
-	debugLog("MachineDeployPool.RemoveMachine %s", machineId)
-	m := p.MachineMap[machineId]
+func (p *MachineDeployPool) RemoveMachine(machineId int) *Machine {
+	//debugLog("MachineDeployPool.RemoveMachine %s", machineId)
+	m, has := p.MachineMap[machineId]
+	if !has {
+		return nil
+	}
 	delete(p.MachineMap, machineId)
 
 	for _, v := range p.MachineLevelDeployArray {
 		if v.LevelConfig == m.LevelConfig {
 			v.RemoveMachine(machineId)
-			return
+			return m
 		}
 	}
+
+	return m
+}
+
+func (p *MachineDeployPool) DebugPrint() {
+	fmt.Printf("MachineDeployPool.DebugPrint")
+	instanceCount := 0
+	for _, v := range p.MachineMap {
+		//v.DebugPrint()
+		instanceCount += v.InstanceArrayCount
+	}
+	fmt.Printf("MachineDeployPool.DebugPrint machineCount=%d,instanceCount=%d\n",
+		len(p.MachineMap), instanceCount)
 }

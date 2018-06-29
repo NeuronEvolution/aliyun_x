@@ -1,4 +1,4 @@
-package clound
+package cloud
 
 type DeployCommand struct {
 	Instance      *Instance
