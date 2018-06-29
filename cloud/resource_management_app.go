@@ -17,20 +17,15 @@ func (r *ResourceManagement) SaveAppResourceConfig(config *AppResourcesConfig) e
 func (r *ResourceManagement) SaveAppInterferenceConfig(config *AppInterferenceConfig) error {
 	_, hasAppResource := r.AppResourcesConfigMap[config.AppId1]
 	if !hasAppResource {
-		return fmt.Errorf("SaveAppInterferenceConfig app %s not exists", config.AppId1)
+		return fmt.Errorf("SaveAppInterferenceConfig app %d not exists", config.AppId1)
 	}
 
 	_, hasAppResource = r.AppResourcesConfigMap[config.AppId2]
 	if !hasAppResource {
-		return fmt.Errorf("SaveAppInterferenceConfig app %s not esists", config.AppId2)
+		return fmt.Errorf("SaveAppInterferenceConfig app %d not esists", config.AppId2)
 	}
 
-	m := r.AppInterferenceConfigMap[config.AppId1]
-	if m == nil {
-		m = make(map[int]int, 0)
-		r.AppInterferenceConfigMap[config.AppId1] = m
-	}
-	m[config.AppId2] = config.Interference
+	r.AppInterferenceConfigMap[config.AppId1][config.AppId2] = config.Interference
 
 	return nil
 }

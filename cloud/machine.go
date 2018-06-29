@@ -12,7 +12,7 @@ type Machine struct {
 	LevelConfig        *MachineLevelConfig
 	InstanceArray      InstanceArray
 	InstanceArrayCount int
-	appCountMap        map[int]int
+	appCountCollection *AppCountCollection
 	Cpu                [TimeSampleCount]float64 //todo decimal
 	Mem                [TimeSampleCount]float64 //todo decimal
 	Disk               int
@@ -26,7 +26,7 @@ func NewMachine(r *ResourceManagement, machineId int, levelConfig *MachineLevelC
 	m.R = r
 	m.MachineId = machineId
 	m.LevelConfig = levelConfig
-	m.appCountMap = make(map[int]int)
+	m.appCountCollection = NewAppCountCollection()
 
 	return m
 }
@@ -39,7 +39,7 @@ func (m *Machine) AddInstance(instance *Instance) error {
 
 	m.InstanceArray = append(m.InstanceArray, instance)
 	m.InstanceArrayCount++
-	m.appCountMap[instance.Config.AppId] = m.appCountMap[instance.Config.AppId] + 1
+	m.appCountCollection.Add(instance.Config.AppId)
 	m.allocResource(instance)
 
 	sort.Sort(m.InstanceArray)
@@ -61,7 +61,7 @@ func (m *Machine) RemoveInstance(instanceId int) {
 			}
 
 			m.InstanceArrayCount--
-			m.appCountMap[instance.Config.AppId] = m.appCountMap[instance.Config.AppId] - 1
+			m.appCountCollection.Remove(instance.Config.AppId)
 			m.freeResource(instance)
 
 			break
@@ -78,7 +78,7 @@ func (m *Machine) ConstraintCheck(instance *Instance) bool {
 
 	if !constraintCheckAppInterference(
 		instance.Config.AppId,
-		m.appCountMap,
+		m.appCountCollection,
 		m.R.AppInterferenceConfigMap) {
 		//debugLog("Machine.ConstraintCheck constraintCheckAppInterference failed")
 		return false
@@ -145,8 +145,8 @@ func (m *Machine) freeResource(instance *Instance) {
 
 func (m *Machine) DebugPrint() {
 	debugLog("Machine.DebugPrint %s %v", m.MachineId, m.LevelConfig)
-	for i, v := range m.appCountMap {
-		debugLog("    %s %d", i, v)
+	for i := 0; i < m.appCountCollection.ListCount; i++ {
+		debugLog("    %v", m.appCountCollection.List[i])
 	}
 	m.debugLogResource()
 }

@@ -47,18 +47,32 @@ func main() {
 	r.SetStrategy(strategies.NewAllocMachineIfDeployFailedStrategy(r))
 	//r.SetStrategy(strategies.NewFreeSmallerStrategy(r))
 
+	var maxMachineId, maxAppId, maxInstanceId int
+
 	for _, v := range machineResourceDataList {
 		r.AddMachine(v)
+		if v.MachineId > maxMachineId {
+			maxMachineId = v.MachineId
+		}
 	}
 
 	//导入应用资源数据
 	for _, v := range appResourcesDataList {
 		r.SaveAppResourceConfig(v)
+		if v.AppId > maxAppId {
+			maxAppId = v.AppId
+		}
 	}
 
 	//导入应用冲突数据
 	for _, v := range appInterferenceDataList {
 		r.SaveAppInterferenceConfig(v)
+		if v.AppId1 > maxAppId {
+			maxAppId = v.AppId1
+		}
+		if v.AppId2 > maxAppId {
+			maxAppId = v.AppId2
+		}
 	}
 
 	instanceList := make([]*cloud.InstanceDeployConfig, 0)
@@ -69,7 +83,18 @@ func main() {
 		} else {
 			instanceMachineList = append(instanceMachineList, v)
 		}
+		if v.AppId > maxAppId {
+			maxAppId = v.AppId
+		}
+		if v.MachineId > maxMachineId {
+			maxMachineId = v.MachineId
+		}
+		if v.InstanceId > maxInstanceId {
+			maxInstanceId = v.InstanceId
+		}
 	}
+
+	fmt.Printf("maxAppId=%d,maxInstanceId=%d,maxMachineId=%d", maxAppId, maxInstanceId, maxMachineId)
 
 	begin := time.Now()
 
@@ -83,6 +108,6 @@ func main() {
 
 	r.DebugDeployStatus()
 	fmt.Printf("%d %d %d\n", len(instanceMachineList), len(instanceList), len(instanceDeployDataList))
-	fmt.Printf("time %10.2f\n", end.Sub(begin).Minutes())
+	fmt.Printf("time %10f\n", end.Sub(begin).Seconds())
 	fmt.Println("cost", r.CalculateTotalCostScore())
 }

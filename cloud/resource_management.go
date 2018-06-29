@@ -3,7 +3,7 @@ package cloud
 type ResourceManagement struct {
 	Strategy                 Strategy
 	AppResourcesConfigMap    map[int]*AppResourcesConfig
-	AppInterferenceConfigMap []map[int]int
+	AppInterferenceConfigMap [][MaxAppId]int
 	MachineConfigMap         map[int]*MachineResourcesConfig
 	MachineLevelConfigPool   *MachineLevelConfigPool
 	MachineMap               map[int]*Machine
@@ -15,7 +15,12 @@ func NewResourceManagement() *ResourceManagement {
 	r := &ResourceManagement{}
 	r.Strategy = &defaultStrategy{}
 	r.AppResourcesConfigMap = make(map[int]*AppResourcesConfig)
-	r.AppInterferenceConfigMap = make([]map[int]int, MaxAppId)
+	r.AppInterferenceConfigMap = make([][MaxAppId]int, MaxAppId)
+	for i := 0; i < MaxAppId; i++ {
+		for j := 0; j < MaxAppId; j++ {
+			r.AppInterferenceConfigMap[i][j] = -1
+		}
+	}
 	r.MachineConfigMap = make(map[int]*MachineResourcesConfig)
 	r.MachineLevelConfigPool = NewMachineLevelConfigPool()
 	r.MachineMap = make(map[int]*Machine)

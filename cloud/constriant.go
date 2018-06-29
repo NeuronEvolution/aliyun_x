@@ -1,74 +1,51 @@
 package cloud
 
-import "fmt"
-
 //app冲突约束检测
 //appId:要新增的appId
-//appCountMap:当前机器已部署的每个app的数量
-//interferenceMap:冲突配置
-func constraintCheckAppInterference(appId int, appCountMap map[int]int, interferenceMap []map[int]int) bool {
-	//debugLog("constraintCheckAppInterference %s %v", appId, appCountMap)
-	appCount := appCountMap[appId]
+//c:当前机器已部署的每个app的数量
+//m:冲突配置
+func constraintCheckAppInterference(appId int, c *AppCountCollection, m [][MaxAppId]int) bool {
+	//debugLog("constraintCheckAppInterference appId=%d %v", appId, c.List[0:c.ListCount])
+	appCount := 0
+	for _, v := range c.List[0:c.ListCount] {
+		if v.AppId == appId {
+			appCount = v.Count
+			break
+		}
+	}
 	appCount++
 
-	if len(appCountMap) > 20 {
-		fmt.Println("appCountMap", len(appCountMap))
+	//<appId,AppId>
+	maxCount := m[appId][appId]
+	if maxCount != -1 && appCount > maxCount+1 {
+		//debugLog("constraintCheckAppInterference 1 failed app=%d,count2=%d,max=%d",
+		//	 appId, appCount, maxCount)
+		return false
 	}
 
-	//<appIdOther,appId>
-	for appIdOther := range appCountMap {
-		if appIdOther == appId {
+	for _, v := range c.List[0:c.ListCount] {
+		if v.AppId == appId {
 			continue
 		}
 
-		/*m := interferenceMap[appIdOther]
-		if m == nil {
-			continue
-		}
-
-		maxCount, has := m[appId]
-		if !has {
-			continue
-		}
-
-		if appCount > maxCount {
-			//debugLog("constraintCheckAppInterference failed app1=%s,app2=%s,count2=%d,max=%d",
-			//	appIdOther, appId, appCount, maxCount)
+		//<appIdOther,appId>
+		maxCount := m[v.AppId][appId]
+		if maxCount != -1 && appCount > maxCount {
+			//debugLog("constraintCheckAppInterference 2 failed app1=%d,app2=%d,count2=%d,max=%d",
+			//	v.AppId, appId, appCount, maxCount)
 			return false
-		}*/
-	}
+		}
 
-	//m := interferenceMap[appId]
-	//if m != nil {
-	/*
 		//<appId,appIdOther>
-		for appIdOther, countOther := range appCountMap {
-			if appIdOther == appId {
-				continue
-			}
-
-			maxCount, has := m[appIdOther]
-			if !has {
-				continue
-			}
-
-			if countOther > maxCount {
-				//debugLog("constraintCheckAppInterference failed app1=%s,app2=%s,count2=%d,max=%d",
-				//appId, appIdOther, countOther, maxCount)
+		if appCount == 1 { //已经存在的app，数量增加不影响冲突结果
+			maxCount = m[appId][v.AppId]
+			if maxCount != -1 && v.Count > maxCount {
+				//debugLog("constraintCheckAppInterference 3 failed app1=%d,app2=%d,count2=%d,max=%d",
+				//	appId, v.AppId, v.Count, maxCount)
 				return false
 			}
 		}
-
-		//<appId,appId>
-		maxCount, has := m[appId]
-		if has {
-			if appCount > maxCount+1 {
-				//debugLog("constraintCheckAppInterference failed app1=%s,app2=%s,count2=%d,max=%d",
-				//appId, appId, appCount, maxCount)
-				return false
-			}
-		}*/
-	//}
+	}
 
 	return true
 }

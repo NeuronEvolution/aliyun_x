@@ -2,6 +2,6 @@ package cloud
 
 const TimeSampleCount = 98
 
-const MaxAppId = 65536 * 2
-const MaxInstanceId = 65536 * 2
-const MaxMachineId = 65536 * 2
+const MaxAppId = 9338 + 1
+const MaxInstanceId = 99998 + 1
+const MaxMachineId = 6000 + 1
