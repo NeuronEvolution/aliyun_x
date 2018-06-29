@@ -3,6 +3,7 @@ package strategies
 import (
 	"fmt"
 	"github.com/NeuronEvolution/aliyun_x/cloud"
+	"sort"
 )
 
 type AllocMachineIfDeployFailedStrategy struct {
@@ -42,14 +43,19 @@ func (s *AllocMachineIfDeployFailedStrategy) AddInstance(instance *cloud.Instanc
 }
 
 func (s *AllocMachineIfDeployFailedStrategy) AddInstanceList(instanceList []*cloud.Instance) (err error) {
+	sort.Sort(cloud.InstanceArray(instanceList))
+
 	for i, v := range instanceList {
-		if i%100 == 0 {
+		//fmt.Println(v.CostEval)
+
+		if i%1000 == 0 {
 			fmt.Println(i)
 		}
 
 		err = s.AddInstance(v)
 		if err != nil {
-			//return err
+			fmt.Println(err)
+			return err
 		}
 	}
 

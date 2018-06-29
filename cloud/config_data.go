@@ -19,7 +19,24 @@ type AppResourcesConfig struct {
 }
 
 func (c *AppResourcesConfig) calcCostEval() {
-	c.CostEval = 1
+	avgCpu := float64(0)
+	for _, v := range c.Cpu {
+		avgCpu += v
+	}
+	avgCpu = avgCpu / float64(len(c.Cpu))
+
+	avgMem := float64(0)
+	for _, v := range c.Mem {
+		avgMem += v
+	}
+	avgMem = avgMem / float64(len(c.Mem))
+
+	c.CostEval = avgCpu/MachineCpuMax +
+		avgMem/MachineMemMax +
+		float64(c.Disk)/MachineDiskMax +
+		float64(c.P)/MachinePMax +
+		float64(c.M)/MachineMMax +
+		float64(c.PM)/MachinePMMax
 }
 
 type InstanceDeployConfig struct {
