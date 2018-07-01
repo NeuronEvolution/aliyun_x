@@ -3,12 +3,17 @@ package cloud
 import "fmt"
 
 type Strategy interface {
+	Name() string
 	AddInstance(instance *Instance) (err error)
 	AddInstanceList(instanceList []*Instance) (err error)
 	ResolveAppInference() (err error)
 }
 
 type defaultStrategy struct {
+}
+
+func (s *defaultStrategy) Name() string {
+	return "defaultStrategy"
 }
 
 func (s *defaultStrategy) ResolveAppInference() (err error) {

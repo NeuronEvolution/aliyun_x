@@ -17,6 +17,10 @@ func NewASortedFirstFitStrategy(r *cloud.ResourceManagement) cloud.Strategy {
 	return s
 }
 
+func (s *SortedFirstFitStrategy) Name() string {
+	return "SortedFirstFitStrategy"
+}
+
 func (s *SortedFirstFitStrategy) ResolveAppInference() (err error) {
 	//fmt.Printf("AllocMachineIfDeployFailedStrategy.ResolveAppInference\n")
 	for i := 0; ; i++ {

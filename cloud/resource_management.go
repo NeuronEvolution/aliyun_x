@@ -41,7 +41,11 @@ func NewResourceManagement() *ResourceManagement {
 }
 
 func (r *ResourceManagement) DebugStatus(buf *bytes.Buffer) {
-
+	if r.Strategy != nil {
+		buf.WriteString("Strategy:")
+		buf.WriteString(r.Strategy.Name())
+		buf.WriteString("\n")
+	}
 	r.MachineDeployPool.DebugPrint(buf)
 
 	buf.WriteString(fmt.Sprintf("cost=%f,totalCommands=%d\n",

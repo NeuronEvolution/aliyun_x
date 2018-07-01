@@ -51,7 +51,7 @@ func (r *ResourceManagement) AddInstance(c *InstanceDeployConfig) error {
 }
 
 //todo 异步化
-func (r *ResourceManagement) BatchAddInstance(configList []*InstanceDeployConfig) error {
+func (r *ResourceManagement) AddInstanceList(configList []*InstanceDeployConfig) error {
 	if configList == nil || len(configList) == 0 {
 		return nil
 	}

@@ -13,7 +13,11 @@ func NewFreeSmallerStrategy(r *cloud.ResourceManagement) *FreeSmallerStrategy {
 	return s
 }
 
-func (s *FreeSmallerStrategy) PostInit() (err error) {
+func (s *FreeSmallerStrategy) Name() string {
+	return "FreeSmallerStrategy"
+}
+
+func (s *FreeSmallerStrategy) ResolveAppInference() (err error) {
 	return nil
 }
 

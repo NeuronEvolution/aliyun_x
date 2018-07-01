@@ -116,7 +116,7 @@ func main() {
 		return
 	}
 
-	r.BatchAddInstance(instanceList)
+	r.AddInstanceList(instanceList)
 	end := time.Now()
 
 	r.DebugPrintStatus()
