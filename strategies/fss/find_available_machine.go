@@ -33,19 +33,21 @@ func (s *FreeSmallerStrategy) calcMachineCostPlusInstance(m *cloud.Machine, inst
 }
 
 func (s *FreeSmallerStrategy) findAvailableMachine(instance *cloud.Instance, skip *cloud.Machine) (m *cloud.Machine) {
-	highLevelDeploy := s.R.MachineDeployPool.MachineLevelDeployArray[0]
-	for _, m := range highLevelDeploy.MachineCollection.List[:highLevelDeploy.MachineCollection.ListCount] {
-		if skip != nil && m.MachineId == skip.MachineId {
-			continue
-		}
+	if len(s.R.MachineDeployPool.MachineLevelDeployArray) > 0 {
+		highLevelDeploy := s.R.MachineDeployPool.MachineLevelDeployArray[0]
+		for _, m := range highLevelDeploy.MachineCollection.List[:highLevelDeploy.MachineCollection.ListCount] {
+			if skip != nil && m.MachineId == skip.MachineId {
+				continue
+			}
 
-		cost := s.calcMachineCostPlusInstance(m, instance)
-		if cost > HighLevelCpuMax {
-			continue
-		}
+			cost := s.calcMachineCostPlusInstance(m, instance)
+			if cost > HighLevelCpuMax {
+				continue
+			}
 
-		if m.ConstraintCheck(instance) {
-			return m
+			if m.ConstraintCheck(instance) {
+				return m
+			}
 		}
 	}
 

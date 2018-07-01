@@ -6,7 +6,8 @@
 - fss带初始状态解除违约解除CPU高负载解除低配机器：time=504.441860，cost=6361.214919,totalCommands=50749，machineCount=5655
 - fss带初始状态解除违约解除CPU高负载解除低配机器排序初始化：time=537.913560，cost=6404.517490,totalCommands=0，machineCount=5649
 
-# 1000实例
+# 1000实例不带初始状态,fss策略
+- time=0.625260,cost=66.570151,totalCommands=0,machineCount=64
 
 # 可调参数
 - 每个实例的资源消耗评估公式

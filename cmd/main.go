@@ -98,9 +98,10 @@ func main() {
 
 	cloud.SetDebug(true)
 
+	instanceMachineList = instanceMachineList[:0]
+	instanceList = instanceList[:1000]
 	begin := time.Now()
 	r := cloud.NewResourceManagement()
-	//r.SetStrategy(sffs.NewASortedFirstFitStrategy(r))
 	r.SetStrategy(fss.NewFreeSmallerStrategy(r))
 	err = r.Init(machineResourceDataList, appResourcesDataList, appInterferenceDataList, instanceMachineList)
 	if err != nil {
