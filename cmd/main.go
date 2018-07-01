@@ -110,11 +110,10 @@ func main() {
 		fmt.Printf("r.ResolveAppInference failed,%s", err)
 	}
 
-	//r.BatchAddInstance(instanceList)
+	r.BatchAddInstance(instanceList)
 	end := time.Now()
 
 	r.DebugDeployStatus()
-	fmt.Printf("cost=%f\n", r.CalculateTotalCostScore())
 
 	playback := cloud.NewResourceManagement()
 	err = playback.Init(machineResourceDataList, appResourcesDataList, appInterferenceDataList, instanceMachineList)
