@@ -1,9 +1,13 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"github.com/NeuronEvolution/aliyun_x/cloud"
 	"github.com/NeuronEvolution/aliyun_x/strategies/sffs"
+	"io/ioutil"
+	"os"
+	"strconv"
 	"time"
 )
 
@@ -43,9 +47,6 @@ func main() {
 	fmt.Println("machineResourceDataList", len(machineResourceDataList))
 
 	//导入机器数据
-	r := cloud.NewResourceManagement()
-	r.SetStrategy(sffs.NewASortedFirstFitStrategy(r))
-	//r.SetStrategy(strategies.NewFreeSmallerStrategy(r))
 
 	var maxMachineId, maxAppId, maxInstanceId int
 
@@ -95,25 +96,30 @@ func main() {
 	fmt.Printf("deployed=%d,non-deployed=%d,total=%d\n",
 		len(instanceMachineList), len(instanceList), len(instanceDeployDataList))
 
-	begin := time.Now()
+	//cloud.SetDebug(true)
 
+	begin := time.Now()
+	r := cloud.NewResourceManagement()
+	r.SetStrategy(sffs.NewASortedFirstFitStrategy(r))
+	//r.SetStrategy(strategies.NewFreeSmallerStrategy(r))
 	err = r.Init(machineResourceDataList, appResourcesDataList, appInterferenceDataList, instanceMachineList)
 	if err != nil {
 		fmt.Printf("r.Init failed,%s", err)
 		return
 	}
 
-	cloud.SetDebug(true)
-	r.DebugDeployStatus()
+	r.DebugPrintStatus()
+
 	err = r.ResolveAppInference()
 	if err != nil {
 		fmt.Printf("r.ResolveAppInference failed,%s", err)
+		return
 	}
 
 	r.BatchAddInstance(instanceList)
 	end := time.Now()
 
-	r.DebugDeployStatus()
+	r.DebugPrintStatus()
 
 	playback := cloud.NewResourceManagement()
 	err = playback.Init(machineResourceDataList, appResourcesDataList, appInterferenceDataList, instanceMachineList)
@@ -121,8 +127,7 @@ func main() {
 		fmt.Printf("r.Init failed,%s", err)
 		return
 	}
-
-	playback.DebugDeployStatus()
+	playback.DebugPrintStatus()
 
 	err = playback.Play(r.DeployCommandHistory)
 	if err != nil {
@@ -130,7 +135,31 @@ func main() {
 		return
 	}
 
-	playback.DebugDeployStatus()
+	playback.DebugPrintStatus()
 
-	fmt.Printf("time=%10f\n", end.Sub(begin).Seconds())
+	fmt.Printf("time=%f\n", end.Sub(begin).Seconds())
+
+	outputFile := fmt.Sprintf("_output/submit_%s", time.Now().Format("20060102_150405"))
+	buf := bytes.NewBufferString("")
+	for _, v := range r.DeployCommandHistory.List[:r.DeployCommandHistory.ListCount] {
+		buf.WriteString("inst_")
+		buf.WriteString(strconv.Itoa(v.InstanceId))
+		buf.WriteString(",")
+		buf.WriteString("machine_")
+		buf.WriteString(strconv.Itoa(v.MachineId))
+		buf.WriteString("\n")
+	}
+
+	err = ioutil.WriteFile(outputFile+".csv", buf.Bytes(), os.ModePerm)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	summaryBuf := bytes.NewBufferString("")
+	r.DebugStatus(summaryBuf)
+	summaryBuf.WriteString(fmt.Sprintf("time=%f\n", end.Sub(begin).Seconds()))
+	err = ioutil.WriteFile(outputFile+"_summary.csv", summaryBuf.Bytes(), os.ModePerm)
+	if err != nil {
+		fmt.Println(err)
+	}
 }

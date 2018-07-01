@@ -45,10 +45,6 @@ func (s *SortedFirstFitStrategy) ResolveAppInference() (err error) {
 		}
 		for _, v := range instanceList {
 			m.RemoveInstance(v.InstanceId)
-			if m.InstanceArrayCount == 0 {
-				s.R.MachineDeployPool.RemoveMachine(m.MachineId)
-				s.R.MachineFreePool.AddMachine(m)
-			}
 
 			newMachine := s.firstFit(v)
 			if newMachine == nil {
@@ -61,9 +57,6 @@ func (s *SortedFirstFitStrategy) ResolveAppInference() (err error) {
 			}
 
 			s.R.CommandDeployInstance(v, newMachine)
-			if newMachine.InstanceArrayCount == 1 {
-				s.R.MachineDeployPool.AddMachine(newMachine)
-			}
 		}
 	}
 
@@ -80,7 +73,7 @@ func (s *SortedFirstFitStrategy) firstFit(instance *cloud.Instance) *cloud.Machi
 		}
 	}
 
-	m := s.R.MachineFreePool.PopMachine()
+	m := s.R.MachineFreePool.PeekMachine()
 	if m == nil {
 		fmt.Printf("SortedFirstFitStrategy.firstFit no machine\n")
 		return nil
@@ -102,9 +95,6 @@ func (s *SortedFirstFitStrategy) AddInstance(instance *cloud.Instance) (err erro
 	}
 
 	s.R.CommandDeployInstance(instance, m)
-	if m.InstanceArrayCount == 1 {
-		s.R.MachineDeployPool.AddMachine(m)
-	}
 
 	return nil
 }

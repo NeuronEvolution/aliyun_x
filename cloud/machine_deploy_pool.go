@@ -1,6 +1,7 @@
 package cloud
 
 import (
+	"bytes"
 	"fmt"
 	"sort"
 )
@@ -110,16 +111,17 @@ func (p *MachineDeployPool) RemoveMachine(machineId int) *Machine {
 	return m
 }
 
-func (p *MachineDeployPool) DebugPrint() {
-	fmt.Printf("MachineDeployPool.DebugPrint\n")
+func (p *MachineDeployPool) DebugPrint(buf *bytes.Buffer) {
+	buf.WriteString("MachineDeployPool.DebugPrint\n")
 	instanceCount := 0
 	for _, v := range p.MachineMap {
 		//v.DebugPrint()
 		instanceCount += v.InstanceArrayCount
 	}
 	for _, v := range p.MachineLevelDeployArray {
-		fmt.Printf("    %v machineCount=%d\n", v.LevelConfig, v.MachineCollection.ListCount)
+		buf.WriteString(fmt.Sprintf("    %v machineCount=%d\n",
+			v.LevelConfig, v.MachineCollection.ListCount))
 	}
-	fmt.Printf("MachineDeployPool.DebugPrint machineCount=%d,instanceCount=%d\n",
-		len(p.MachineMap), instanceCount)
+	buf.WriteString(fmt.Sprintf("MachineDeployPool.DebugPrint machineCount=%d,instanceCount=%d\n",
+		len(p.MachineMap), instanceCount))
 }

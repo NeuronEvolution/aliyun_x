@@ -1,6 +1,9 @@
 package cloud
 
-import "fmt"
+import (
+	"bytes"
+	"fmt"
+)
 
 type ResourceManagement struct {
 	Strategy                    Strategy
@@ -37,10 +40,19 @@ func NewResourceManagement() *ResourceManagement {
 	return r
 }
 
-func (r *ResourceManagement) DebugDeployStatus() {
+func (r *ResourceManagement) DebugStatus(buf *bytes.Buffer) {
+
+	r.MachineDeployPool.DebugPrint(buf)
+
+	buf.WriteString(fmt.Sprintf("cost=%f,totalCommands=%d\n",
+		r.CalculateTotalCostScore(), r.DeployCommandHistory.ListCount))
+}
+
+func (r *ResourceManagement) DebugPrintStatus() {
 	fmt.Printf("-----------------------------------------------------------------\n")
-	r.MachineDeployPool.DebugPrint()
-	fmt.Printf("cost=%f\n", r.CalculateTotalCostScore())
+	buf := bytes.NewBufferString("")
+	r.DebugStatus(buf)
+	fmt.Printf(buf.String())
 	fmt.Printf("#################################################################\n")
 }
 
