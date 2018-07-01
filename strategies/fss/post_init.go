@@ -3,36 +3,40 @@ package fss
 import (
 	"fmt"
 	"github.com/NeuronEvolution/aliyun_x/cloud"
-	"sort"
 	"time"
 )
 
+func (s *FreeSmallerStrategy) getAppInferenceMachineList() []*cloud.Machine {
+	machineList := make([]*cloud.Machine, 0)
+	for _, level := range s.R.MachineDeployPool.MachineLevelDeployArray {
+		for _, v := range level.MachineCollection.List[:level.MachineCollection.ListCount] {
+			if v.HasBadConstraint() {
+				machineList = append(machineList, v)
+			}
+		}
+	}
+
+	return machineList
+}
+
 func (s *FreeSmallerStrategy) resolveAppInference() (err error) {
 	fmt.Printf("FreeSmallerStrategy.resolveAppInference\n")
-	for i := 0; ; i++ {
-		//fmt.Printf("FreeSmallerStrategy.resolveAppInference %d\n", i)
-		var m *cloud.Machine
-		for _, level := range s.R.MachineDeployPool.MachineLevelDeployArray {
-			for _, v := range level.MachineCollection.List[:level.MachineCollection.ListCount] {
-				if v.HasBadConstraint() {
-					m = v
-					break
-				}
-			}
-			if m != nil {
-				break
-			}
-		}
+	machineList := s.getAppInferenceMachineList()
+	instanceList := make([]*cloud.Instance, 0)
+	for _, m := range machineList {
+		instanceList = append(instanceList, m.InstanceArray[:m.InstanceArrayCount]...)
+	}
+	fmt.Printf("FreeSmallerStrategy.resolveAppInference begin machineCount=%d,instanceCount=%d\n",
+		len(machineList), len(instanceList))
 
-		if m == nil {
-			fmt.Printf("SortedFirstFitStrategy.resolveAppInference total expand %d\n", i)
-			break
-		}
+	err = s.redeployInstanceList(instanceList, true)
+	if err != nil {
+		return err
+	}
 
-		err := s.redeployMachine(m, false)
-		if err != nil {
-			return err
-		}
+	machineList = s.getAppInferenceMachineList()
+	if len(machineList) != 0 {
+		return fmt.Errorf("FreeSmallerStrategy.resolveAppInference not completed")
 	}
 
 	return nil
@@ -48,76 +52,67 @@ func (s *FreeSmallerStrategy) getHighCpuMachineList() []*cloud.Machine {
 			}
 		}
 	}
-	sort.Sort(cloud.MachineListSortByCostDesc(machineList))
 
 	return machineList
 }
 
-func (s *FreeSmallerStrategy) resolveHighCpu() error {
-	fmt.Printf("FreeSmallerStrategy.resolveHighCpu\n")
-	machineRedeployList := s.getHighCpuMachineList()
-	fmt.Printf("FreeSmallerStrategy.resolveHighCpu high cpu before count=%d\n", len(machineRedeployList))
+func (s *FreeSmallerStrategy) getLowLevelMachineList() []*cloud.Machine {
+	machineList := make([]*cloud.Machine, 0)
 
-	for _, v := range machineRedeployList {
-		s.redeployMachine(v, false)
-	}
-
-	machineRedeployList = s.getHighCpuMachineList()
-	fmt.Printf("FreeSmallerStrategy.resolveHighCpu high cpu after count=%d\n", len(machineRedeployList))
-	for _, v := range machineRedeployList {
-		fmt.Printf("    %f,%d\n", v.GetCost(), v.MachineId)
-		//v.DebugPrint()
-	}
-	fmt.Println("")
-
-	return nil
-}
-
-func (s *FreeSmallerStrategy) resolveSmallMachine() error {
-	fmt.Printf("FreeSmallerStrategy.resolveSmallMachine\n")
 	if s.R.MachineDeployPool.MachineLevelDeployArray.Len() == 0 {
-		return nil
+		return machineList
 	}
 
 	if s.R.MachineFreePool.MachineLevelFreeArray.Len() <= 1 {
+		return machineList
+	}
+
+	startLevel := 0
+	if s.R.MachineDeployPool.MachineLevelDeployArray[0].LevelConfig.Cpu ==
+		s.R.MachineFreePool.MachineLevelFreeArray[0].LevelConfig.Cpu {
+		startLevel = 1
+	}
+	for _, level := range s.R.MachineDeployPool.MachineLevelDeployArray[startLevel:] {
+		if level.MachineCollection.ListCount > 0 {
+			machineList = append(machineList, level.MachineCollection.List[:level.MachineCollection.ListCount]...)
+		}
+	}
+
+	return machineList
+}
+
+func (s *FreeSmallerStrategy) resolveHighCpuAndLowLevelMachine() (err error) {
+	fmt.Printf("FreeSmallerStrategy.resolveHighCpuAndLowLevelMachine\n")
+
+	highCpuMachineList := s.getHighCpuMachineList()
+	fmt.Printf("FreeSmallerStrategy.resolveHighCpuAndLowLevelMachine begin hight cpu machine count=%d\n",
+		len(highCpuMachineList))
+	lowLevelMachineList := s.getLowLevelMachineList()
+	fmt.Printf("FreeSmallerStrategy.resolveHighCpuAndLowLevelMachine begin low level machine count=%d\n",
+		len(lowLevelMachineList))
+
+	instanceList := make([]*cloud.Instance, 0)
+	for _, m := range highCpuMachineList {
+		instanceList = append(instanceList, m.InstanceArray[:m.InstanceArrayCount]...)
+	}
+	for _, m := range lowLevelMachineList {
+		instanceList = append(instanceList, m.InstanceArray[:m.InstanceArrayCount]...)
+	}
+
+	fmt.Printf("FreeSmallerStrategy.resolveHighCpuAndLowLevelMachine instance count=%d\n",
+		len(instanceList))
+
+	err = s.redeployInstanceList(instanceList, false)
+	if err != nil {
 		return nil
 	}
 
-	countResolved := 0
-	for {
-		hasHighLevelMachine := false
-		for _, v := range s.R.MachineFreePool.MachineLevelFreeArray[:s.R.MachineFreePool.MachineLevelFreeArray.Len()-1] {
-			if v.MachineCollection.ListCount > 0 {
-				hasHighLevelMachine = true
-				break
-			}
-		}
-		if !hasHighLevelMachine {
-			break
-		}
-
-		startLevel := 0
-		if s.R.MachineDeployPool.MachineLevelDeployArray[0].LevelConfig.Cpu ==
-			s.R.MachineFreePool.MachineLevelFreeArray[0].LevelConfig.Cpu {
-			startLevel = 1
-		}
-
-		hasLowMachine := false
-		for _, level := range s.R.MachineDeployPool.MachineLevelDeployArray[startLevel:] {
-			if level.MachineCollection.ListCount > 0 {
-				hasLowMachine = true
-				s.redeployMachine(level.MachineCollection.List[0], false)
-				countResolved++
-				break
-			}
-		}
-
-		if !hasLowMachine {
-			break
-		}
-	}
-
-	fmt.Printf("FreeSmallerStrategy.resolveSmallMachine countResolved=%d\n", countResolved)
+	highCpuMachineList = s.getHighCpuMachineList()
+	fmt.Printf("FreeSmallerStrategy.resolveHighCpuAndLowLevelMachine end hight cpu machine count=%d\n",
+		len(highCpuMachineList))
+	lowLevelMachineList = s.getLowLevelMachineList()
+	fmt.Printf("FreeSmallerStrategy.resolveHighCpuAndLowLevelMachine end low level machine count=%d\n",
+		len(lowLevelMachineList))
 
 	return nil
 }
@@ -128,24 +123,16 @@ func (s *FreeSmallerStrategy) PostInit() (err error) {
 	if err != nil {
 		return err
 	}
-	s.R.DebugPrintStatus()
 	fmt.Printf("FreeSmallerStrategy.PostInit resolveAppInference time=%f\n", time.Now().Sub(begin).Seconds())
+	s.R.DebugPrintStatus()
 
 	begin = time.Now()
-	err = s.resolveHighCpu()
+	err = s.resolveHighCpuAndLowLevelMachine()
 	if err != nil {
 		return err
 	}
+	fmt.Printf("FreeSmallerStrategy.PostInit resolveHighCpuAndLowLevelMachine time=%f\n", time.Now().Sub(begin).Seconds())
 	s.R.DebugPrintStatus()
-	fmt.Printf("FreeSmallerStrategy.PostInit resolveHighCpu time=%f\n", time.Now().Sub(begin).Seconds())
-
-	begin = time.Now()
-	err = s.resolveSmallMachine()
-	if err != nil {
-		return err
-	}
-	s.R.DebugPrintStatus()
-	fmt.Printf("FreeSmallerStrategy.PostInit resolveSmallMachine time=%f\n", time.Now().Sub(begin).Seconds())
 
 	return nil
 }
