@@ -18,6 +18,24 @@ func NewAppCountCollection() *AppCountCollection {
 	return c
 }
 
+func (c *AppCountCollection) debugValidation() {
+	for i := 0; i < c.ListCount; i++ {
+		if c.List[i].AppId == 0 {
+			panic(fmt.Errorf("AppCountCollection.debugValidation %d", i))
+		}
+	}
+}
+
+func (c *AppCountCollection) debugPrint() {
+	for _, v := range c.List[:c.ListCount] {
+		fmt.Printf("    %d %d\n", v.AppId, v.Count)
+	}
+}
+
+func (c *AppCountCollection) Clear() {
+	c.ListCount = 0
+}
+
 func (c *AppCountCollection) Add(appId int) {
 	for i := 0; i < c.ListCount; i++ {
 		if c.List[i].AppId == appId {
@@ -30,6 +48,10 @@ func (c *AppCountCollection) Add(appId int) {
 	item.AppId = appId
 	item.Count = 1
 	c.ListCount++
+
+	if debugEnabled {
+		c.debugValidation()
+	}
 }
 
 func (c *AppCountCollection) Remove(appId int) {
@@ -47,10 +69,20 @@ func (c *AppCountCollection) Remove(appId int) {
 					item.AppId = last.AppId
 					item.Count = last.Count
 				}
+
+				c.ListCount--
 			}
 
-			c.ListCount--
+			if debugEnabled {
+				c.debugValidation()
+			}
+
+			return
 		}
+	}
+
+	if debugEnabled {
+		c.debugValidation()
 	}
 
 	panic(fmt.Errorf("AppCountCollection.Remove appId %d not exists", appId))

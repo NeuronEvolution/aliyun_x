@@ -26,32 +26,58 @@ func NewMachine(r *ResourceManagement, machineId int, levelConfig *MachineLevelC
 	m.R = r
 	m.MachineId = machineId
 	m.LevelConfig = levelConfig
+	m.InstanceArray = make([]*Instance, MaxInstancePerMachine)
 	m.appCountCollection = NewAppCountCollection()
 
 	return m
 }
 
-func (m *Machine) AddInstance(instance *Instance) error {
-	//debugLog("Machine.AddInstance %s %s", m.MachineId, instance.InstanceId)
-	if !m.ConstraintCheck(instance) {
-		return fmt.Errorf("%s add %s ConstraintCheck failed", m.MachineId, instance.InstanceId)
+func (m *Machine) debugValidation() {
+	for i := 0; i < m.InstanceArrayCount; i++ {
+		if m.InstanceArray[i] == nil {
+			panic(fmt.Errorf("Machine.debugValidation machineId=%d,i=%d", m.MachineId, i))
+		}
 	}
 
-	m.InstanceArray = append(m.InstanceArray, instance)
+	m.appCountCollection.debugValidation()
+}
+
+func (m *Machine) ClearInstances() {
+	m.InstanceArrayCount = 0
+	m.appCountCollection.Clear()
+	for i := 0; i < len(m.Cpu); i++ {
+		m.Cpu[i] = 0
+	}
+	for i := 0; i < len(m.Mem); i++ {
+		m.Mem[i] = 0
+	}
+	m.Disk = 0
+	m.P = 0
+	m.M = 0
+	m.PM = 0
+}
+
+func (m *Machine) AddInstance(instance *Instance) {
+	//debugLog("Machine.AddInstance %s %s", m.MachineId, instance.InstanceId)
+	m.InstanceArray[m.InstanceArrayCount] = instance
 	m.InstanceArrayCount++
 	m.appCountCollection.Add(instance.Config.AppId)
 	m.allocResource(instance)
 
-	sort.Sort(m.InstanceArray)
+	sort.Sort(m.InstanceArray[:m.InstanceArrayCount])
+	m.R.InstanceMachineMap[instance.InstanceId] = m
 
-	return nil
+	if debugEnabled {
+		m.debugValidation()
+	}
 }
 
 func (m *Machine) RemoveInstance(instanceId int) {
-	debugLog("Machine.RemoveInstance", m.MachineId, instanceId)
-	for i, v := range m.InstanceArray {
+	//debugLog("Machine.RemoveInstance machineId=%d,instanceId=%d", m.MachineId, instanceId)
+	for i, v := range m.InstanceArray[:m.InstanceArrayCount] {
 		if v.InstanceId == instanceId {
 			instance := m.InstanceArray[i]
+			//debugLog("Machine.RemoveInstance appId=%d", instance.Config.AppId)
 			m.InstanceArray[i] = nil
 			if m.InstanceArrayCount > 1 && i < m.InstanceArrayCount-1 {
 				for j := i; j < m.InstanceArrayCount-1; j++ {
@@ -67,6 +93,10 @@ func (m *Machine) RemoveInstance(instanceId int) {
 			break
 		}
 	}
+
+	if debugEnabled {
+		m.debugValidation()
+	}
 }
 
 func (m *Machine) IsEmpty() bool {
@@ -76,11 +106,11 @@ func (m *Machine) IsEmpty() bool {
 func (m *Machine) ConstraintCheck(instance *Instance) bool {
 	//debugLog("Machine.ConstraintCheck %s %s", m.MachineId, instance.InstanceId)
 
-	if !constraintCheckAppInterference(
+	if !constraintCheckAppInterferenceAddInstance(
 		instance.Config.AppId,
 		m.appCountCollection,
 		m.R.AppInterferenceConfigMap) {
-		//debugLog("Machine.ConstraintCheck constraintCheckAppInterference failed")
+		//debugLog("Machine.ConstraintCheck constraintCheckAppInterferenceAddInstance failed")
 		return false
 	}
 
@@ -90,6 +120,10 @@ func (m *Machine) ConstraintCheck(instance *Instance) bool {
 	}
 
 	return true
+}
+
+func (m *Machine) HasBadConstraint() bool {
+	return !constraintCheckAppInterference(m.appCountCollection, m.R.AppInterferenceConfigMap)
 }
 
 func (m *Machine) debugLogResource() {
@@ -106,7 +140,7 @@ func (m *Machine) debugLogResource() {
 				maxMem = v
 			}
 		}
-		debugLog("Machine.debugLogResource %s %f %f %d %d %d %d",
+		debugLog("Machine.debugLogResource %d %f %f %d %d %d %d",
 			m.MachineId, maxCpu, maxMem, m.Disk, m.P, m.M, m.PM)
 	}
 }
@@ -144,7 +178,7 @@ func (m *Machine) freeResource(instance *Instance) {
 }
 
 func (m *Machine) DebugPrint() {
-	debugLog("Machine.DebugPrint %s %v", m.MachineId, m.LevelConfig)
+	debugLog("Machine.DebugPrint %d %v", m.MachineId, m.LevelConfig)
 	for i := 0; i < m.appCountCollection.ListCount; i++ {
 		debugLog("    %v", m.appCountCollection.List[i])
 	}

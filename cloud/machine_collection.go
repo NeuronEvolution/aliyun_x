@@ -11,28 +11,46 @@ type MachineCollection struct {
 func NewMachineCollection() *MachineCollection {
 	c := &MachineCollection{}
 	c.Map = make(map[int]*Machine)
-	c.List = make([]*Machine, 0)
+	c.List = make([]*Machine, MaxMachineId+1)
 
 	return c
 }
 
+func (c *MachineCollection) debugValidation() {
+	for i := 0; i < c.ListCount; i++ {
+		if c.List[i] == nil {
+			panic(fmt.Errorf("MachineCollection.debugValidation c.List[%d]==nil,%d", i, c.ListCount))
+		}
+	}
+}
+
 func (c *MachineCollection) Add(m *Machine) {
-	//debugLog("MachineCollection.Add %s", m.MachineId)
-	_, has := c.Map[m.MachineId]
-	if has {
-		panic(fmt.Errorf("MachineCollection.Add %s exists", m.MachineId))
+	//debugLog("MachineCollection.Add %d", m.MachineId)
+
+	if debugEnabled {
+		_, has := c.Map[m.MachineId]
+		if has {
+			panic(fmt.Errorf("MachineCollection.Add %d exists", m.MachineId))
+		}
 	}
 
 	c.Map[m.MachineId] = m
-	c.List = append(c.List, m)
+	c.List[c.ListCount] = m
 	c.ListCount++
+
+	if debugEnabled {
+		c.debugValidation()
+	}
 }
 
 func (c *MachineCollection) Remove(machineId int) {
-	debugLog("MachineCollection.Remove %s", machineId)
-	_, has := c.Map[machineId]
-	if !has {
-		panic(fmt.Errorf("MachineCollection.Add %s not exists", machineId))
+	//debugLog("MachineCollection.Remove %d", machineId)
+
+	if debugEnabled {
+		_, has := c.Map[machineId]
+		if !has {
+			panic(fmt.Errorf("MachineCollection.Add %d not exists", machineId))
+		}
 	}
 
 	delete(c.Map, machineId)
@@ -45,6 +63,10 @@ func (c *MachineCollection) Remove(machineId int) {
 			}
 			c.ListCount--
 		}
+	}
+
+	if debugEnabled {
+		c.debugValidation()
 	}
 }
 
@@ -64,7 +86,11 @@ func (c *MachineCollection) Pop() (m *Machine) {
 		panic("111")
 	}
 
-	//debugLog("MachineCollection.Pop success %s", m.MachineId)
+	//debugLog("MachineCollection.Pop success %d", m.MachineId)
+
+	if debugEnabled {
+		c.debugValidation()
+	}
 
 	return m
 }

@@ -1,13 +1,32 @@
 package cloud
 
+func constraintCheckAppInterference(c *AppCountCollection, m [][MaxAppId]int) bool {
+	//debugLog("constraintCheckAppInterference %v", c.List[:c.ListCount])
+	for _, v1 := range c.List[:c.ListCount] {
+		for _, v2 := range c.List[:c.ListCount] {
+			maxCount := m[v1.AppId][v2.AppId]
+			if maxCount != -1 {
+				if v1.AppId == v2.AppId {
+					maxCount++
+				}
+				if v2.Count > maxCount {
+					return false
+				}
+			}
+		}
+	}
+
+	return true
+}
+
 //app冲突约束检测
 //appId:要新增的appId
 //c:当前机器已部署的每个app的数量
 //m:冲突配置
-func constraintCheckAppInterference(appId int, c *AppCountCollection, m [][MaxAppId]int) bool {
-	//debugLog("constraintCheckAppInterference appId=%d %v", appId, c.List[0:c.ListCount])
+func constraintCheckAppInterferenceAddInstance(appId int, c *AppCountCollection, m [][MaxAppId]int) bool {
+	//debugLog("constraintCheckAppInterferenceAddInstance appId=%d %v", appId, c.List[:c.ListCount])
 	appCount := 0
-	for _, v := range c.List[0:c.ListCount] {
+	for _, v := range c.List[:c.ListCount] {
 		if v.AppId == appId {
 			appCount = v.Count
 			break
@@ -18,12 +37,12 @@ func constraintCheckAppInterference(appId int, c *AppCountCollection, m [][MaxAp
 	//<appId,AppId>
 	maxCount := m[appId][appId]
 	if maxCount != -1 && appCount > maxCount+1 {
-		//debugLog("constraintCheckAppInterference 1 failed app=%d,count2=%d,max=%d",
+		//debugLog("constraintCheckAppInterferenceAddInstance 1 failed app=%d,count2=%d,max=%d",
 		//	 appId, appCount, maxCount)
 		return false
 	}
 
-	for _, v := range c.List[0:c.ListCount] {
+	for _, v := range c.List[:c.ListCount] {
 		if v.AppId == appId {
 			continue
 		}
@@ -31,7 +50,7 @@ func constraintCheckAppInterference(appId int, c *AppCountCollection, m [][MaxAp
 		//<appIdOther,appId>
 		maxCount := m[v.AppId][appId]
 		if maxCount != -1 && appCount > maxCount {
-			//debugLog("constraintCheckAppInterference 2 failed app1=%d,app2=%d,count2=%d,max=%d",
+			//debugLog("constraintCheckAppInterferenceAddInstance 2 failed app1=%d,app2=%d,count2=%d,max=%d",
 			//	v.AppId, appId, appCount, maxCount)
 			return false
 		}
@@ -40,7 +59,7 @@ func constraintCheckAppInterference(appId int, c *AppCountCollection, m [][MaxAp
 		if appCount == 1 { //已经存在的app，数量增加不影响冲突结果
 			maxCount = m[appId][v.AppId]
 			if maxCount != -1 && v.Count > maxCount {
-				//debugLog("constraintCheckAppInterference 3 failed app1=%d,app2=%d,count2=%d,max=%d",
+				//debugLog("constraintCheckAppInterferenceAddInstance 3 failed app1=%d,app2=%d,count2=%d,max=%d",
 				//	appId, v.AppId, v.Count, maxCount)
 				return false
 			}

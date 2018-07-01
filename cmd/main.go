@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/NeuronEvolution/aliyun_x/cloud"
-	"github.com/NeuronEvolution/aliyun_x/strategies"
+	"github.com/NeuronEvolution/aliyun_x/strategies/sffs"
 	"time"
 )
 
@@ -44,13 +44,12 @@ func main() {
 
 	//导入机器数据
 	r := cloud.NewResourceManagement()
-	r.SetStrategy(strategies.NewAllocMachineIfDeployFailedStrategy(r))
+	r.SetStrategy(sffs.NewASortedFirstFitStrategy(r))
 	//r.SetStrategy(strategies.NewFreeSmallerStrategy(r))
 
 	var maxMachineId, maxAppId, maxInstanceId int
 
 	for _, v := range machineResourceDataList {
-		r.AddMachine(v)
 		if v.MachineId > maxMachineId {
 			maxMachineId = v.MachineId
 		}
@@ -58,7 +57,6 @@ func main() {
 
 	//导入应用资源数据
 	for _, v := range appResourcesDataList {
-		r.SaveAppResourceConfig(v)
 		if v.AppId > maxAppId {
 			maxAppId = v.AppId
 		}
@@ -66,7 +64,6 @@ func main() {
 
 	//导入应用冲突数据
 	for _, v := range appInterferenceDataList {
-		r.SaveAppInterferenceConfig(v)
 		if v.AppId1 > maxAppId {
 			maxAppId = v.AppId1
 		}
@@ -94,20 +91,47 @@ func main() {
 		}
 	}
 
-	fmt.Printf("maxAppId=%d,maxInstanceId=%d,maxMachineId=%d", maxAppId, maxInstanceId, maxMachineId)
+	fmt.Printf("maxAppId=%d,maxInstanceId=%d,maxMachineId=%d\n", maxAppId, maxInstanceId, maxMachineId)
+	fmt.Printf("deployed=%d,non-deployed=%d,total=%d\n",
+		len(instanceMachineList), len(instanceList), len(instanceDeployDataList))
 
 	begin := time.Now()
 
+	err = r.Init(machineResourceDataList, appResourcesDataList, appInterferenceDataList, instanceMachineList)
+	if err != nil {
+		fmt.Printf("r.Init failed,%s", err)
+		return
+	}
+
 	cloud.SetDebug(true)
-	//r.InitInstanceDeploy(instanceMachineList)
+	r.DebugDeployStatus()
+	err = r.ResolveAppInference()
+	if err != nil {
+		fmt.Printf("r.ResolveAppInference failed,%s", err)
+	}
 
-	r.ResetCommandHistory()
-
-	r.BatchAddInstance(instanceDeployDataList)
+	//r.BatchAddInstance(instanceList)
 	end := time.Now()
 
 	r.DebugDeployStatus()
-	fmt.Printf("%d %d %d\n", len(instanceMachineList), len(instanceList), len(instanceDeployDataList))
-	fmt.Printf("time %10f\n", end.Sub(begin).Seconds())
-	fmt.Println("cost", r.CalculateTotalCostScore())
+	fmt.Printf("cost=%f\n", r.CalculateTotalCostScore())
+
+	playback := cloud.NewResourceManagement()
+	err = playback.Init(machineResourceDataList, appResourcesDataList, appInterferenceDataList, instanceMachineList)
+	if err != nil {
+		fmt.Printf("r.Init failed,%s", err)
+		return
+	}
+
+	playback.DebugDeployStatus()
+
+	err = playback.Play(r.DeployCommandHistory)
+	if err != nil {
+		fmt.Printf("playback.Play failed,%s", err)
+		return
+	}
+
+	playback.DebugDeployStatus()
+
+	fmt.Printf("time=%10f\n", end.Sub(begin).Seconds())
 }

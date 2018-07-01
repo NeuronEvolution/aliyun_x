@@ -1,7 +1,6 @@
 package cloud
 
 import (
-	"fmt"
 	"sort"
 )
 
@@ -19,7 +18,7 @@ func NewMachineLevelFree(level *MachineLevelConfig) *MachineLevelFree {
 }
 
 func (p *MachineLevelFree) PushMachine(m *Machine) {
-	//debugLog("MachineLevelFree.PushMachine %s %v", m.MachineId, m.LevelConfig)
+	//debugLog("MachineLevelFree.PushMachine %d %v", m.MachineId, m.LevelConfig)
 	p.MachineCollection.Add(m)
 }
 
@@ -30,7 +29,7 @@ func (p *MachineLevelFree) PopMachine() (m *Machine) {
 }
 
 func (p *MachineLevelFree) RemoveMachine(machineId int) {
-	//debugLog("MachineLevelFree.RemoveMachine %s %v", machineId, p.LevelConfig)
+	//debugLog("MachineLevelFree.RemoveMachine %d %v", machineId, p.LevelConfig)
 	p.MachineCollection.Remove(machineId)
 }
 
@@ -63,7 +62,7 @@ func NewMachineFreePool() *MachineFreePool {
 }
 
 func (p *MachineFreePool) AddMachine(m *Machine) {
-	//debugLog("MachineFreePool.AddMachine %s", m.MachineId)
+	//debugLog("MachineFreePool.AddMachine %d", m.MachineId)
 	p.MachineMap[m.MachineId] = m
 
 	var pool *MachineLevelFree
@@ -74,13 +73,10 @@ func (p *MachineFreePool) AddMachine(m *Machine) {
 		}
 	}
 	if pool == nil {
-		fmt.Println("MachineFreePool.AddMachine new level", m.LevelConfig)
+		//debugLog("MachineFreePool.AddMachine new level %v", m.LevelConfig)
 		pool = NewMachineLevelFree(m.LevelConfig)
 		p.MachineLevelFreeArray = append(p.MachineLevelFreeArray, pool)
 		sort.Sort(p.MachineLevelFreeArray)
-		for _, v := range p.MachineLevelFreeArray {
-			fmt.Println("    ", v.LevelConfig)
-		}
 	}
 	pool.PushMachine(m)
 }

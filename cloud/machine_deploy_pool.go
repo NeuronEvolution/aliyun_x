@@ -73,7 +73,7 @@ func NewMachineDeployPool() *MachineDeployPool {
 }
 
 func (p *MachineDeployPool) AddMachine(m *Machine) {
-	//debugLog("MachineDeployPool.AddMachine %s", m.MachineId)
+	//debugLog("MachineDeployPool.AddMachine %d", m.MachineId)
 	p.MachineMap[m.MachineId] = m
 
 	var pool *MachineLevelDeploy
@@ -84,19 +84,16 @@ func (p *MachineDeployPool) AddMachine(m *Machine) {
 		}
 	}
 	if pool == nil {
-		fmt.Println("MachineDeployPool.AddMachine new level", m.LevelConfig)
+		//debugLog("MachineDeployPool.AddMachine new level %v", m.LevelConfig)
 		pool = NewMachineLevelDeploy(m.LevelConfig)
 		p.MachineLevelDeployArray = append(p.MachineLevelDeployArray, pool)
 		sort.Sort(p.MachineLevelDeployArray)
-		for _, v := range p.MachineLevelDeployArray {
-			fmt.Println("    ", v.LevelConfig)
-		}
 	}
 	pool.AddMachine(m)
 }
 
 func (p *MachineDeployPool) RemoveMachine(machineId int) *Machine {
-	//debugLog("MachineDeployPool.RemoveMachine %s", machineId)
+	//debugLog("MachineDeployPool.RemoveMachine %d", machineId)
 	m, has := p.MachineMap[machineId]
 	if !has {
 		return nil
@@ -114,11 +111,14 @@ func (p *MachineDeployPool) RemoveMachine(machineId int) *Machine {
 }
 
 func (p *MachineDeployPool) DebugPrint() {
-	fmt.Printf("MachineDeployPool.DebugPrint")
+	fmt.Printf("MachineDeployPool.DebugPrint\n")
 	instanceCount := 0
 	for _, v := range p.MachineMap {
 		//v.DebugPrint()
 		instanceCount += v.InstanceArrayCount
+	}
+	for _, v := range p.MachineLevelDeployArray {
+		fmt.Printf("    %v machineCount=%d\n", v.LevelConfig, v.MachineCollection.ListCount)
 	}
 	fmt.Printf("MachineDeployPool.DebugPrint machineCount=%d,instanceCount=%d\n",
 		len(p.MachineMap), instanceCount)

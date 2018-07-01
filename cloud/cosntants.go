@@ -11,3 +11,6 @@ const MachineDiskMax = 1024
 const MachinePMax = 7
 const MachineMMax = 7
 const MachinePMMax = 9
+
+const MaxDeployCommandCount = 1024 * 1024
+const MaxInstancePerMachine = 1024

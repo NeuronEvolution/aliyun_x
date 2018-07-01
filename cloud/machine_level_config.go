@@ -1,7 +1,5 @@
 package cloud
 
-import "fmt"
-
 type MachineLevelConfig struct {
 	Cpu  float64
 	Mem  float64
@@ -72,7 +70,7 @@ func (p *MachineLevelConfigPool) GetConfig(config *MachineLevelConfig) (result *
 		}
 	}
 
-	fmt.Println("MachineLevelConfigPool.GetConfig new level ", config)
+	//debugLog("MachineLevelConfigPool.GetConfig new level %v", config)
 
 	result = &(*config)
 	p.ConfigList = append(p.ConfigList, result)

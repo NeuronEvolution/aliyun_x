@@ -9,10 +9,12 @@ func (r *ResourceManagement) InitInstanceDeploy(configList []*InstanceDeployConf
 		return nil
 	}
 
+	r.InitialInstanceDeployConfig = configList
+
 	for _, v := range configList {
 		appResourcesConfig := r.AppResourcesConfigMap[v.AppId]
 		if appResourcesConfig == nil {
-			return fmt.Errorf("R.InitInstanceDeploy %s appResourcesConfig %s not found",
+			return fmt.Errorf("R.InitInstanceDeploy %d appResourcesConfig %d not found",
 				v.InstanceId, v.AppId)
 		}
 		instance := NewInstance(r, v.InstanceId, appResourcesConfig)
@@ -21,16 +23,18 @@ func (r *ResourceManagement) InitInstanceDeploy(configList []*InstanceDeployConf
 		if m == nil {
 			m = r.MachineDeployPool.MachineMap[v.MachineId]
 			if m == nil {
-				return fmt.Errorf("R.InitInstanceDeploy %s not exsits", v.MachineId)
+				return fmt.Errorf("R.InitInstanceDeploy %d not exsits", v.MachineId)
 			}
 		} else {
 			r.MachineDeployPool.AddMachine(m)
 		}
 
-		err := m.AddInstance(instance)
-		if err != nil {
-			return err
+		if !constraintCheckResourceLimit(m, instance) {
+			//debugLog("Machine.ConstraintCheck constraintCheckResourceLimit failed")
+			return fmt.Errorf("constraintCheckResourceLimit failed %d", m.MachineId)
 		}
+
+		m.AddInstance(instance)
 	}
 
 	return nil
@@ -42,7 +46,7 @@ func (r *ResourceManagement) AddInstance(c *InstanceDeployConfig) error {
 
 	appResourcesConfig := r.AppResourcesConfigMap[c.AppId]
 	if appResourcesConfig == nil {
-		return fmt.Errorf("R.AddInstance %s appResourcesConfig %s not found",
+		return fmt.Errorf("R.AddInstance %d appResourcesConfig %d not found",
 			c.InstanceId, c.AppId)
 	}
 
@@ -61,7 +65,7 @@ func (r *ResourceManagement) BatchAddInstance(configList []*InstanceDeployConfig
 	for _, c := range configList {
 		appResourcesConfig := r.AppResourcesConfigMap[c.AppId]
 		if appResourcesConfig == nil {
-			return fmt.Errorf("R.AddInstance %s appResourcesConfig %s not found",
+			return fmt.Errorf("R.AddInstance %d appResourcesConfig %d not found",
 				c.InstanceId, c.AppId)
 		}
 		instance := NewInstance(r, c.InstanceId, appResourcesConfig)

@@ -1,4 +1,4 @@
-package strategies
+package fss
 
 import "github.com/NeuronEvolution/aliyun_x/cloud"
 
@@ -11,6 +11,10 @@ func NewFreeSmallerStrategy(r *cloud.ResourceManagement) *FreeSmallerStrategy {
 	s.R = r
 
 	return s
+}
+
+func (s *FreeSmallerStrategy) PostInit() (err error) {
+	return nil
 }
 
 func (s *FreeSmallerStrategy) AddInstance(instance *cloud.Instance) (err error) {

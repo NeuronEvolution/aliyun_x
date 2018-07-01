@@ -1,14 +1,18 @@
 package cloud
 
 type ResourceManagement struct {
-	Strategy                 Strategy
-	AppResourcesConfigMap    map[int]*AppResourcesConfig
-	AppInterferenceConfigMap [][MaxAppId]int
-	MachineConfigMap         map[int]*MachineResourcesConfig
-	MachineLevelConfigPool   *MachineLevelConfigPool
-	MachineMap               map[int]*Machine
-	MachineFreePool          *MachineFreePool
-	MachineDeployPool        *MachineDeployPool
+	Strategy                    Strategy
+	InitialInstanceDeployConfig []*InstanceDeployConfig
+	AppResourcesConfigMap       map[int]*AppResourcesConfig
+	AppInterferenceConfigMap    [][MaxAppId]int
+	MachineConfigMap            map[int]*MachineResourcesConfig
+	MachineLevelConfigPool      *MachineLevelConfigPool
+	MachineMap                  map[int]*Machine
+	MachineFreePool             *MachineFreePool
+	MachineDeployPool           *MachineDeployPool
+	DeployCommandHistory        *DeployCommandHistory
+	InstanceList                [MaxInstanceId]*Instance
+	InstanceMachineMap          [MaxInstanceId]*Machine
 }
 
 func NewResourceManagement() *ResourceManagement {
@@ -26,12 +30,16 @@ func NewResourceManagement() *ResourceManagement {
 	r.MachineMap = make(map[int]*Machine)
 	r.MachineFreePool = NewMachineFreePool()
 	r.MachineDeployPool = NewMachineDeployPool()
+	r.DeployCommandHistory = NewDeployCommandHistory()
 
 	return r
 }
 
 func (r *ResourceManagement) DebugDeployStatus() {
+	debugLog("-----------------------------------------------------------------")
 	r.MachineDeployPool.DebugPrint()
+	debugLog("cost=%f", r.CalculateTotalCostScore())
+	debugLog("#################################################################")
 }
 
 func (r *ResourceManagement) SetStrategy(s Strategy) {

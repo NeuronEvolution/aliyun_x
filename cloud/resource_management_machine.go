@@ -5,6 +5,7 @@ import "fmt"
 //添加机器
 //todo 将触发调度
 //todo 异步将最低资源机器释放，相关instance重新拉入
+
 func (r *ResourceManagement) AddMachine(config *MachineResourcesConfig) error {
 	r.MachineConfigMap[config.MachineId] = config
 	machine := NewMachine(r, config.MachineId, r.MachineLevelConfigPool.GetConfig(&config.MachineLevelConfig))
