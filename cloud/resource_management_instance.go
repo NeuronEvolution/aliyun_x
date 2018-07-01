@@ -19,14 +19,9 @@ func (r *ResourceManagement) InitInstanceDeploy(configList []*InstanceDeployConf
 		}
 		instance := NewInstance(r, v.InstanceId, appResourcesConfig)
 
-		m := r.MachineFreePool.RemoveMachine(v.MachineId)
+		m := r.MachineMap[v.MachineId]
 		if m == nil {
-			m = r.MachineDeployPool.MachineMap[v.MachineId]
-			if m == nil {
-				return fmt.Errorf("R.InitInstanceDeploy %d not exsits", v.MachineId)
-			}
-		} else {
-			r.MachineDeployPool.AddMachine(m)
+			return fmt.Errorf("ResourceManagement.InitInstanceDeploy machine %d not exsits", v.MachineId)
 		}
 
 		if !constraintCheckResourceLimit(m, instance) {

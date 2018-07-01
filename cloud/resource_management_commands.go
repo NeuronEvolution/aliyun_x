@@ -50,20 +50,12 @@ func (r *ResourceManagement) Play(h *DeployCommandHistory) (err error) {
 			}
 
 			currentMachine.RemoveInstance(v.InstanceId)
-			if currentMachine.InstanceArrayCount == 0 {
-				r.MachineDeployPool.RemoveMachine(currentMachine.MachineId)
-				r.MachineFreePool.AddMachine(currentMachine)
-			}
 		}
 
 		if !m.ConstraintCheck(instance) {
 			return fmt.Errorf("ResourceManagement.Play ConstraintCheck failed %d %v ", i, v)
 		}
 		m.AddInstance(instance)
-		if m.InstanceArrayCount == 1 {
-			r.MachineFreePool.RemoveMachine(m.MachineId)
-			r.MachineDeployPool.AddMachine(m)
-		}
 	}
 
 	return nil

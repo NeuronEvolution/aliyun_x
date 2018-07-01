@@ -54,6 +54,7 @@ func (c *MachineCollection) Remove(machineId int) {
 	}
 
 	delete(c.Map, machineId)
+
 	for i := 0; i < c.ListCount; i++ {
 		v := c.List[i]
 		if v.MachineId == machineId {
@@ -70,29 +71,13 @@ func (c *MachineCollection) Remove(machineId int) {
 	}
 }
 
-func (c *MachineCollection) Pop() (m *Machine) {
-	//debugLog("MachineCollection.Pop ListCount=%d", c.ListCount)
+func (c *MachineCollection) Peek() (m *Machine) {
+	//debugLog("MachineCollection.Peek ListCount=%d", c.ListCount)
 	if c.ListCount == 0 {
 		return nil
 	}
 
-	c.ListCount--
-
-	m = c.List[c.ListCount]
-	c.List[c.ListCount] = nil
-	delete(c.Map, m.MachineId)
-
-	if c.ListCount != len(c.Map) {
-		panic("111")
-	}
-
-	//debugLog("MachineCollection.Pop success %d", m.MachineId)
-
-	if debugEnabled {
-		c.debugValidation()
-	}
-
-	return m
+	return c.List[c.ListCount-1]
 }
 
 func (c *MachineCollection) Has(machinedId int) bool {

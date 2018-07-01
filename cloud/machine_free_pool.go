@@ -22,10 +22,10 @@ func (p *MachineLevelFree) PushMachine(m *Machine) {
 	p.MachineCollection.Add(m)
 }
 
-func (p *MachineLevelFree) PopMachine() (m *Machine) {
-	//debugLog("MachineLevelFree.PopMachine MachineListCount=%d %v",
+func (p *MachineLevelFree) PeekMachine() (m *Machine) {
+	//debugLog("MachineLevelFree.PeekMachine MachineListCount=%d %v",
 	//p.MachineCollection.ListCount, p.LevelConfig)
-	return p.MachineCollection.Pop()
+	return p.MachineCollection.Peek()
 }
 
 func (p *MachineLevelFree) RemoveMachine(machineId int) {
@@ -100,14 +100,13 @@ func (p *MachineFreePool) RemoveMachine(machineId int) *Machine {
 	return m
 }
 
-func (p *MachineFreePool) PopMachine() (m *Machine) {
-	//debugLog("MachineFreePool.PopMachine")
+func (p *MachineFreePool) PeekMachine() (m *Machine) {
+	//debugLog("MachineFreePool.PeekMachine")
 	for _, v := range p.MachineLevelFreeArray {
 		if v.MachineCollection.ListCount > 0 {
-			m = v.PopMachine()
+			m = v.PeekMachine()
 			if m != nil {
-				delete(p.MachineMap, m.MachineId)
-				//debugLog("MachineFreePool.PopMachine success,machineId=%s remain=%d %v",
+				//debugLog("MachineFreePool.PeekMachine success,machineId=%s remain=%d %v",
 				//	m.MachineId, len(p.MachineMap), m.LevelConfig)
 				return m
 			}

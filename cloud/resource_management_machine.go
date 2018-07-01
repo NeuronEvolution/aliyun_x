@@ -39,7 +39,3 @@ func (r *ResourceManagement) addFreeMachine(m *Machine) {
 func (r *ResourceManagement) removeFromFreeMachine(machineId int) *Machine {
 	return r.MachineFreePool.RemoveMachine(machineId)
 }
-
-func (r *ResourceManagement) popFreeMachine() (machine *Machine) {
-	return r.MachineFreePool.PopMachine()
-}

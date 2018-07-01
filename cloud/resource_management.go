@@ -1,5 +1,7 @@
 package cloud
 
+import "fmt"
+
 type ResourceManagement struct {
 	Strategy                    Strategy
 	InitialInstanceDeployConfig []*InstanceDeployConfig
@@ -36,10 +38,10 @@ func NewResourceManagement() *ResourceManagement {
 }
 
 func (r *ResourceManagement) DebugDeployStatus() {
-	debugLog("-----------------------------------------------------------------")
+	fmt.Printf("-----------------------------------------------------------------\n")
 	r.MachineDeployPool.DebugPrint()
-	debugLog("cost=%f", r.CalculateTotalCostScore())
-	debugLog("#################################################################")
+	fmt.Printf("cost=%f\n", r.CalculateTotalCostScore())
+	fmt.Printf("#################################################################\n")
 }
 
 func (r *ResourceManagement) SetStrategy(s Strategy) {

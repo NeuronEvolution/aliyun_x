@@ -66,6 +66,10 @@ func (m *Machine) AddInstance(instance *Instance) {
 
 	sort.Sort(m.InstanceArray[:m.InstanceArrayCount])
 	m.R.InstanceMachineMap[instance.InstanceId] = m
+	if m.InstanceArrayCount == 1 {
+		m.R.MachineFreePool.RemoveMachine(m.MachineId)
+		m.R.MachineDeployPool.AddMachine(m)
+	}
 
 	if debugEnabled {
 		m.debugValidation()
@@ -89,6 +93,11 @@ func (m *Machine) RemoveInstance(instanceId int) {
 			m.InstanceArrayCount--
 			m.appCountCollection.Remove(instance.Config.AppId)
 			m.freeResource(instance)
+
+			if m.InstanceArrayCount == 0 {
+				m.R.MachineDeployPool.RemoveMachine(m.MachineId)
+				m.R.MachineFreePool.AddMachine(m)
+			}
 
 			break
 		}
