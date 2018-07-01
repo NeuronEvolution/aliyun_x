@@ -19,20 +19,18 @@ func (s *FreeSmallerStrategy) AddInstance(instance *cloud.Instance) (err error) 
 
 func (s *FreeSmallerStrategy) AddInstanceList(instanceList []*cloud.Instance) (err error) {
 	sort.Sort(cloud.InstanceListSortByCostEvalDesc(instanceList))
-
 	for i, v := range instanceList {
-		//fmt.Println(v.CostEval)
-
 		if i > 0 && i%1000 == 0 {
 			fmt.Println(i)
 		}
 
-		err = s.AddInstance(v)
-		if err != nil {
-			fmt.Println(err)
-			return err
+		m := s.findAvailableMachine(v, nil)
+		if m == nil {
+			return fmt.Errorf("SortedFirstFitStrategy.AddInstance no firstFit")
 		}
+
+		s.R.CommandDeployInstance(v, m)
 	}
 
-	return
+	return nil
 }
