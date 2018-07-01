@@ -10,6 +10,7 @@ type ResourceManagement struct {
 	InitialInstanceDeployConfig []*InstanceDeployConfig
 	AppResourcesConfigMap       map[int]*AppResourcesConfig
 	AppInterferenceConfigMap    [][MaxAppId]int
+	Initializing                bool
 	MachineConfigMap            map[int]*MachineResourcesConfig
 	MachineLevelConfigPool      *MachineLevelConfigPool
 	MachineMap                  map[int]*Machine
@@ -67,7 +68,7 @@ func (r *ResourceManagement) SetStrategy(s Strategy) {
 func (r *ResourceManagement) CalculateTotalCostScore() float64 {
 	totalCost := float64(0)
 	for _, m := range r.MachineDeployPool.MachineMap {
-		totalCost += m.CalculateCost()
+		totalCost += m.GetCost()
 	}
 
 	return totalCost

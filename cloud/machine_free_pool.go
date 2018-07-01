@@ -33,17 +33,17 @@ func (p *MachineLevelFree) RemoveMachine(machineId int) {
 	p.MachineCollection.Remove(machineId)
 }
 
-type MachineLevelFreeArray []*MachineLevelFree
+type MachineLevelFreeListSortByMachineLevelDesc []*MachineLevelFree
 
-func (p MachineLevelFreeArray) Len() int {
+func (p MachineLevelFreeListSortByMachineLevelDesc) Len() int {
 	return len(p)
 }
 
-func (p MachineLevelFreeArray) Less(i, j int) bool {
-	return p[i].LevelConfig.Less(p[j].LevelConfig)
+func (p MachineLevelFreeListSortByMachineLevelDesc) Less(i, j int) bool {
+	return !p[i].LevelConfig.Less(p[j].LevelConfig)
 }
 
-func (p MachineLevelFreeArray) Swap(i, j int) {
+func (p MachineLevelFreeListSortByMachineLevelDesc) Swap(i, j int) {
 	temp := p[i]
 	p[i] = p[j]
 	p[j] = temp
@@ -51,7 +51,7 @@ func (p MachineLevelFreeArray) Swap(i, j int) {
 
 type MachineFreePool struct {
 	MachineMap            map[int]*Machine
-	MachineLevelFreeArray MachineLevelFreeArray
+	MachineLevelFreeArray MachineLevelFreeListSortByMachineLevelDesc
 }
 
 func NewMachineFreePool() *MachineFreePool {

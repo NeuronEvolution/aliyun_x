@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/NeuronEvolution/aliyun_x/cloud"
-	"github.com/NeuronEvolution/aliyun_x/strategies/sffs"
+	"github.com/NeuronEvolution/aliyun_x/strategies/fss"
 	"io/ioutil"
 	"os"
 	"strconv"
@@ -96,12 +96,12 @@ func main() {
 	fmt.Printf("deployed=%d,non-deployed=%d,total=%d\n",
 		len(instanceMachineList), len(instanceList), len(instanceDeployDataList))
 
-	//cloud.SetDebug(true)
+	cloud.SetDebug(true)
 
 	begin := time.Now()
 	r := cloud.NewResourceManagement()
-	r.SetStrategy(sffs.NewASortedFirstFitStrategy(r))
-	//r.SetStrategy(strategies.NewFreeSmallerStrategy(r))
+	//r.SetStrategy(sffs.NewASortedFirstFitStrategy(r))
+	r.SetStrategy(fss.NewFreeSmallerStrategy(r))
 	err = r.Init(machineResourceDataList, appResourcesDataList, appInterferenceDataList, instanceMachineList)
 	if err != nil {
 		fmt.Printf("r.Init failed,%s", err)
@@ -110,16 +110,22 @@ func main() {
 
 	r.DebugPrintStatus()
 
-	err = r.ResolveAppInference()
+	err = r.PostInit()
 	if err != nil {
-		fmt.Printf("r.ResolveAppInference failed,%s", err)
+		fmt.Printf("r.PostInit failed,%s", err)
 		return
 	}
 
-	r.AddInstanceList(instanceList)
+	testInstanceCount := len(instanceList)
+	r.AddInstanceList(instanceList[:testInstanceCount])
 	end := time.Now()
 
 	r.DebugPrintStatus()
+
+	fmt.Printf("\n\n\n")
+	fmt.Printf("*****************************************************************\n")
+	fmt.Printf("*****************************************************************\n")
+	fmt.Printf("*****************************************************************\n")
 
 	playback := cloud.NewResourceManagement()
 	err = playback.Init(machineResourceDataList, appResourcesDataList, appInterferenceDataList, instanceMachineList)
@@ -158,7 +164,8 @@ func main() {
 	summaryBuf := bytes.NewBufferString("")
 	r.DebugStatus(summaryBuf)
 	summaryBuf.WriteString(fmt.Sprintf("time=%f\n", end.Sub(begin).Seconds()))
-	err = ioutil.WriteFile(outputFile+"_summary.csv", summaryBuf.Bytes(), os.ModePerm)
+	err = ioutil.WriteFile(fmt.Sprintf(outputFile+"_summary_%d.csv", testInstanceCount),
+		summaryBuf.Bytes(), os.ModePerm)
 	if err != nil {
 		fmt.Println(err)
 	}

@@ -14,8 +14,8 @@ func (c *MachineLevelConfig) isEqual(v *MachineLevelConfig) bool {
 }
 
 func (c *MachineLevelConfig) Less(v *MachineLevelConfig) bool {
-	l1 := v
-	l2 := c
+	l1 := c
+	l2 := v
 
 	if l1.Cpu < l2.Cpu {
 		return true

@@ -29,23 +29,23 @@ func (p *MachineLevelDeploy) RemoveMachine(machineId int) {
 	p.MachineCollection.Remove(machineId)
 }
 
-type MachineLevelDeployArray []*MachineLevelDeploy
+type MachineLevelDeployListSortByMachineLevelDesc []*MachineLevelDeploy
 
-func (p MachineLevelDeployArray) Len() int {
+func (p MachineLevelDeployListSortByMachineLevelDesc) Len() int {
 	return len(p)
 }
 
-func (p MachineLevelDeployArray) Less(i, j int) bool {
-	return p[i].LevelConfig.Less(p[j].LevelConfig)
+func (p MachineLevelDeployListSortByMachineLevelDesc) Less(i, j int) bool {
+	return !p[i].LevelConfig.Less(p[j].LevelConfig)
 }
 
-func (p MachineLevelDeployArray) Swap(i, j int) {
+func (p MachineLevelDeployListSortByMachineLevelDesc) Swap(i, j int) {
 	temp := p[i]
 	p[i] = p[j]
 	p[j] = temp
 }
 
-func (p MachineLevelDeployArray) First() *MachineLevelDeploy {
+func (p MachineLevelDeployListSortByMachineLevelDesc) First() *MachineLevelDeploy {
 	if len(p) == 0 {
 		return nil
 	}
@@ -53,7 +53,7 @@ func (p MachineLevelDeployArray) First() *MachineLevelDeploy {
 	return p[0]
 }
 
-func (p MachineLevelDeployArray) Last() *MachineLevelDeploy {
+func (p MachineLevelDeployListSortByMachineLevelDesc) Last() *MachineLevelDeploy {
 	if len(p) == 0 {
 		return nil
 	}
@@ -63,7 +63,7 @@ func (p MachineLevelDeployArray) Last() *MachineLevelDeploy {
 
 type MachineDeployPool struct {
 	MachineMap              map[int]*Machine
-	MachineLevelDeployArray MachineLevelDeployArray
+	MachineLevelDeployArray MachineLevelDeployListSortByMachineLevelDesc
 }
 
 func NewMachineDeployPool() *MachineDeployPool {

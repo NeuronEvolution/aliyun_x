@@ -10,7 +10,7 @@ type Machine struct {
 	R                  *ResourceManagement
 	MachineId          int
 	LevelConfig        *MachineLevelConfig
-	InstanceArray      InstanceArray
+	InstanceArray      InstanceListSortByCostEvalDesc
 	InstanceArrayCount int
 	appCountCollection *AppCountCollection
 	Cpu                [TimeSampleCount]float64 //todo decimal
@@ -19,6 +19,9 @@ type Machine struct {
 	P                  int
 	M                  int
 	PM                 int
+
+	cost        float64
+	isCostValid bool
 }
 
 func NewMachine(r *ResourceManagement, machineId int, levelConfig *MachineLevelConfig) *Machine {
@@ -30,16 +33,6 @@ func NewMachine(r *ResourceManagement, machineId int, levelConfig *MachineLevelC
 	m.appCountCollection = NewAppCountCollection()
 
 	return m
-}
-
-func (m *Machine) debugValidation() {
-	for i := 0; i < m.InstanceArrayCount; i++ {
-		if m.InstanceArray[i] == nil {
-			panic(fmt.Errorf("Machine.debugValidation machineId=%d,i=%d", m.MachineId, i))
-		}
-	}
-
-	m.appCountCollection.debugValidation()
 }
 
 func (m *Machine) ClearInstances() {
@@ -55,10 +48,13 @@ func (m *Machine) ClearInstances() {
 	m.P = 0
 	m.M = 0
 	m.PM = 0
+
+	m.isCostValid = false
 }
 
 func (m *Machine) AddInstance(instance *Instance) {
-	//debugLog("Machine.AddInstance %s %s", m.MachineId, instance.InstanceId)
+	//debugLog("Machine.AddInstance %d %d", m.MachineId, instance.InstanceId)
+
 	m.InstanceArray[m.InstanceArrayCount] = instance
 	m.InstanceArrayCount++
 	m.appCountCollection.Add(instance.Config.AppId)
@@ -70,6 +66,8 @@ func (m *Machine) AddInstance(instance *Instance) {
 		m.R.MachineFreePool.RemoveMachine(m.MachineId)
 		m.R.MachineDeployPool.AddMachine(m)
 	}
+
+	m.isCostValid = false
 
 	if debugEnabled {
 		m.debugValidation()
@@ -99,58 +97,14 @@ func (m *Machine) RemoveInstance(instanceId int) {
 				m.R.MachineFreePool.AddMachine(m)
 			}
 
+			m.isCostValid = false
+
 			break
 		}
 	}
 
 	if debugEnabled {
 		m.debugValidation()
-	}
-}
-
-func (m *Machine) IsEmpty() bool {
-	return len(m.InstanceArray) == 0
-}
-
-func (m *Machine) ConstraintCheck(instance *Instance) bool {
-	//debugLog("Machine.ConstraintCheck %s %s", m.MachineId, instance.InstanceId)
-
-	if !constraintCheckAppInterferenceAddInstance(
-		instance.Config.AppId,
-		m.appCountCollection,
-		m.R.AppInterferenceConfigMap) {
-		//debugLog("Machine.ConstraintCheck constraintCheckAppInterferenceAddInstance failed")
-		return false
-	}
-
-	if !constraintCheckResourceLimit(m, instance) {
-		//debugLog("Machine.ConstraintCheck constraintCheckResourceLimit failed")
-		return false
-	}
-
-	return true
-}
-
-func (m *Machine) HasBadConstraint() bool {
-	return !constraintCheckAppInterference(m.appCountCollection, m.R.AppInterferenceConfigMap)
-}
-
-func (m *Machine) debugLogResource() {
-	if debugEnabled {
-		maxCpu := float64(0)
-		for _, v := range m.Cpu {
-			if v > maxCpu {
-				maxCpu = v
-			}
-		}
-		maxMem := float64(0)
-		for _, v := range m.Mem {
-			if v > maxMem {
-				maxMem = v
-			}
-		}
-		debugLog("Machine.debugLogResource %d %f %f %d %d %d %d",
-			m.MachineId, maxCpu, maxMem, m.Disk, m.P, m.M, m.PM)
 	}
 }
 
@@ -186,20 +140,82 @@ func (m *Machine) freeResource(instance *Instance) {
 	//m.debugLogResource()
 }
 
-func (m *Machine) DebugPrint() {
-	debugLog("Machine.DebugPrint %d %v", m.MachineId, m.LevelConfig)
-	for i := 0; i < m.appCountCollection.ListCount; i++ {
-		debugLog("    %v", m.appCountCollection.List[i])
-	}
-	m.debugLogResource()
+func (m *Machine) IsEmpty() bool {
+	return len(m.InstanceArray) == 0
 }
 
-func (m *Machine) CalculateCost() float64 {
+func (m *Machine) ConstraintCheck(instance *Instance) bool {
+	//debugLog("Machine.ConstraintCheck %s %s", m.MachineId, instance.InstanceId)
+
+	if !constraintCheckAppInterferenceAddInstance(
+		instance.Config.AppId,
+		m.appCountCollection,
+		m.R.AppInterferenceConfigMap) {
+		//debugLog("Machine.ConstraintCheck constraintCheckAppInterferenceAddInstance failed")
+		return false
+	}
+
+	if !constraintCheckResourceLimit(m, instance) {
+		//debugLog("Machine.ConstraintCheck constraintCheckResourceLimit failed")
+		return false
+	}
+
+	return true
+}
+
+func (m *Machine) HasBadConstraint() bool {
+	return !constraintCheckAppInterference(m.appCountCollection, m.R.AppInterferenceConfigMap)
+}
+
+func (m *Machine) GetCost() float64 {
+	if m.isCostValid {
+		return m.cost
+	}
+
 	totalCost := float64(0)
 	for i := 0; i < TimeSampleCount; i++ {
 		s := 1 + 10*(math.Exp(math.Max(0, m.Cpu[i]/m.LevelConfig.Cpu-0.5))-1)
 		totalCost += s
 	}
 
-	return totalCost / TimeSampleCount
+	m.cost = totalCost / TimeSampleCount
+	return m.cost
+}
+
+func (m *Machine) debugValidation() {
+	for i := 0; i < m.InstanceArrayCount; i++ {
+		if m.InstanceArray[i] == nil {
+			panic(fmt.Errorf("Machine.debugValidation machineId=%d,i=%d", m.MachineId, i))
+		}
+	}
+
+	m.appCountCollection.debugValidation()
+}
+
+func (m *Machine) debugLogResource() {
+	if debugEnabled {
+		maxCpu := float64(0)
+		for _, v := range m.Cpu {
+			if v > maxCpu {
+				maxCpu = v
+			}
+		}
+		maxMem := float64(0)
+		for _, v := range m.Mem {
+			if v > maxMem {
+				maxMem = v
+			}
+		}
+		fmt.Printf("Machine.debugLogResource %d %f %f %d %d %d %d\n",
+			m.MachineId, maxCpu, maxMem, m.Disk, m.P, m.M, m.PM)
+	}
+}
+
+func (m *Machine) DebugPrint() {
+	fmt.Printf("Machine.DebugPrint %d %v\n", m.MachineId, m.LevelConfig)
+	for i := 0; i < m.appCountCollection.ListCount; i++ {
+		fmt.Printf("    %v,%v\n", m.appCountCollection.List[i],
+			m.R.AppResourcesConfigMap[m.appCountCollection.List[i].AppId])
+	}
+	m.debugLogResource()
 }

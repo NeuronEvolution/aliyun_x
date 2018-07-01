@@ -11,7 +11,6 @@ func (r *ResourceManagement) CommandRemoveMachine(machineId int) error {
 }
 
 func (r *ResourceManagement) CommandDeployInstance(instance *Instance, m *Machine) {
-
 	//debugLog("ResourceManagement.CommandDeployInstance appId=%d,instanceId=%d,machineId=%d",
 	//	instance.Config.AppId, instance.InstanceId, m.MachineId)
 

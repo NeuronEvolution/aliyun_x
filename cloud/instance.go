@@ -17,17 +17,17 @@ func NewInstance(r *ResourceManagement, instanceId int, config *AppResourcesConf
 	return i
 }
 
-type InstanceArray []*Instance
+type InstanceListSortByCostEvalDesc []*Instance
 
-func (p InstanceArray) Len() int {
+func (p InstanceListSortByCostEvalDesc) Len() int {
 	return len(p)
 }
 
-func (p InstanceArray) Less(i, j int) bool {
+func (p InstanceListSortByCostEvalDesc) Less(i, j int) bool {
 	return p[i].CostEval > p[j].CostEval
 }
 
-func (p InstanceArray) Swap(i, j int) {
+func (p InstanceListSortByCostEvalDesc) Swap(i, j int) {
 	temp := p[i]
 	p[i] = p[j]
 	p[j] = temp

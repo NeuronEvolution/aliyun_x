@@ -56,7 +56,7 @@ func (r *ResourceManagement) AddInstanceList(configList []*InstanceDeployConfig)
 		return nil
 	}
 
-	instanceList := make(InstanceArray, 0)
+	instanceList := make(InstanceListSortByCostEvalDesc, 0)
 	for _, c := range configList {
 		appResourcesConfig := r.AppResourcesConfigMap[c.AppId]
 		if appResourcesConfig == nil {
