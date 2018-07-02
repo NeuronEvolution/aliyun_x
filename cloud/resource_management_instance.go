@@ -39,21 +39,6 @@ func (r *ResourceManagement) InitInstanceDeploy(configList []*InstanceDeployConf
 }
 
 //todo 异步化
-func (r *ResourceManagement) AddInstance(c *InstanceDeployConfig) error {
-	debugLog("R.AddInstance %s %s", c.InstanceId, c.AppId)
-
-	appResourcesConfig := r.AppResourcesConfigMap[c.AppId]
-	if appResourcesConfig == nil {
-		return fmt.Errorf("R.AddInstance %d appResourcesConfig %d not found",
-			c.InstanceId, c.AppId)
-	}
-
-	instance := NewInstance(r, c.InstanceId, appResourcesConfig)
-
-	return r.Strategy.AddInstance(instance)
-}
-
-//todo 异步化
 func (r *ResourceManagement) AddInstanceList(configList []*InstanceDeployConfig) error {
 	if configList == nil || len(configList) == 0 {
 		return nil

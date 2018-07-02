@@ -98,8 +98,8 @@ func main() {
 
 	cloud.SetDebug(true)
 
-	instanceMachineList = instanceMachineList[:0]
-	instanceList = instanceList[:1000]
+	//instanceMachineList = instanceMachineList[:0]
+	//instanceList = instanceList[:1000]
 	begin := time.Now()
 	r := cloud.NewResourceManagement()
 	r.SetStrategy(fss.NewFreeSmallerStrategy(r))
@@ -117,8 +117,7 @@ func main() {
 		return
 	}
 
-	testInstanceCount := len(instanceList)
-	r.AddInstanceList(instanceList[:testInstanceCount])
+	r.AddInstanceList(instanceList)
 	end := time.Now()
 
 	r.DebugPrintStatus()
@@ -165,7 +164,7 @@ func main() {
 	summaryBuf := bytes.NewBufferString("")
 	r.DebugStatus(summaryBuf)
 	summaryBuf.WriteString(fmt.Sprintf("time=%f\n", end.Sub(begin).Seconds()))
-	err = ioutil.WriteFile(fmt.Sprintf(outputFile+"_summary_%d.csv", testInstanceCount),
+	err = ioutil.WriteFile(fmt.Sprintf(outputFile+"_summary.csv"),
 		summaryBuf.Bytes(), os.ModePerm)
 	if err != nil {
 		fmt.Println(err)

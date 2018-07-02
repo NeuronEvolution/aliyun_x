@@ -6,14 +6,38 @@ import (
 	"sort"
 )
 
+func (s *FreeSmallerStrategy) redeployMachine(m *cloud.Machine, breakOnFail bool) error {
+	instanceList := make([]*cloud.Instance, m.InstanceArrayCount)
+	for index, v := range m.InstanceArray[:m.InstanceArrayCount] {
+		instanceList[index] = v
+	}
+	for _, v := range instanceList {
+		m.RemoveInstance(v.InstanceId)
+
+		err := s.addInstance(v, m)
+		if err != nil {
+			m.AddInstance(v)
+
+			if breakOnFail {
+				return fmt.Errorf("FreeSmallerStrategy.redeployMachine findAvailableMachine none,instanceId=%d\n",
+					v.InstanceId)
+			} else {
+				continue
+			}
+		}
+	}
+
+	return nil
+}
+
 func (s *FreeSmallerStrategy) redeployInstanceList(instanceList []*cloud.Instance, breakOnFail bool) error {
 	sort.Sort(cloud.InstanceListSortByCostEvalDesc(instanceList))
 	for _, v := range instanceList {
 		m := s.R.InstanceDeployedMachineMap[v.InstanceId]
 		m.RemoveInstance(v.InstanceId)
 
-		newMachine := s.findAvailableMachine(v, m)
-		if newMachine == nil {
+		err := s.addInstance(v, m)
+		if err != nil {
 			m.AddInstance(v)
 
 			if breakOnFail {
@@ -24,8 +48,6 @@ func (s *FreeSmallerStrategy) redeployInstanceList(instanceList []*cloud.Instanc
 				continue
 			}
 		}
-
-		s.R.CommandDeployInstance(v, newMachine)
 	}
 
 	return nil

@@ -102,12 +102,6 @@ func (s *SortedFirstFitStrategy) findAvailableMachine(instance *cloud.Instance) 
 }
 
 func (s *SortedFirstFitStrategy) AddInstance(instance *cloud.Instance) (err error) {
-	m := s.findAvailableMachine(instance)
-	if m == nil {
-		return fmt.Errorf("SortedFirstFitStrategy.AddInstance no firstFit")
-	}
-
-	s.R.CommandDeployInstance(instance, m)
 
 	return nil
 }
@@ -122,11 +116,12 @@ func (s *SortedFirstFitStrategy) AddInstanceList(instanceList []*cloud.Instance)
 			fmt.Println(i)
 		}
 
-		err = s.AddInstance(v)
-		if err != nil {
-			fmt.Println(err)
-			return err
+		m := s.findAvailableMachine(v)
+		if m == nil {
+			return fmt.Errorf("SortedFirstFitStrategy.AddInstance no firstFit")
 		}
+
+		s.R.CommandDeployInstance(v, m)
 	}
 
 	return

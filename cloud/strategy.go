@@ -4,9 +4,8 @@ import "fmt"
 
 type Strategy interface {
 	Name() string
-	AddInstance(instance *Instance) (err error)
-	AddInstanceList(instanceList []*Instance) (err error)
 	PostInit() (err error)
+	AddInstanceList(instanceList []*Instance) (err error)
 }
 
 type defaultStrategy struct {
@@ -18,11 +17,6 @@ func (s *defaultStrategy) Name() string {
 
 func (s *defaultStrategy) PostInit() (err error) {
 	fmt.Println("defaultStrategy.PostInit")
-	return nil
-}
-
-func (s *defaultStrategy) AddInstance(instance *Instance) (err error) {
-	fmt.Println("defaultStrategy.AddInstance")
 	return nil
 }
 
