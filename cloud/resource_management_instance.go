@@ -1,6 +1,9 @@
 package cloud
 
-import "fmt"
+import (
+	"fmt"
+	"sort"
+)
 
 //该操作将重置所有实例部署
 //todo 异步化
@@ -73,4 +76,28 @@ func (r *ResourceManagement) AddInstanceList(configList []*InstanceDeployConfig)
 //todo 异步化
 func (r *ResourceManagement) RemoveInstance(instanceId string) error {
 	return nil
+}
+
+func (r *ResourceManagement) SetInstanceDeployedMachine(instance *Instance, m *Machine) {
+	if r.InstanceDeployedMachineMap[instance.InstanceId] == nil {
+		r.instanceDeployedOrderByCostDescValid = false
+	}
+
+	r.InstanceDeployedMachineMap[instance.InstanceId] = m
+}
+
+func (r *ResourceManagement) GetInstanceOrderByCodeDescList() (instanceList []*Instance) {
+	if !r.instanceDeployedOrderByCostDescValid {
+		r.instanceDeployedOrderByCostDescListCount = 0
+		for i := range r.InstanceDeployedMachineMap {
+			r.instanceDeployedOrderByCostDescList[r.instanceDeployedOrderByCostDescListCount] = r.InstanceList[i]
+			r.instanceDeployedOrderByCostDescListCount++
+		}
+		sort.Sort(InstanceListSortByCostEvalDesc(
+			r.instanceDeployedOrderByCostDescList[:r.instanceDeployedOrderByCostDescListCount]))
+
+		r.instanceDeployedOrderByCostDescValid = true
+	}
+
+	return r.instanceDeployedOrderByCostDescList[:r.instanceDeployedOrderByCostDescListCount]
 }

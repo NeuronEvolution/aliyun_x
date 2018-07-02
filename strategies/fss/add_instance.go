@@ -9,7 +9,7 @@ import (
 func (s *FreeSmallerStrategy) AddInstance(instance *cloud.Instance) (err error) {
 	m := s.findAvailableMachine(instance, nil)
 	if m == nil {
-		return fmt.Errorf("SortedFirstFitStrategy.AddInstance no firstFit")
+		return fmt.Errorf("SortedFirstFitStrategy.AddInstance no findFirstFit")
 	}
 
 	s.R.CommandDeployInstance(instance, m)
@@ -26,7 +26,7 @@ func (s *FreeSmallerStrategy) AddInstanceList(instanceList []*cloud.Instance) (e
 
 		m := s.findAvailableMachine(v, nil)
 		if m == nil {
-			return fmt.Errorf("SortedFirstFitStrategy.AddInstance no firstFit")
+			return fmt.Errorf("SortedFirstFitStrategy.AddInstance no findFirstFit")
 		}
 
 		s.R.CommandDeployInstance(v, m)

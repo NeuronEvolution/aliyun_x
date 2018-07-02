@@ -42,7 +42,7 @@ func (r *ResourceManagement) Play(h *DeployCommandHistory) (err error) {
 			instance = NewInstance(r, v.InstanceId, appResourcesConfig)
 		}
 
-		currentMachine := r.InstanceMachineMap[instance.InstanceId]
+		currentMachine := r.InstanceDeployedMachineMap[instance.InstanceId]
 		if currentMachine != nil {
 			if currentMachine.MachineId == m.MachineId {
 				panic(fmt.Errorf("ResourceManagement.Play self deploy %d %v", i, v))

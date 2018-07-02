@@ -9,7 +9,7 @@ import (
 func (s *FreeSmallerStrategy) redeployInstanceList(instanceList []*cloud.Instance, breakOnFail bool) error {
 	sort.Sort(cloud.InstanceListSortByCostEvalDesc(instanceList))
 	for _, v := range instanceList {
-		m := s.R.InstanceMachineMap[v.InstanceId]
+		m := s.R.InstanceDeployedMachineMap[v.InstanceId]
 		m.RemoveInstance(v.InstanceId)
 
 		newMachine := s.findAvailableMachine(v, m)

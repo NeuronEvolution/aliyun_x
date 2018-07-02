@@ -18,7 +18,11 @@ type ResourceManagement struct {
 	MachineDeployPool           *MachineDeployPool
 	DeployCommandHistory        *DeployCommandHistory
 	InstanceList                [MaxInstanceId]*Instance
-	InstanceMachineMap          [MaxInstanceId]*Machine
+	InstanceDeployedMachineMap  [MaxInstanceId]*Machine
+
+	instanceDeployedOrderByCostDescList      [MaxInstanceId]*Instance
+	instanceDeployedOrderByCostDescListCount int
+	instanceDeployedOrderByCostDescValid     bool
 }
 
 func NewResourceManagement() *ResourceManagement {

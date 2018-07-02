@@ -3,11 +3,13 @@ package cloud
 import (
 	"fmt"
 	"math"
+	"math/rand"
 	"sort"
 )
 
 type Machine struct {
 	R                  *ResourceManagement
+	Rand               *rand.Rand
 	MachineId          int
 	LevelConfig        *MachineLevelConfig
 	InstanceArray      InstanceListSortByCostEvalDesc
@@ -27,6 +29,7 @@ type Machine struct {
 func NewMachine(r *ResourceManagement, machineId int, levelConfig *MachineLevelConfig) *Machine {
 	m := &Machine{}
 	m.R = r
+	m.Rand = rand.New(rand.NewSource(0))
 	m.MachineId = machineId
 	m.LevelConfig = levelConfig
 	m.InstanceArray = make([]*Instance, MaxInstancePerMachine)
@@ -61,7 +64,7 @@ func (m *Machine) AddInstance(instance *Instance) {
 	m.allocResource(instance)
 
 	sort.Sort(m.InstanceArray[:m.InstanceArrayCount])
-	m.R.InstanceMachineMap[instance.InstanceId] = m
+	m.R.SetInstanceDeployedMachine(instance, m)
 	if m.InstanceArrayCount == 1 {
 		m.R.MachineFreePool.RemoveMachine(m.MachineId)
 		m.R.MachineDeployPool.AddMachine(m)
@@ -171,6 +174,7 @@ func (m *Machine) GetCost() float64 {
 	if m.isCostValid {
 		return m.cost
 	}
+	m.isCostValid = true
 
 	totalCost := float64(0)
 	for i := 0; i < TimeSampleCount; i++ {
@@ -179,6 +183,7 @@ func (m *Machine) GetCost() float64 {
 	}
 
 	m.cost = totalCost / TimeSampleCount
+
 	return m.cost
 }
 
