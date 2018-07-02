@@ -98,8 +98,8 @@ func main() {
 
 	cloud.SetDebug(true)
 
-	//instanceMachineList = instanceMachineList[:0]
-	//instanceList = instanceList[:1000]
+	instanceMachineList = instanceMachineList[:0]
+	instanceList = instanceList[:1000]
 	begin := time.Now()
 	r := cloud.NewResourceManagement()
 	r.SetStrategy(fss.NewFreeSmallerStrategy(r))
