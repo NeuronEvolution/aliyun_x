@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/NeuronEvolution/aliyun_x/cloud"
-	"github.com/NeuronEvolution/aliyun_x/strategies/fss"
+	"github.com/NeuronEvolution/aliyun_x/strategies/bfs"
 	"io/ioutil"
 	"os"
 	"strconv"
@@ -96,11 +96,11 @@ func main() {
 	fmt.Printf("deployed=%d,non-deployed=%d,total=%d\n",
 		len(instanceMachineList), len(instanceList), len(instanceDeployDataList))
 
-	//instanceMachineList = instanceMachineList[:0]
+	instanceMachineList = instanceMachineList[:0]
 	//instanceList = instanceList[:20000]
 	begin := time.Now()
 	r := cloud.NewResourceManagement()
-	r.SetStrategy(fss.NewFreeSmallerStrategy(r))
+	r.SetStrategy(bfs.NewFreeSmallerStrategy(r))
 	err = r.Init(machineResourceDataList, appResourcesDataList, appInterferenceDataList, instanceMachineList)
 	if err != nil {
 		fmt.Printf("r.Init failed,%s", err)
@@ -115,7 +115,7 @@ func main() {
 		return
 	}
 
-	err = r.AddInstanceList(instanceList)
+	err = r.AddInstanceList(instanceDeployDataList)
 	if err != nil {
 		fmt.Println(err)
 		return

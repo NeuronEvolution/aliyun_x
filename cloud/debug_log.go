@@ -2,20 +2,14 @@ package cloud
 
 import "fmt"
 
-var debugEnabled = false
+var DebugEnabled = false
 
 func SetDebug(v bool) {
-	debugEnabled = v
+	DebugEnabled = v
 }
 
 func debugLog(format string, a ...interface{}) {
-	if debugEnabled {
+	if DebugEnabled {
 		fmt.Printf(format+"\n", a...)
-	}
-}
-
-func debugWrite(format string, a ...interface{}) {
-	if debugEnabled {
-		fmt.Printf(format, a...)
 	}
 }

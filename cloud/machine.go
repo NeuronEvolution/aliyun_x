@@ -8,6 +8,7 @@ import (
 )
 
 type Machine struct {
+	Resource
 	R                  *ResourceManagement
 	Rand               *rand.Rand
 	MachineId          int
@@ -15,15 +16,9 @@ type Machine struct {
 	InstanceArray      InstanceListSortByCostEvalDesc
 	InstanceArrayCount int
 	appCountCollection *AppCountCollection
-	Cpu                [TimeSampleCount]float64 //todo decimal
-	Mem                [TimeSampleCount]float64 //todo decimal
-	Disk               int
-	P                  int
-	M                  int
-	PM                 int
 
-	cost        float64
-	isCostValid bool
+	cpuCost      float64
+	cpuCostValid bool
 }
 
 func NewMachine(r *ResourceManagement, machineId int, levelConfig *MachineLevelConfig) *Machine {
@@ -52,7 +47,7 @@ func (m *Machine) ClearInstances() {
 	m.M = 0
 	m.PM = 0
 
-	m.isCostValid = false
+	m.cpuCostValid = false
 }
 
 func (m *Machine) AddInstance(instance *Instance) {
@@ -70,9 +65,11 @@ func (m *Machine) AddInstance(instance *Instance) {
 		m.R.MachineDeployPool.AddMachine(m)
 	}
 
-	m.isCostValid = false
+	m.cpuCostValid = false
 
-	if debugEnabled {
+	m.calcCostEval(m.LevelConfig)
+
+	if DebugEnabled {
 		m.debugValidation()
 	}
 }
@@ -100,13 +97,15 @@ func (m *Machine) RemoveInstance(instanceId int) {
 				m.R.MachineFreePool.AddMachine(m)
 			}
 
-			m.isCostValid = false
+			m.cpuCostValid = false
 
 			break
 		}
 	}
 
-	if debugEnabled {
+	m.calcCostEval(m.LevelConfig)
+
+	if DebugEnabled {
 		m.debugValidation()
 	}
 }
@@ -185,10 +184,10 @@ func (m *Machine) GetCostReal() float64 {
 }
 
 func (m *Machine) GetCost() float64 {
-	if m.isCostValid {
-		return m.cost
+	if m.cpuCostValid {
+		return m.cpuCost
 	}
-	m.isCostValid = true
+	m.cpuCostValid = true
 
 	totalCost := float64(0)
 	for i := 0; i < TimeSampleCount; i++ {
@@ -200,9 +199,9 @@ func (m *Machine) GetCost() float64 {
 		}
 	}
 
-	m.cost = totalCost / TimeSampleCount
+	m.cpuCost = totalCost / TimeSampleCount
 
-	return m.cost
+	return m.cpuCost
 }
 
 func (m *Machine) GetCostWithInstance(instance *Instance) float64 {
@@ -230,7 +229,7 @@ func (m *Machine) debugValidation() {
 }
 
 func (m *Machine) debugLogResource() {
-	if debugEnabled {
+	if DebugEnabled {
 		maxCpu := float64(0)
 		for _, v := range m.Cpu {
 			if v > maxCpu {

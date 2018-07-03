@@ -53,7 +53,7 @@ func (r *ResourceManagement) DebugStatus(buf *bytes.Buffer) {
 	}
 	r.MachineDeployPool.DebugPrint(buf)
 
-	buf.WriteString(fmt.Sprintf("cost=%f,totalCommands=%d\n",
+	buf.WriteString(fmt.Sprintf("cpuCost=%f,totalCommands=%d\n",
 		r.CalculateTotalCostScore(), r.DeployCommandHistory.ListCount))
 }
 

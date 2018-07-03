@@ -27,7 +27,7 @@ func (c *MachineCollection) debugValidation() {
 func (c *MachineCollection) Add(m *Machine) {
 	//debugLog("MachineCollection.Add %d", m.MachineId)
 
-	if debugEnabled {
+	if DebugEnabled {
 		_, has := c.Map[m.MachineId]
 		if has {
 			panic(fmt.Errorf("MachineCollection.Add %d exists", m.MachineId))
@@ -38,7 +38,7 @@ func (c *MachineCollection) Add(m *Machine) {
 	c.List[c.ListCount] = m
 	c.ListCount++
 
-	if debugEnabled {
+	if DebugEnabled {
 		c.debugValidation()
 	}
 }
@@ -46,7 +46,7 @@ func (c *MachineCollection) Add(m *Machine) {
 func (c *MachineCollection) Remove(machineId int) {
 	//debugLog("MachineCollection.Remove %d", machineId)
 
-	if debugEnabled {
+	if DebugEnabled {
 		_, has := c.Map[machineId]
 		if !has {
 			panic(fmt.Errorf("MachineCollection.Add %d not exists", machineId))
@@ -66,7 +66,7 @@ func (c *MachineCollection) Remove(machineId int) {
 		}
 	}
 
-	if debugEnabled {
+	if DebugEnabled {
 		c.debugValidation()
 	}
 }

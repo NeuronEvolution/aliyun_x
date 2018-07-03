@@ -6,7 +6,14 @@ import "fmt"
 //todo 将触发调度
 //todo 异步将该app相关instance拉出再重新拉入
 func (r *ResourceManagement) SaveAppResourceConfig(config *AppResourcesConfig) error {
-	config.calcCostEval()
+	config.calcCostEval(&MachineLevelConfig{
+		Cpu:  MachineCpuMax,
+		Mem:  MachineMemMax,
+		Disk: MachineDiskMax,
+		P:    MachinePMax,
+		M:    MachineMMax,
+		PM:   MachinePMMax,
+	})
 	r.AppResourcesConfigMap[config.AppId] = config
 	return nil
 }

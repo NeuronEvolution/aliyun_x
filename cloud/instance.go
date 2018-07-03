@@ -4,7 +4,7 @@ type Instance struct {
 	ResourceManagement *ResourceManagement
 	InstanceId         int
 	Config             *AppResourcesConfig
-	CostEval           float64
+	ResourceCost       float64
 }
 
 func NewInstance(r *ResourceManagement, instanceId int, config *AppResourcesConfig) *Instance {
@@ -12,7 +12,7 @@ func NewInstance(r *ResourceManagement, instanceId int, config *AppResourcesConf
 	i.ResourceManagement = r
 	i.InstanceId = instanceId
 	i.Config = config
-	i.CostEval = config.CostEval
+	i.ResourceCost = config.ResourceCost
 
 	return i
 }
@@ -24,7 +24,7 @@ func (p InstanceListSortByCostEvalDesc) Len() int {
 }
 
 func (p InstanceListSortByCostEvalDesc) Less(i, j int) bool {
-	return p[i].CostEval > p[j].CostEval
+	return p[i].ResourceCost > p[j].ResourceCost
 }
 
 func (p InstanceListSortByCostEvalDesc) Swap(i, j int) {

@@ -1,4 +1,4 @@
-package fss
+package bfs
 
 import (
 	"fmt"
@@ -6,7 +6,7 @@ import (
 	"sort"
 )
 
-func (s *FreeSmallerStrategy) redeployMachine(m *cloud.Machine, breakOnFail bool) error {
+func (s *BestFitStrategy) redeployMachine(m *cloud.Machine, breakOnFail bool) error {
 	instanceList := make([]*cloud.Instance, m.InstanceArrayCount)
 	for index, v := range m.InstanceArray[:m.InstanceArrayCount] {
 		instanceList[index] = v
@@ -19,7 +19,7 @@ func (s *FreeSmallerStrategy) redeployMachine(m *cloud.Machine, breakOnFail bool
 			m.AddInstance(v)
 
 			if breakOnFail {
-				return fmt.Errorf("FreeSmallerStrategy.redeployMachine findAvailableMachine none,instanceId=%d\n",
+				return fmt.Errorf("BestFitStrategy.redeployMachine findAvailableMachine none,instanceId=%d\n",
 					v.InstanceId)
 			} else {
 				continue
@@ -30,7 +30,7 @@ func (s *FreeSmallerStrategy) redeployMachine(m *cloud.Machine, breakOnFail bool
 	return nil
 }
 
-func (s *FreeSmallerStrategy) redeployInstanceList(instanceList []*cloud.Instance, breakOnFail bool) error {
+func (s *BestFitStrategy) redeployInstanceList(instanceList []*cloud.Instance, breakOnFail bool) error {
 	sort.Sort(cloud.InstanceListSortByCostEvalDesc(instanceList))
 	for _, v := range instanceList {
 		m := s.R.InstanceDeployedMachineMap[v.InstanceId]
@@ -41,7 +41,7 @@ func (s *FreeSmallerStrategy) redeployInstanceList(instanceList []*cloud.Instanc
 			m.AddInstance(v)
 
 			if breakOnFail {
-				return fmt.Errorf("FreeSmallerStrategy.resolveAppInference findAvailableMachine failed,"+
+				return fmt.Errorf("BestFitStrategy.resolveAppInference findAvailableMachine failed,"+
 					"machineId=%d,instanceId=%d\n",
 					m.MachineId, v.InstanceId)
 			} else {

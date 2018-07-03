@@ -49,7 +49,7 @@ func (c *AppCountCollection) Add(appId int) {
 	item.Count = 1
 	c.ListCount++
 
-	if debugEnabled {
+	if DebugEnabled {
 		c.debugValidation()
 	}
 }
@@ -73,7 +73,7 @@ func (c *AppCountCollection) Remove(appId int) {
 				c.ListCount--
 			}
 
-			if debugEnabled {
+			if DebugEnabled {
 				c.debugValidation()
 			}
 
@@ -81,7 +81,7 @@ func (c *AppCountCollection) Remove(appId int) {
 		}
 	}
 
-	if debugEnabled {
+	if DebugEnabled {
 		c.debugValidation()
 	}
 
