@@ -39,7 +39,7 @@ func (r *ResourceManagement) Play(h *DeployCommandHistory) (err error) {
 
 		instance := r.InstanceList[v.InstanceId]
 		if instance == nil {
-			instance = NewInstance(r, v.InstanceId, appResourcesConfig)
+			instance = r.CreateInstance(v.InstanceId, appResourcesConfig)
 		}
 
 		currentMachine := r.InstanceDeployedMachineMap[instance.InstanceId]
@@ -54,7 +54,8 @@ func (r *ResourceManagement) Play(h *DeployCommandHistory) (err error) {
 		if !m.ConstraintCheck(instance) {
 			return fmt.Errorf("ResourceManagement.Play ConstraintCheck failed %d %v ", i, v)
 		}
-		m.AddInstance(instance)
+
+		r.CommandDeployInstance(instance, m)
 	}
 
 	return nil

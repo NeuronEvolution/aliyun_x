@@ -5,6 +5,13 @@ import (
 	"sort"
 )
 
+func (r *ResourceManagement) CreateInstance(instanceId int, config *AppResourcesConfig) *Instance {
+	instance := NewInstance(r, instanceId, config)
+	r.InstanceList[instance.InstanceId] = instance
+
+	return instance
+}
+
 //该操作将重置所有实例部署
 //todo 异步化
 func (r *ResourceManagement) InitInstanceDeploy(configList []*InstanceDeployConfig) error {
@@ -20,7 +27,7 @@ func (r *ResourceManagement) InitInstanceDeploy(configList []*InstanceDeployConf
 			return fmt.Errorf("R.InitInstanceDeploy %d appResourcesConfig %d not found",
 				v.InstanceId, v.AppId)
 		}
-		instance := NewInstance(r, v.InstanceId, appResourcesConfig)
+		instance := r.CreateInstance(v.InstanceId, appResourcesConfig)
 
 		m := r.MachineMap[v.MachineId]
 		if m == nil {
@@ -51,7 +58,7 @@ func (r *ResourceManagement) AddInstanceList(configList []*InstanceDeployConfig)
 			return fmt.Errorf("R.AddInstance %d appResourcesConfig %d not found",
 				c.InstanceId, c.AppId)
 		}
-		instance := NewInstance(r, c.InstanceId, appResourcesConfig)
+		instance := r.CreateInstance(c.InstanceId, appResourcesConfig)
 		instanceList = append(instanceList, instance)
 	}
 

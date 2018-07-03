@@ -1,5 +1,10 @@
 package cloud
 
+import (
+	"bytes"
+	"strconv"
+)
+
 type DeployCommand struct {
 	AppId      int
 	InstanceId int
@@ -26,6 +31,20 @@ func (h *DeployCommandHistory) Push(appId int, instanceId int, machineId int) {
 	item.InstanceId = instanceId
 	item.MachineId = machineId
 	h.ListCount++
+}
+
+func (h *DeployCommandHistory) OutputCSV() []byte {
+	buf := bytes.NewBufferString("")
+	for _, v := range h.List[:h.ListCount] {
+		buf.WriteString("inst_")
+		buf.WriteString(strconv.Itoa(v.InstanceId))
+		buf.WriteString(",")
+		buf.WriteString("machine_")
+		buf.WriteString(strconv.Itoa(v.MachineId))
+		buf.WriteString("\n")
+	}
+
+	return buf.Bytes()
 }
 
 func (h *DeployCommandHistory) DebugPrint() {

@@ -7,7 +7,6 @@ import (
 	"github.com/NeuronEvolution/aliyun_x/strategies/bfs"
 	"io/ioutil"
 	"os"
-	"strconv"
 	"time"
 )
 
@@ -130,6 +129,25 @@ func main() {
 	fmt.Printf("*****************************************************************\n")
 	fmt.Printf("*****************************************************************\n")
 
+	merge := cloud.NewResourceManagement()
+	err = merge.Init(machineResourceDataList, appResourcesDataList, appInterferenceDataList, instanceMachineList)
+	if err != nil {
+		fmt.Printf("r.Init failed,%s", err)
+		return
+	}
+	merge.DebugPrintStatus()
+
+	err = merge.MergeTo(r)
+	if err != nil {
+		fmt.Printf("MergeTo failed,%s", err)
+		return
+	}
+
+	fmt.Printf("\n\n\n")
+	fmt.Printf("*****************************************************************\n")
+	fmt.Printf("*****************************************************************\n")
+	fmt.Printf("*****************************************************************\n")
+
 	playback := cloud.NewResourceManagement()
 	err = playback.Init(machineResourceDataList, appResourcesDataList, appInterferenceDataList, instanceMachineList)
 	if err != nil {
@@ -138,7 +156,7 @@ func main() {
 	}
 	playback.DebugPrintStatus()
 
-	err = playback.Play(r.DeployCommandHistory)
+	err = playback.Play(merge.DeployCommandHistory)
 	if err != nil {
 		fmt.Printf("playback.Play failed,%s", err)
 		return
@@ -149,17 +167,7 @@ func main() {
 	fmt.Printf("time=%f\n", end.Sub(begin).Seconds())
 
 	outputFile := fmt.Sprintf("_output/submit_%s", time.Now().Format("20060102_150405"))
-	buf := bytes.NewBufferString("")
-	for _, v := range r.DeployCommandHistory.List[:r.DeployCommandHistory.ListCount] {
-		buf.WriteString("inst_")
-		buf.WriteString(strconv.Itoa(v.InstanceId))
-		buf.WriteString(",")
-		buf.WriteString("machine_")
-		buf.WriteString(strconv.Itoa(v.MachineId))
-		buf.WriteString("\n")
-	}
-
-	err = ioutil.WriteFile(outputFile+".csv", buf.Bytes(), os.ModePerm)
+	err = ioutil.WriteFile(outputFile+".csv", merge.DeployCommandHistory.OutputCSV(), os.ModePerm)
 	if err != nil {
 		fmt.Println(err)
 	}
