@@ -24,10 +24,14 @@ func (r *Resource) calcCostEval(config *MachineLevelConfig) {
 	}
 	avgMem = avgMem / float64(len(r.Mem))
 
-	r.ResourceCost = avgCpu/config.Cpu +
-		avgMem/config.Mem +
-		float64(r.Disk)/float64(config.Disk) +
-		float64(r.P)/float64(config.P) +
-		float64(r.M)/float64(config.M) +
-		float64(r.PM)/float64(config.PM)
+	r.ResourceCost = scaleCost(avgCpu/config.Cpu) +
+		scaleCost(avgMem/config.Mem) +
+		scaleCost(float64(r.Disk)/float64(config.Disk)) +
+		scaleCost(float64(r.P)/float64(config.P)) +
+		scaleCost(float64(r.M)/float64(config.M)) +
+		scaleCost(float64(r.PM)/float64(config.PM))
+}
+
+func scaleCost(f float64) float64 {
+	return Exp(5 * f)
 }

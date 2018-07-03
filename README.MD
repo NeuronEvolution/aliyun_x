@@ -26,6 +26,29 @@
 Strategy:BestFit
 MachineDeployPool.DebugPrint
     &{92 288 1024 7 7 9} machineCount=3000
+    &{32 64 600 7 3 7} machineCount=2590
+    cpuCost=2.546094,machineId=2065
+    cpuCost=2.546094,machineId=2066
+    cpuCost=2.509665,machineId=1647
+    cpuCost=2.509642,machineId=1646
+    cpuCost=2.509642,machineId=1645
+    cpuCost=2.190585,machineId=2442
+    cpuCost=2.190437,machineId=2304
+    cpuCost=2.190437,machineId=2308
+    cpuCost=2.190437,machineId=2305
+    cpuCost=2.190437,machineId=2309
+    cpuCost=2.190437,machineId=2441
+    cpuCost=2.190437,machineId=2440
+    cpuCost=2.190437,machineId=2306
+    cpuCost=2.190437,machineId=2307
+total high cpu(1.010000) count=738
+MachineDeployPool.DebugPrint machineCount=5590,instanceCount=68219
+cpuCost=5647.659305,totalCommands=68219
+time=49.443332
+---
+Strategy:BestFit
+MachineDeployPool.DebugPrint
+    &{92 288 1024 7 7 9} machineCount=3000
     &{32 64 600 7 3 7} machineCount=2621
     cpuCost=2.315893,machineId=1581
     cpuCost=2.315893,machineId=1589

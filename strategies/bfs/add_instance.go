@@ -3,7 +3,6 @@ package bfs
 import (
 	"fmt"
 	"github.com/NeuronEvolution/aliyun_x/cloud"
-	"math"
 	"sort"
 )
 
@@ -47,20 +46,16 @@ func (s *BestFitStrategy) getDeployMachineList(totalCount int) []*cloud.Machine 
 
 func (s *BestFitStrategy) addInstance(instance *cloud.Instance, skip *cloud.Machine) (err error) {
 	//0.6CPU内，插入后最小原则插入
-	m := s.bestFit(instance, skip, cloud.MaxCpu)
+	m := s.bestFitResource(instance, skip, cloud.MaxCpu)
 	if m != nil {
 		s.R.CommandDeployInstance(instance, m)
 		s.sortMachineDeployList()
 		return nil
 	}
 
-	//return fmt.Errorf("BestFitStrategy.addInstance no machine")
-
-	//fmt.Printf("BestFitStrategy.addInstance no machine\n")
-
-	m = s.bestFit(instance, skip, math.MaxFloat64)
+	m = s.bestFitCpuCost(instance, skip)
 	if m == nil {
-		return fmt.Errorf("BestFitStrategy.addInstance bestFit failed")
+		return fmt.Errorf("BestFitStrategy.addInstance bestFitResource failed")
 	}
 
 	s.R.CommandDeployInstance(instance, m)

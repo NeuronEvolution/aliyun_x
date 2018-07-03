@@ -5,7 +5,7 @@ import (
 )
 
 const ExpTableSize = 200000
-const ExpTableStep = 100000
+const ExpTableStep = 10000
 const ExpTableStepRev = float64(1) / float64(ExpTableStep)
 
 var ExpTable [ExpTableSize]float64

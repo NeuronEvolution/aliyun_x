@@ -1,3 +1,3 @@
 package bfs
 
-const MachineDeployCount = 5621
+const MachineDeployCount = 5590
