@@ -120,8 +120,6 @@ func main() {
 		return
 	}
 
-	end := time.Now()
-
 	r.DebugPrintStatus()
 
 	fmt.Printf("\n\n\n")
@@ -142,6 +140,8 @@ func main() {
 		fmt.Printf("MergeTo failed,%s", err)
 		return
 	}
+
+	end := time.Now()
 
 	fmt.Printf("\n\n\n")
 	fmt.Printf("*****************************************************************\n")

@@ -16,7 +16,8 @@ func (s *BestFitStrategy) bestFitResource(
 			continue
 		}
 
-		if m.ResourceCost >= minResourceCost {
+		resourceCost := m.GetResourceCostWithInstance(instance)
+		if resourceCost >= minResourceCost {
 			continue
 		}
 
@@ -28,7 +29,7 @@ func (s *BestFitStrategy) bestFitResource(
 		}
 
 		if m.ConstraintCheck(instance) {
-			minResourceCost = m.ResourceCost
+			minResourceCost = resourceCost
 			minResourceCostMachine = m
 		}
 	}

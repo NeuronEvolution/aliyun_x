@@ -218,6 +218,27 @@ func (m *Machine) GetCostWithInstance(instance *Instance) float64 {
 	return totalCost / TimeSampleCount
 }
 
+func (m *Machine) GetResourceCostWithInstance(inst *Instance) float64 {
+	avgCpu := float64(0)
+	for i, v := range m.Cpu {
+		avgCpu += v + inst.Config.Cpu[i]
+	}
+	avgCpu = avgCpu / float64(len(m.Cpu))
+
+	avgMem := float64(0)
+	for i, v := range m.Mem {
+		avgMem += v + inst.Config.Mem[i]
+	}
+	avgMem = avgMem / float64(len(m.Mem))
+
+	return scaleCost(avgCpu/m.LevelConfig.Cpu) +
+		scaleCost(avgMem/m.LevelConfig.Mem) +
+		scaleCost(float64(m.Disk+inst.Config.Disk)/float64(m.LevelConfig.Disk)) +
+		scaleCost(float64(m.P+inst.Config.P)/float64(m.LevelConfig.P)) +
+		scaleCost(float64(m.M+inst.Config.M)/float64(m.LevelConfig.M)) +
+		scaleCost(float64(m.PM+inst.Config.PM)/float64(m.LevelConfig.PM))
+}
+
 func (m *Machine) debugValidation() {
 	for i := 0; i < m.InstanceArrayCount; i++ {
 		if m.InstanceArray[i] == nil {

@@ -1,10 +1,14 @@
 # TODO
-初始状态迁移至最终态的操作步骤
+对初始状态及结果进行定量分析
 针对应用冲突优化
 预分配数量调度完成后，分配额外的机器处理CPU高负载的机器
 调整CPU使用过低的机器
 资源消耗公式调整
+进行数据分析后分别处理各资源的组合
+初始状态迁移前调整机器ID减少迁移
 
+# 已完成
+初始状态迁移至最终态的操作步骤
 
 # 各类初始结果
 - 不带初始状态简单评估排序暴力插入：time= 17.443135,cost=6406.757646,machineCount=5627
@@ -30,6 +34,52 @@
 - 每台机器的资源消耗评估公式
 
 #正式分值版本纪录(时间倒序)
+---加入实例再计算资源消耗
+Strategy:BestFit
+MachineDeployPool.DebugPrint
+    &{92 288 1024 7 7 9} machineCount=3000
+    &{32 64 600 7 3 7} machineCount=2571
+    cpuCost=1.483749,machineId=1657
+    cpuCost=1.405415,machineId=1714
+    cpuCost=1.403423,machineId=1655
+    cpuCost=1.403423,machineId=1678
+    cpuCost=1.403423,machineId=1693
+    cpuCost=1.403423,machineId=1672
+    cpuCost=1.403423,machineId=1650
+    cpuCost=1.401222,machineId=1646
+    cpuCost=1.401222,machineId=1660
+    cpuCost=1.398347,machineId=1665
+    cpuCost=1.367922,machineId=2395
+    cpuCost=1.361750,machineId=1383
+    cpuCost=1.361735,machineId=1784
+    cpuCost=1.333378,machineId=1389
+    cpuCost=1.333378,machineId=2122
+    cpuCost=1.333378,machineId=1746
+    cpuCost=1.333378,machineId=1756
+    cpuCost=1.333378,machineId=1794
+    cpuCost=1.333378,machineId=1296
+    cpuCost=1.328816,machineId=1820
+    cpuCost=1.303553,machineId=1682
+    cpuCost=1.303553,machineId=2037
+    cpuCost=1.303553,machineId=2129
+    cpuCost=1.282055,machineId=1780
+    cpuCost=1.278889,machineId=1688
+    cpuCost=1.259645,machineId=1677
+    cpuCost=1.251318,machineId=1783
+    cpuCost=1.240034,machineId=1765
+    cpuCost=1.233940,machineId=1715
+    cpuCost=1.230250,machineId=1385
+    cpuCost=1.227271,machineId=1823
+    cpuCost=1.219499,machineId=1653
+    cpuCost=1.219499,machineId=1425
+    cpuCost=1.213787,machineId=1900
+    cpuCost=1.211728,machineId=1741
+    cpuCost=1.209093,machineId=1497
+total high cpu(1.010000) count=726
+MachineDeployPool.DebugPrint machineCount=5571,instanceCount=68219
+cpuCost=5611.009504,totalCommands=68219
+time=168.180176
+
 ---初始状态merge到最终状态
 Strategy:BestFit
 MachineDeployPool.DebugPrint
