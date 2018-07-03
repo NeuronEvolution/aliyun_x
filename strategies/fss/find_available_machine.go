@@ -5,17 +5,6 @@ import (
 	"math"
 )
 
-func (s *FreeSmallerStrategy) calcMachineRealCostPlusInstance(m *cloud.Machine, instance *cloud.Instance) float64 {
-	totalCost := float64(0)
-	for i := 0; i < cloud.TimeSampleCount; i++ {
-		r := (m.Cpu[i] + instance.Config.Cpu[i]) / m.LevelConfig.Cpu
-		s := 1 + 10*(math.Exp(math.Max(0, r-0.5))-1) - (0.5 - math.Min(0.5, r))
-		totalCost += s
-	}
-
-	return totalCost / cloud.TimeSampleCount
-}
-
 func (s *FreeSmallerStrategy) firstFit(instance *cloud.Instance, skip *cloud.Machine) *cloud.Machine {
 	for _, v := range s.R.MachineDeployPool.MachineLevelDeployArray {
 		for _, m := range v.MachineCollection.List[:v.MachineCollection.ListCount] {
@@ -32,31 +21,38 @@ func (s *FreeSmallerStrategy) firstFit(instance *cloud.Instance, skip *cloud.Mac
 	return nil
 }
 
-func (s *FreeSmallerStrategy) bestFit(instance *cloud.Instance, skip *cloud.Machine, cpuLimit float64) *cloud.Machine {
-	minCost := float64(math.MaxFloat64)
-	var minCostMachine *cloud.Machine
-	for _, v := range s.R.MachineDeployPool.MachineLevelDeployArray {
-		for _, m := range v.MachineCollection.List[:v.MachineCollection.ListCount] {
-			if skip != nil && m.MachineId == skip.MachineId {
-				continue
-			}
+func (s *FreeSmallerStrategy) bestFit(
+	instance *cloud.Instance, skip *cloud.Machine, cpuMax float64) *cloud.Machine {
 
-			cost := s.calcMachineRealCostPlusInstance(m, instance)
-			if cost < cpuLimit && cost >= minCost {
-				continue
-			}
+	minDisk := math.MaxInt64
+	var minDiskMachine *cloud.Machine
 
-			if m.ConstraintCheck(instance) {
-				minCost = cost
-				minCostMachine = m
-			}
+	for _, m := range s.machineDeployList {
+		if skip != nil && m.MachineId == skip.MachineId {
+			continue
+		}
+
+		if m.Disk >= minDisk {
+			continue
+		}
+
+		cost := m.GetCostWithInstance(instance)
+		if cost > cpuMax {
+			//fmt.Printf("calcMachineRealCostPlusInstance cost > cpuLimit %d %d %f\n",
+			//	m.MachineId, instance.InstanceId, cost)
+			continue
+		}
+
+		if m.ConstraintCheck(instance) {
+			minDisk = m.Disk
+			minDiskMachine = m
 		}
 	}
 
-	if minCostMachine != nil {
+	if minDiskMachine != nil {
 		//fmt.Printf("FreeSmallerStrategy.bestFit cost=%f,%f,machineId=%d\n",
 		//	minCost, instance.Config.Cpu[0], minCostMachine.MachineId)
 	}
 
-	return minCostMachine
+	return minDiskMachine
 }

@@ -5,7 +5,8 @@ import (
 )
 
 type FreeSmallerStrategy struct {
-	R *cloud.ResourceManagement
+	R                 *cloud.ResourceManagement
+	machineDeployList []*cloud.Machine
 }
 
 func NewFreeSmallerStrategy(r *cloud.ResourceManagement) *FreeSmallerStrategy {

@@ -6,10 +6,16 @@
 - 带初始状态解除违约解除CPU高负载解除低配机器：time=504.441860，cost=6361.214919,totalCommands=50749，machineCount=5655
 - 带初始状态解除违约解除CPU高负载解除低配机器排序初始化：time=537.913560，cost=6404.517490,totalCommands=0，machineCount=5649
 - BFD限制CPU不惩罚再BFD放开CPU：time=909.591672，cost=6189.086039,totalCommands=0，machineCount=5602
+- 磁盘BFD预分配机器 time=75.609463,cost=6132.121646,totalCommands=0,machineCount=6000
+- 均值BFD预分配机器Exp展开 time=49.752896,cost=6101.959981,totalCommands=40548,machineCount=6000
 
 # 1000实例不带初始状态,
 - FFD time=0.625260,cost=66.570151,totalCommands=0,machineCount=64
 - BFD time=0.727273,cost=65.265338,totalCommands=0,machineCount=64
+- BFD预分配机器 time=0.839353，cost=64.000000,totalCommands=0，machineCount=64
+
+# 10000实例不带初始状态
+- BFD预分配机器 time=26.318945,cost=684.000000,totalCommands=0,machineCount=684
 
 # 可调参数
 - 每个实例的资源消耗评估公式

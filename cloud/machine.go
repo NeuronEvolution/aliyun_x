@@ -150,16 +150,16 @@ func (m *Machine) IsEmpty() bool {
 func (m *Machine) ConstraintCheck(instance *Instance) bool {
 	//debugLog("Machine.ConstraintCheck %s %s", m.MachineId, instance.InstanceId)
 
+	if !constraintCheckResourceLimit(m, instance) {
+		//debugLog("Machine.ConstraintCheck constraintCheckResourceLimit failed")
+		return false
+	}
+
 	if !constraintCheckAppInterferenceAddInstance(
 		instance.Config.AppId,
 		m.appCountCollection,
 		m.R.AppInterferenceConfigMap) {
 		//debugLog("Machine.ConstraintCheck constraintCheckAppInterferenceAddInstance failed")
-		return false
-	}
-
-	if !constraintCheckResourceLimit(m, instance) {
-		//debugLog("Machine.ConstraintCheck constraintCheckResourceLimit failed")
 		return false
 	}
 
@@ -170,6 +170,20 @@ func (m *Machine) HasBadConstraint() bool {
 	return !constraintCheckAppInterference(m.appCountCollection, m.R.AppInterferenceConfigMap)
 }
 
+func (m *Machine) GetCostReal() float64 {
+	totalCost := float64(0)
+	for i := 0; i < TimeSampleCount; i++ {
+		r := m.Cpu[i] / m.LevelConfig.Cpu
+		if r > 0.5 {
+			totalCost += 1 + 10*(math.Exp(r-0.5)-1)
+		} else {
+			totalCost += 1
+		}
+	}
+
+	return totalCost / TimeSampleCount
+}
+
 func (m *Machine) GetCost() float64 {
 	if m.isCostValid {
 		return m.cost
@@ -178,13 +192,31 @@ func (m *Machine) GetCost() float64 {
 
 	totalCost := float64(0)
 	for i := 0; i < TimeSampleCount; i++ {
-		s := 1 + 10*(math.Exp(math.Max(0, m.Cpu[i]/m.LevelConfig.Cpu-0.5))-1)
-		totalCost += s
+		r := m.Cpu[i] / m.LevelConfig.Cpu
+		if r > 0.5 {
+			totalCost += 1 + 10*(Exp(r-0.5)-1)
+		} else {
+			totalCost += 1
+		}
 	}
 
 	m.cost = totalCost / TimeSampleCount
 
 	return m.cost
+}
+
+func (m *Machine) GetCostWithInstance(instance *Instance) float64 {
+	totalCost := float64(0)
+	for i := 0; i < TimeSampleCount; i++ {
+		r := (m.Cpu[i] + instance.Config.Cpu[i]) / m.LevelConfig.Cpu
+		if r > 0.5 {
+			totalCost += 1 + 10*(Exp(r-0.5)-1)
+		} else {
+			totalCost += 1
+		}
+	}
+
+	return totalCost / TimeSampleCount
 }
 
 func (m *Machine) debugValidation() {

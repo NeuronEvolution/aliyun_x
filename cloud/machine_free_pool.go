@@ -115,3 +115,19 @@ func (p *MachineFreePool) PeekMachine() (m *Machine) {
 
 	return nil
 }
+
+func (p *MachineFreePool) PeekMachineList(count int) []*Machine {
+	machineList := make([]*Machine, 0)
+	for _, v := range p.MachineLevelFreeArray {
+		if v.MachineCollection.ListCount > 0 {
+			if v.MachineCollection.ListCount >= count-len(machineList) {
+				machineList = append(machineList, v.MachineCollection.List[:count-len(machineList)]...)
+				break
+			} else {
+				machineList = append(machineList, v.MachineCollection.List[:v.MachineCollection.ListCount]...)
+			}
+		}
+	}
+
+	return machineList
+}

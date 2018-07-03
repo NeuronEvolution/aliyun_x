@@ -122,6 +122,24 @@ func (p *MachineDeployPool) DebugPrint(buf *bytes.Buffer) {
 		buf.WriteString(fmt.Sprintf("    %v machineCount=%d\n",
 			v.LevelConfig, v.MachineCollection.ListCount))
 	}
+
+	cpuHighCount := 0
+	cpuHighMachineList := make([]*Machine, 0)
+	highCpuLimit := MaxCpu
+	for _, v := range p.MachineMap {
+		if v.GetCost() > highCpuLimit {
+			cpuHighCount++
+			cpuHighMachineList = append(cpuHighMachineList, v)
+		}
+	}
+	sort.Sort(MachineListSortByCostDesc(cpuHighMachineList))
+	for _, v := range cpuHighMachineList {
+		if v.GetCost() > 2 {
+			buf.WriteString(fmt.Sprintf("    cost=%f,machineId=%d\n", v.GetCost(), v.MachineId))
+		}
+	}
+	buf.WriteString(fmt.Sprintf("total high cpu(%f) count=%d\n", highCpuLimit, len(cpuHighMachineList)))
+
 	buf.WriteString(fmt.Sprintf("MachineDeployPool.DebugPrint machineCount=%d,instanceCount=%d\n",
 		len(p.MachineMap), instanceCount))
 }

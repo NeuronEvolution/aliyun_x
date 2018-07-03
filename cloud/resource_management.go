@@ -72,7 +72,7 @@ func (r *ResourceManagement) SetStrategy(s Strategy) {
 func (r *ResourceManagement) CalculateTotalCostScore() float64 {
 	totalCost := float64(0)
 	for _, m := range r.MachineDeployPool.MachineMap {
-		totalCost += m.GetCost()
+		totalCost += m.GetCostReal()
 	}
 
 	return totalCost

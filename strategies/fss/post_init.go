@@ -46,8 +46,7 @@ func (s *FreeSmallerStrategy) getHighCpuMachineList() []*cloud.Machine {
 	machineList := make([]*cloud.Machine, 0)
 	for _, level := range s.R.MachineDeployPool.MachineLevelDeployArray {
 		for _, v := range level.MachineCollection.List[:level.MachineCollection.ListCount] {
-			if (v.LevelConfig.Cpu == cloud.MachineCpuMax && v.GetCost() > HighLevelCpuMax) ||
-				(v.LevelConfig.Cpu < cloud.MachineCpuMax && v.GetCost() > LowLevelCpuMax) {
+			if v.GetCost() > cloud.MaxCpu {
 				machineList = append(machineList, v)
 			}
 		}
@@ -130,6 +129,11 @@ func (s *FreeSmallerStrategy) resolveLowLevelMachine() (err error) {
 }
 
 func (s *FreeSmallerStrategy) PostInit() (err error) {
+	s.machineDeployList = s.getDeployMachineList(MachineDeployCount)
+	if len(s.machineDeployList) != MachineDeployCount {
+		panic("FreeSmallerStrategy.AddInstanceList getDeployMachineList failed")
+	}
+
 	begin := time.Now()
 	err = s.resolveAppInference()
 	if err != nil {
@@ -139,7 +143,7 @@ func (s *FreeSmallerStrategy) PostInit() (err error) {
 	s.R.DebugPrintStatus()
 
 	begin = time.Now()
-	err = s.resolveHighCpuMachine()
+	//err = s.resolveHighCpuMachine()
 	if err != nil {
 		return err
 	}
@@ -147,7 +151,7 @@ func (s *FreeSmallerStrategy) PostInit() (err error) {
 	s.R.DebugPrintStatus()
 
 	begin = time.Now()
-	err = s.resolveLowLevelMachine()
+	//err = s.resolveLowLevelMachine()
 	if err != nil {
 		return err
 	}

@@ -96,10 +96,8 @@ func main() {
 	fmt.Printf("deployed=%d,non-deployed=%d,total=%d\n",
 		len(instanceMachineList), len(instanceList), len(instanceDeployDataList))
 
-	cloud.SetDebug(true)
-
-	instanceMachineList = instanceMachineList[:0]
-	instanceList = instanceList[:1000]
+	//instanceMachineList = instanceMachineList[:0]
+	//instanceList = instanceList[:20000]
 	begin := time.Now()
 	r := cloud.NewResourceManagement()
 	r.SetStrategy(fss.NewFreeSmallerStrategy(r))
@@ -117,7 +115,12 @@ func main() {
 		return
 	}
 
-	r.AddInstanceList(instanceList)
+	err = r.AddInstanceList(instanceList)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
 	end := time.Now()
 
 	r.DebugPrintStatus()
