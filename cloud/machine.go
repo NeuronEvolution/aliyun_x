@@ -231,12 +231,25 @@ func (m *Machine) GetResourceCostWithInstance(inst *Instance) float64 {
 	}
 	avgMem = avgMem / float64(len(m.Mem))
 
-	return scaleCost(avgCpu/m.LevelConfig.Cpu) +
-		scaleCost(avgMem/m.LevelConfig.Mem) +
-		scaleCost(float64(m.Disk+inst.Config.Disk)/float64(m.LevelConfig.Disk)) +
-		scaleCost(float64(m.P+inst.Config.P)/float64(m.LevelConfig.P)) +
-		scaleCost(float64(m.M+inst.Config.M)/float64(m.LevelConfig.M)) +
-		scaleCost(float64(m.PM+inst.Config.PM)/float64(m.LevelConfig.PM))
+	cpu := avgCpu / m.LevelConfig.Cpu
+	mem := avgMem / m.LevelConfig.Mem
+	disk := float64(m.Disk+inst.Config.Disk) / float64(m.LevelConfig.Disk)
+	p := float64(m.P+inst.Config.P) / float64(m.LevelConfig.P)
+	mCost := float64(m.M+inst.Config.M) / float64(m.LevelConfig.M)
+	pm := float64(m.PM+inst.Config.PM) / float64(m.LevelConfig.PM)
+
+	cost := scaleCost(cpu) +
+		scaleCost(mem) +
+		scaleCost(disk) +
+		scaleCost(p) +
+		scaleCost(mCost) +
+		scaleCost(pm)
+
+	deviation := calcResourceCostDeviation(cpu, mem, disk, p, mCost, pm)
+
+	d := deviation - m.ResourceCostDeviation
+
+	return cost * Exp(1+d)
 }
 
 func (m *Machine) debugValidation() {

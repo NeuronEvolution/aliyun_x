@@ -23,8 +23,6 @@ func (s *BestFitStrategy) bestFitResource(
 
 		cost := m.GetCostWithInstance(instance)
 		if cost > cpuMax {
-			//fmt.Printf("calcMachineRealCostPlusInstance cost > cpuLimit %d %d %f\n",
-			//	m.MachineId, instance.InstanceId, cost)
 			continue
 		}
 
@@ -59,7 +57,7 @@ func (s *BestFitStrategy) bestFitCpuCost(
 		}
 
 		if m.ConstraintCheck(instance) {
-			minCpuCost = m.ResourceCost
+			minCpuCost = cost
 			minCpuCostMachine = m
 		}
 	}

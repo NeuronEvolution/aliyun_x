@@ -6,6 +6,7 @@
 资源消耗公式调整
 进行数据分析后分别处理各资源的组合
 初始状态迁移前调整机器ID减少迁移
+平方根展开
 
 # 已完成
 初始状态迁移至最终态的操作步骤
@@ -30,6 +31,26 @@
 - BFD预分配机器 time=26.318945,cost=684.000000,machineCount=684
 
 #正式分值版本纪录(时间倒序)
+---交叉匹配
+Strategy:BestFit
+MachineDeployPool.DebugPrint
+    &{92 288 1024 7 7 9} machineCount=3000
+    &{32 64 600 7 3 7} machineCount=2571
+total high cpu(1.010000) count=331
+MachineDeployPool.DebugPrint machineCount=5571,instanceCount=68219
+cpuCost=5583.059498,totalCommands=68219
+time=167.991460
+
+---fix
+Strategy:BestFit
+MachineDeployPool.DebugPrint
+    &{92 288 1024 7 7 9} machineCount=3000
+    &{32 64 600 7 3 7} machineCount=2571
+total high cpu(1.010000) count=728
+MachineDeployPool.DebugPrint machineCount=5571,instanceCount=68219
+cpuCost=5604.356598,totalCommands=68219
+time=172.307525
+
 ---加入实例再计算资源消耗
 Strategy:BestFit
 MachineDeployPool.DebugPrint
