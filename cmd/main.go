@@ -95,12 +95,10 @@ func main() {
 	fmt.Printf("deployed=%d,non-deployed=%d,total=%d\n",
 		len(instanceMachineList), len(instanceList), len(instanceDeployDataList))
 
-	instanceMachineList = instanceMachineList[:0]
-	//instanceList = instanceList[:20000]
 	begin := time.Now()
 	r := cloud.NewResourceManagement()
 	r.SetStrategy(bfs.NewFreeSmallerStrategy(r))
-	err = r.Init(machineResourceDataList, appResourcesDataList, appInterferenceDataList, instanceMachineList)
+	err = r.Init(machineResourceDataList, appResourcesDataList, appInterferenceDataList, nil)
 	if err != nil {
 		fmt.Printf("r.Init failed,%s", err)
 		return
@@ -149,7 +147,7 @@ func main() {
 	fmt.Printf("*****************************************************************\n")
 
 	playback := cloud.NewResourceManagement()
-	err = playback.Init(machineResourceDataList, appResourcesDataList, appInterferenceDataList, instanceMachineList)
+	err = playback.Init(machineResourceDataList, appResourcesDataList, appInterferenceDataList, nil)
 	if err != nil {
 		fmt.Printf("r.Init failed,%s", err)
 		return

@@ -50,7 +50,7 @@ func (c *AppCountCollection) Add(appId int) {
 	c.ListCount++
 
 	if DebugEnabled {
-		c.debugValidation()
+		//c.debugValidation()
 	}
 }
 
@@ -74,7 +74,7 @@ func (c *AppCountCollection) Remove(appId int) {
 			}
 
 			if DebugEnabled {
-				c.debugValidation()
+				//c.debugValidation()
 			}
 
 			return
@@ -82,7 +82,7 @@ func (c *AppCountCollection) Remove(appId int) {
 	}
 
 	if DebugEnabled {
-		c.debugValidation()
+		//c.debugValidation()
 	}
 
 	panic(fmt.Errorf("AppCountCollection.Remove appId %d not exists", appId))

@@ -1,7 +1,5 @@
 package cloud
 
-import "math"
-
 type Resource struct {
 	Cpu  [TimeSampleCount]float64
 	Mem  [TimeSampleCount]float64
@@ -46,7 +44,7 @@ func (r *Resource) calcCostEval(config *MachineLevelConfig) {
 
 func calcResourceCostDeviation(cpu float64, mem float64, disk float64, p float64, m float64, pm float64) float64 {
 	avg := (cpu + mem + disk + p + m + pm) / 6
-	return math.Sqrt(((cpu-avg)*(cpu-avg) + (mem-avg)*(mem-avg) + (disk-avg)*(disk-avg) +
+	return Sqrt(((cpu-avg)*(cpu-avg) + (mem-avg)*(mem-avg) + (disk-avg)*(disk-avg) +
 		(p-avg)*(p-avg) + (m-avg)*(m-avg) + (pm-avg)*(pm-avg)) / 6)
 }
 

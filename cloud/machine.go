@@ -70,7 +70,7 @@ func (m *Machine) AddInstance(instance *Instance) {
 	m.calcCostEval(m.LevelConfig)
 
 	if DebugEnabled {
-		m.debugValidation()
+		//m.debugValidation()
 	}
 }
 
@@ -106,7 +106,7 @@ func (m *Machine) RemoveInstance(instanceId int) {
 	m.calcCostEval(m.LevelConfig)
 
 	if DebugEnabled {
-		m.debugValidation()
+		//m.debugValidation()
 	}
 }
 
