@@ -3,6 +3,23 @@ package cloud
 import "fmt"
 
 func (r *ResourceManagement) MergeTo(status *ResourceManagement) (err error) {
+	var mapping [MaxMachineId]int
+	mappedCount := 0
+	for _, instance := range r.InstanceList {
+		if instance == nil {
+			continue
+		}
+
+		srcMachine := r.InstanceDeployedMachineMap[instance.InstanceId]
+		machineId := status.InstanceDeployedMachineMap[instance.InstanceId].MachineId
+		if mapping[machineId] == 0 {
+			mapping[machineId] = srcMachine.MachineId
+			mappedCount++
+		}
+	}
+
+	fmt.Printf("ResourceManagement.MergeTo mappedCount=%d\n", mappedCount)
+
 	for i := 0; ; i++ {
 		fmt.Printf("ResourceManagement.MergeTo loop %d\n", i)
 		hasSkippedInstance := false
@@ -13,13 +30,19 @@ func (r *ResourceManagement) MergeTo(status *ResourceManagement) (err error) {
 
 			srcMachine := r.InstanceDeployedMachineMap[instance.InstanceId]
 			machineId := status.InstanceDeployedMachineMap[instance.InstanceId].MachineId
-			if srcMachine.MachineId != machineId {
-				targetMachine := r.MachineMap[machineId]
+			mappedMachineId := machineId
+			if mapping[machineId] != 0 {
+				mappedMachineId = mapping[machineId]
+			}
+			if srcMachine.MachineId != mappedMachineId {
+				targetMachine := r.MachineMap[mappedMachineId]
 				if targetMachine.ConstraintCheck(instance) {
 					r.CommandDeployInstance(instance, targetMachine)
 				} else {
 					hasSkippedInstance = true
 				}
+			} else {
+				fmt.Printf("mapped %d\n", machineId)
 			}
 		}
 

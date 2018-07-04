@@ -8,7 +8,7 @@ type AppCount struct {
 }
 
 type AppCountCollection struct {
-	List      [64]AppCount
+	List      [MaxAppPerMachine]AppCount
 	ListCount int
 }
 
@@ -86,4 +86,14 @@ func (c *AppCountCollection) Remove(appId int) {
 	}
 
 	panic(fmt.Errorf("AppCountCollection.Remove appId %d not exists", appId))
+}
+
+func (c *AppCountCollection) GetAppCount(appId int) int {
+	for _, v := range c.List[:c.ListCount] {
+		if v.AppId == appId {
+			return v.Count
+		}
+	}
+
+	return 0
 }
