@@ -37,8 +37,8 @@ func constraintCheckAppInterferenceAddInstance(appId int, c *AppCountCollection,
 	//<appId,AppId>
 	maxCount := m[appId][appId]
 	if maxCount != -1 && appCount > maxCount+1 {
-		//debugLog("constraintCheckAppInterferenceAddInstance 1 failed app=%d,count2=%d,max=%d",
-		//	 appId, appCount, maxCount)
+		debugLog("constraintCheckAppInterferenceAddInstance 1 failed app=%d,count2=%d,max=%d",
+			appId, appCount, maxCount)
 		return false
 	}
 
@@ -50,8 +50,8 @@ func constraintCheckAppInterferenceAddInstance(appId int, c *AppCountCollection,
 		//<appIdOther,appId>
 		maxCount := m[v.AppId][appId]
 		if maxCount != -1 && appCount > maxCount {
-			//debugLog("constraintCheckAppInterferenceAddInstance 2 failed app1=%d,app2=%d,count2=%d,max=%d",
-			//	v.AppId, appId, appCount, maxCount)
+			debugLog("constraintCheckAppInterferenceAddInstance 2 failed app1=%d,app2=%d,count2=%d,max=%d",
+				v.AppId, appId, appCount, maxCount)
 			return false
 		}
 
@@ -59,8 +59,8 @@ func constraintCheckAppInterferenceAddInstance(appId int, c *AppCountCollection,
 		if appCount == 1 { //已经存在的app，数量增加不影响冲突结果
 			maxCount = m[appId][v.AppId]
 			if maxCount != -1 && v.Count > maxCount {
-				//debugLog("constraintCheckAppInterferenceAddInstance 3 failed app1=%d,app2=%d,count2=%d,max=%d",
-				//	appId, v.AppId, v.Count, maxCount)
+				debugLog("constraintCheckAppInterferenceAddInstance 3 failed app1=%d,app2=%d,count2=%d,max=%d",
+					appId, v.AppId, v.Count, maxCount)
 				return false
 			}
 		}
@@ -74,7 +74,7 @@ func constraintCheckResourceLimit(m *Machine, instance *Instance) bool {
 	i := instance.Config
 
 	if m.Disk+i.Disk > c.Disk {
-		//debugLog("constraintCheckResourceLimit failed Disk %d %d %d", m.Disk, i.Disk, c.Disk)
+		debugLog("constraintCheckResourceLimit failed Disk %d %d %d", m.Disk, i.Disk, c.Disk)
 		return false
 	}
 
@@ -95,14 +95,14 @@ func constraintCheckResourceLimit(m *Machine, instance *Instance) bool {
 
 	for index, v := range m.Cpu {
 		if v+i.Cpu[index] > c.Cpu {
-			//debugLog("constraintCheckResourceLimit failed Cpu %d %f %f %f", index, v, i.Cpu[index], c.Cpu)
+			debugLog("constraintCheckResourceLimit failed Cpu %d %f %f %f", index, v, i.Cpu[index], c.Cpu)
 			return false
 		}
 	}
 
 	for index, v := range m.Mem {
 		if v+i.Mem[index] > c.Mem {
-			//debugLog("constraintCheckResourceLimit failed Mem %d %f %f %f", index, v, i.Mem[index], c.Mem)
+			debugLog("constraintCheckResourceLimit failed Mem %d %f %f %f", index, v, i.Mem[index], c.Mem)
 			return false
 		}
 	}

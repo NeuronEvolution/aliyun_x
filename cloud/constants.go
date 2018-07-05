@@ -17,8 +17,8 @@ const MaxInstancePerMachine = 1024
 const MaxAppPerMachine = 64
 const MaxCpu = 1.01
 
-const ParamMachineCostMultiply = 4
-const ParamDeviationMultiply = 1
-const ParamAppInferenceMultiply = 10
-const ParamAppCostMultiply = 5
+const ParamMachineCostMultiply = 4 //影响大
+const ParamDeviationMultiply = 1   //影响大
+const ParamAppInferenceMultiply = 1
+const ParamAppCostMultiply = 5 //影响大
 const ParamCpuCostMultiply = 1

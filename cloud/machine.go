@@ -246,12 +246,18 @@ func (m *Machine) GetResourceCostWithInstance(inst *Instance) float64 {
 		m.scaleCost(pm)
 
 	deviation := calcResourceCostDeviation(cpu, mem, disk, p, mCost, pm)
-	d := deviation - m.ResourceCostDeviation
+	deviation = 1 + deviation - m.ResourceCostDeviation
 	appCount := m.appCountCollection.GetAppCount(inst.Config.AppId)
-	appE := float64(1) - float64(appCount)/float64(610)
 
-	return cost * Exp(1+ParamDeviationMultiply*d) * Exp(ParamAppInferenceMultiply*appE)
+	if appCount > MaxAppCountInMachine {
+		MaxAppCountInMachine = appCount
+		fmt.Println("MaxAppCountInMachine", MaxAppCountInMachine)
+	}
+
+	return cost * Exp(ParamDeviationMultiply*deviation+ParamAppInferenceMultiply*float64(appCount))
 }
+
+var MaxAppCountInMachine = 0
 
 func (m *Machine) scaleCost(r float64) float64 {
 	return Exp(ParamMachineCostMultiply * r)

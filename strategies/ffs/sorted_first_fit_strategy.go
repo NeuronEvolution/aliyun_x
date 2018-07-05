@@ -1,4 +1,4 @@
-package sffs
+package ffs
 
 import (
 	"fmt"
