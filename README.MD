@@ -7,6 +7,7 @@
 进行数据分析后分别处理各资源的组合
 初始状态迁移前调整机器ID减少迁移
 平方根展开
+将删除实例包装到部署命令内
 
 # 已完成
 初始状态迁移至最终态的操作步骤
@@ -33,6 +34,59 @@
 - BFD预分配机器 time=26.318945,cost=684.000000,machineCount=684
 
 #正式分值版本纪录(时间倒序)
+---fix merge
+Strategy:BestFit
+MachineDeployPool.DebugPrint
+    &{92 288 1024 7 7 9} machineCount=3000
+    &{32 64 600 7 3 7} machineCount=2570
+    cpuCost=1.097633,machineId=168
+    cpuCost=1.097455,machineId=1033
+    cpuCost=1.093533,machineId=395
+    cpuCost=1.092022,machineId=209
+    cpuCost=1.084872,machineId=1189
+    cpuCost=1.084872,machineId=1382
+    cpuCost=1.084872,machineId=1295
+    cpuCost=1.084872,machineId=1293
+    cpuCost=1.082257,machineId=1064
+    cpuCost=1.082257,machineId=923
+    cpuCost=1.076283,machineId=989
+    cpuCost=1.076283,machineId=933
+    cpuCost=1.076283,machineId=1009
+    cpuCost=1.075734,machineId=2142
+    cpuCost=1.075734,machineId=2146
+    cpuCost=1.075272,machineId=1145
+    cpuCost=1.074178,machineId=428
+    cpuCost=1.074049,machineId=1019
+    cpuCost=1.073872,machineId=1141
+    cpuCost=1.073768,machineId=1076
+    cpuCost=1.070698,machineId=2130
+    cpuCost=1.069815,machineId=1352
+    cpuCost=1.066456,machineId=1718
+    cpuCost=1.065764,machineId=2119
+    cpuCost=1.062899,machineId=954
+    cpuCost=1.062899,machineId=1075
+    cpuCost=1.059142,machineId=937
+    cpuCost=1.057757,machineId=1013
+    cpuCost=1.056523,machineId=2540
+    cpuCost=1.056523,machineId=2372
+    cpuCost=1.056523,machineId=2379
+    cpuCost=1.056523,machineId=2411
+    cpuCost=1.055458,machineId=1058
+    cpuCost=1.055337,machineId=920
+    cpuCost=1.054567,machineId=930
+    cpuCost=1.054567,machineId=1100
+    cpuCost=1.054567,machineId=965
+    cpuCost=1.054567,machineId=914
+    cpuCost=1.054567,machineId=1061
+    cpuCost=1.053298,machineId=1919
+    cpuCost=1.053016,machineId=2180
+    cpuCost=1.052387,machineId=2110
+total high cpu(1.010000) count=297
+MachineDeployPool.DebugPrint machineCount=5570,instanceCount=68219
+cpuCost=5582.440302,totalCommands=68219
+time=181.857110
+
+
 ---交叉匹配最优
 Strategy:BestFit
 MachineDeployPool.DebugPrint

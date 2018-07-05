@@ -1,124 +1,57 @@
 package cloud
 
-import "fmt"
+import (
+	"fmt"
+)
 
-func (r *ResourceManagement) MergeTo(status *ResourceManagement) (err error) {
-	var mapping [MaxMachineId]int
-	mappedCount := 0
+func (r *ResourceManagement) margeMachine(m *Machine, pool []*Machine, status *ResourceManagement) (err error) {
+	instanceList := make([]*Instance, 0)
+	instanceList = append(instanceList, m.InstanceArray[:m.InstanceArrayCount]...)
+	for _, instance := range instanceList {
+		hasFit := false
+		for _, freeMachine := range pool {
+			if freeMachine.ConstraintCheck(instance) {
+				m.RemoveInstance(instance.InstanceId)
+				r.CommandDeployInstance(instance, freeMachine)
+				hasFit = true
+				break
+			}
+		}
+		if !hasFit {
+			freeMachine := r.MachineFreePool.PeekMachine()
+			if freeMachine == nil {
+				return fmt.Errorf("ResourceManagement.MergeTo no free machine")
+			}
+
+			if !freeMachine.ConstraintCheck(instance) {
+				return fmt.Errorf("ResourceManagement.MergeTo free machine ConstraintCheck failed")
+			}
+
+			m.RemoveInstance(instance.InstanceId)
+			r.CommandDeployInstance(instance, freeMachine)
+		}
+	}
+
 	for _, instance := range r.InstanceList {
 		if instance == nil {
 			continue
 		}
 
-		srcMachine := r.InstanceDeployedMachineMap[instance.InstanceId]
 		machineId := status.InstanceDeployedMachineMap[instance.InstanceId].MachineId
-		if mapping[machineId] == 0 {
-			mapping[machineId] = srcMachine.MachineId
-			mappedCount++
+		if machineId == m.MachineId {
+			if !m.ConstraintCheck(instance) {
+				return fmt.Errorf("ResourceManagement.MergeTo return back ConstraintCheck failed")
+			}
+			oldMachine := r.InstanceDeployedMachineMap[instance.InstanceId]
+			oldMachine.RemoveInstance(instance.InstanceId)
+			r.CommandDeployInstance(instance, m)
 		}
 	}
 
-	fmt.Printf("ResourceManagement.MergeTo mappedCount=%d\n", mappedCount)
-	locked := make(map[int]*Machine)
-	for i := 0; ; i++ {
-		fmt.Printf("ResourceManagement.MergeTo loop %d\n", i)
-		hasSkipped := false
-		hasMoved := false
-		for _, instance := range r.InstanceList {
-			if instance == nil {
-				continue
-			}
+	return nil
+}
 
-			srcMachine := r.InstanceDeployedMachineMap[instance.InstanceId]
-			_, hasLocked := locked[srcMachine.MachineId]
-			if hasLocked {
-				continue
-			}
-
-			machineId := status.InstanceDeployedMachineMap[instance.InstanceId].MachineId
-			mappedMachineId := machineId
-			if mapping[machineId] != 0 {
-				mappedMachineId = mapping[machineId]
-			}
-			if srcMachine.MachineId != mappedMachineId {
-				targetMachine := r.MachineMap[mappedMachineId]
-				if targetMachine.ConstraintCheck(instance) {
-					r.CommandDeployInstance(instance, targetMachine)
-					hasMoved = true
-				} else {
-					hasSkipped = true
-				}
-			}
-		}
-
-		if !hasMoved {
-			var m *Machine
-			for _, level := range r.MachineFreePool.MachineLevelFreeArray {
-				if level.MachineCollection.ListCount > 0 {
-					for _, v := range level.MachineCollection.List[:level.MachineCollection.ListCount] {
-						used := false
-						for _, mapped := range mapping {
-							if mapped == v.MachineId {
-								used = true
-								break
-							}
-						}
-						if !used {
-							m = v
-							break
-						}
-					}
-				}
-
-				if m != nil {
-					break
-				}
-			}
-
-			if m == nil {
-				return fmt.Errorf("ResourceManagement.MergeTo no free machine")
-			}
-
-			m = r.MachineFreePool.RemoveMachine(m.MachineId)
-			locked[m.MachineId] = m
-			fmt.Printf("ResourceManagement.MergeTo lockedCount=%d", len(locked))
-			if len(locked) > 128 {
-				locked = make(map[int]*Machine)
-			}
-
-			freedCount := 0
-			for index := len(r.InstanceList) - 1; index >= 0; index-- {
-				instance := r.InstanceList[index]
-				if instance == nil {
-					continue
-				}
-
-				srcMachine := r.InstanceDeployedMachineMap[instance.InstanceId]
-				machineId := status.InstanceDeployedMachineMap[instance.InstanceId].MachineId
-				mappedMachineId := machineId
-				if mapping[machineId] != 0 {
-					mappedMachineId = mapping[machineId]
-				}
-				if mappedMachineId == srcMachine.MachineId {
-					continue
-				}
-
-				if m.ConstraintCheck(instance) {
-					r.CommandDeployInstance(instance, m)
-					m.AddInstance(instance)
-					freedCount++
-					if freedCount > 128 {
-						break
-					}
-				}
-			}
-		}
-
-		if !hasSkipped {
-			break
-		}
-	}
-
+func (r *ResourceManagement) mergeNonDeployedMachines(status *ResourceManagement) (err error) {
 	for _, instance := range status.InstanceList {
 		if instance == nil {
 			continue
@@ -136,4 +69,49 @@ func (r *ResourceManagement) MergeTo(status *ResourceManagement) (err error) {
 	}
 
 	return nil
+}
+
+func (r *ResourceManagement) MergeTo(status *ResourceManagement) (err error) {
+	var mapping [MaxMachineId]int
+	mappedCount := 0
+	for _, instance := range r.InstanceList {
+		if instance == nil {
+			continue
+		}
+
+		srcMachine := r.InstanceDeployedMachineMap[instance.InstanceId]
+		machineId := status.InstanceDeployedMachineMap[instance.InstanceId].MachineId
+		if mapping[machineId] == 0 {
+			mapping[machineId] = srcMachine.MachineId
+			mappedCount++
+		}
+	}
+
+	initMachineMap := make([]*Machine, 0)
+	for _, level := range r.MachineDeployPool.MachineLevelDeployArray {
+		initMachineMap = append(initMachineMap, level.MachineCollection.List[:level.MachineCollection.ListCount]...)
+	}
+
+	freeMachineMap := make([]*Machine, 0)
+	for _, level := range r.MachineFreePool.MachineLevelFreeArray {
+		freeMachineMap = append(freeMachineMap, level.MachineCollection.List[:level.MachineCollection.ListCount]...)
+	}
+
+	for _, m := range initMachineMap {
+		err = r.margeMachine(m, freeMachineMap, status)
+		if err != nil {
+			return err
+		}
+	}
+
+	fmt.Printf("ResourceManagement.MergeTo freed machine count=%d\n", len(freeMachineMap))
+
+	for _, m := range freeMachineMap {
+		err = r.margeMachine(m, initMachineMap, status)
+		if err != nil {
+			return err
+		}
+	}
+
+	return r.mergeNonDeployedMachines(status)
 }
