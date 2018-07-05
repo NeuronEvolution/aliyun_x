@@ -27,7 +27,7 @@ func (r *Resource) calcCostEval(config *MachineLevelConfig) {
 	}
 	avgMem = avgMem / float64(len(r.Mem))
 
-	cpu := avgCpu / config.Cpu
+	cpu := avgCpu * ParamCpuCostMultiply / config.Cpu
 	mem := avgMem / config.Mem
 	disk := float64(r.Disk) / float64(config.Disk)
 	p := float64(r.P) / float64(config.P)
@@ -51,5 +51,5 @@ func calcResourceCostDeviation(cpu float64, mem float64, disk float64, p float64
 }
 
 func scaleCost(f float64) float64 {
-	return Exp(4 * f)
+	return Exp(ParamAppCostMultiply * f)
 }

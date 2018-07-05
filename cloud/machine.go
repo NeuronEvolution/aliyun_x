@@ -231,25 +231,30 @@ func (m *Machine) GetResourceCostWithInstance(inst *Instance) float64 {
 	}
 	avgMem = avgMem / float64(len(m.Mem))
 
-	cpu := avgCpu / m.LevelConfig.Cpu
+	cpu := avgCpu * ParamCpuCostMultiply / m.LevelConfig.Cpu
 	mem := avgMem / m.LevelConfig.Mem
 	disk := float64(m.Disk+inst.Config.Disk) / float64(m.LevelConfig.Disk)
 	p := float64(m.P+inst.Config.P) / float64(m.LevelConfig.P)
 	mCost := float64(m.M+inst.Config.M) / float64(m.LevelConfig.M)
 	pm := float64(m.PM+inst.Config.PM) / float64(m.LevelConfig.PM)
 
-	cost := scaleCost(cpu) +
-		scaleCost(mem) +
-		scaleCost(disk) +
-		scaleCost(p) +
-		scaleCost(mCost) +
-		scaleCost(pm)
+	cost := m.scaleCost(cpu) +
+		m.scaleCost(mem) +
+		m.scaleCost(disk) +
+		m.scaleCost(p) +
+		m.scaleCost(mCost) +
+		m.scaleCost(pm)
 
 	deviation := calcResourceCostDeviation(cpu, mem, disk, p, mCost, pm)
-
 	d := deviation - m.ResourceCostDeviation
+	appCount := m.appCountCollection.GetAppCount(inst.Config.AppId)
+	appE := float64(1) - float64(appCount)/float64(610)
 
-	return cost * Exp(1+d)
+	return cost * Exp(1+ParamDeviationMultiply*d) * Exp(ParamAppInferenceMultiply*appE)
+}
+
+func (m *Machine) scaleCost(r float64) float64 {
+	return Exp(ParamMachineCostMultiply * r)
 }
 
 func (m *Machine) debugValidation() {

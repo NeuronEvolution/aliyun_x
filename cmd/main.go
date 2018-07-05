@@ -91,7 +91,21 @@ func main() {
 		}
 	}
 
+	var appCount [cloud.MaxAppId]int
+	for _, v := range instanceDeployDataList {
+		appCount[v.AppId]++
+	}
+	maxAppCount := 0
+	maxAppCountAppId := 0
+	for i, v := range appCount {
+		if v > maxAppCount {
+			maxAppCount = v
+			maxAppCountAppId = i
+		}
+	}
+
 	fmt.Printf("maxAppId=%d,maxInstanceId=%d,maxMachineId=%d\n", maxAppId, maxInstanceId, maxMachineId)
+	fmt.Printf("maxAppCount=%d,appId=%d\n", maxAppCount, maxAppCountAppId)
 	fmt.Printf("deployed=%d,non-deployed=%d,total=%d\n",
 		len(instanceMachineList), len(instanceList), len(instanceDeployDataList))
 

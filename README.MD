@@ -8,6 +8,7 @@
 初始状态迁移前调整机器ID减少迁移
 平方根展开
 将删除实例包装到部署命令内
+无法改进时试试替换Exp函数
 
 # 已完成
 初始状态迁移至最终态的操作步骤
@@ -34,6 +35,81 @@
 - BFD预分配机器 time=26.318945,cost=684.000000,machineCount=684
 
 #正式分值版本纪录(时间倒序)
+---app冲突参与计算
+Strategy:BestFit
+MachineDeployPool.DebugPrint
+    &{92 288 1024 7 7 9} machineCount=3000
+    &{32 64 600 7 3 7} machineCount=2557
+    cpuCost=1.082927,machineId=1411
+    cpuCost=1.077421,machineId=1464
+    cpuCost=1.076040,machineId=37
+    cpuCost=1.075647,machineId=239
+    cpuCost=1.075647,machineId=1414
+    cpuCost=1.075647,machineId=1520
+    cpuCost=1.075635,machineId=1139
+    cpuCost=1.075635,machineId=59
+    cpuCost=1.075635,machineId=1136
+    cpuCost=1.075056,machineId=1025
+    cpuCost=1.074381,machineId=1042
+    cpuCost=1.073415,machineId=1141
+    cpuCost=1.072646,machineId=711
+    cpuCost=1.072646,machineId=741
+    cpuCost=1.072646,machineId=828
+    cpuCost=1.072646,machineId=604
+    cpuCost=1.072646,machineId=368
+    cpuCost=1.072646,machineId=891
+    cpuCost=1.072489,machineId=1401
+    cpuCost=1.072018,machineId=57
+    cpuCost=1.072018,machineId=437
+    cpuCost=1.070681,machineId=857
+    cpuCost=1.070681,machineId=731
+    cpuCost=1.070681,machineId=768
+    cpuCost=1.070264,machineId=871
+    cpuCost=1.069694,machineId=1462
+    cpuCost=1.066612,machineId=801
+    cpuCost=1.066612,machineId=638
+    cpuCost=1.066196,machineId=528
+    cpuCost=1.066196,machineId=550
+    cpuCost=1.062229,machineId=533
+    cpuCost=1.061319,machineId=707
+    cpuCost=1.061189,machineId=745
+    cpuCost=1.060704,machineId=507
+    cpuCost=1.060704,machineId=672
+    cpuCost=1.060321,machineId=592
+    cpuCost=1.060321,machineId=630
+    cpuCost=1.060321,machineId=76
+    cpuCost=1.059690,machineId=287
+    cpuCost=1.059690,machineId=67
+    cpuCost=1.057556,machineId=514
+    cpuCost=1.056402,machineId=480
+    cpuCost=1.056402,machineId=1689
+    cpuCost=1.056284,machineId=1471
+    cpuCost=1.055942,machineId=1882
+    cpuCost=1.055841,machineId=1495
+    cpuCost=1.055841,machineId=1064
+    cpuCost=1.055841,machineId=1829
+    cpuCost=1.055841,machineId=1475
+    cpuCost=1.055686,machineId=279
+    cpuCost=1.055456,machineId=697
+    cpuCost=1.055456,machineId=613
+    cpuCost=1.055136,machineId=1977
+    cpuCost=1.055136,machineId=2191
+    cpuCost=1.055136,machineId=2171
+    cpuCost=1.055136,machineId=1806
+    cpuCost=1.054882,machineId=71
+    cpuCost=1.054882,machineId=1134
+    cpuCost=1.053244,machineId=1907
+    cpuCost=1.053244,machineId=1989
+    cpuCost=1.052315,machineId=2277
+    cpuCost=1.052315,machineId=2000
+    cpuCost=1.050901,machineId=1147
+    cpuCost=1.050755,machineId=2177
+    cpuCost=1.050755,machineId=1634
+total high cpu(1.010000) count=360
+MachineDeployPool.DebugPrint machineCount=5557,instanceCount=68219
+cpuCost=5571.194745,totalCommands=68219
+time=197.176210
+
 ---fix merge
 Strategy:BestFit
 MachineDeployPool.DebugPrint
