@@ -185,7 +185,7 @@ func main() {
 	}
 
 	summaryBuf := bytes.NewBufferString("")
-	r.DebugStatus(summaryBuf)
+	merge.DebugStatus(summaryBuf)
 	summaryBuf.WriteString(fmt.Sprintf("time=%f\n", end.Sub(begin).Seconds()))
 	err = ioutil.WriteFile(fmt.Sprintf(outputFile+"_summary.csv"),
 		summaryBuf.Bytes(), os.ModePerm)

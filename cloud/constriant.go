@@ -74,7 +74,7 @@ func constraintCheckResourceLimit(m *Machine, instance *Instance) bool {
 	i := instance.Config
 
 	if m.Disk+i.Disk > c.Disk {
-		debugLog("constraintCheckResourceLimit failed Disk %d %d %d", m.Disk, i.Disk, c.Disk)
+		//debugLog("constraintCheckResourceLimit failed Disk %d %d %d", m.Disk, i.Disk, c.Disk)
 		return false
 	}
 
