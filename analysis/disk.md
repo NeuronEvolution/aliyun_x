@@ -1,0 +1,34 @@
+AnalysisDiskDistribution by app
+    disk=1024,count=4
+    disk=1000,count=1
+    disk=650,count=1
+    disk=600,count=12
+    disk=500,count=17
+    disk=300,count=42
+    disk=250,count=4
+    disk=200,count=103
+    disk=180,count=7
+    disk=167,count=9
+    disk=150,count=18
+    disk=120,count=1
+    disk=100,count=259
+    disk=80,count=302
+    disk=60,count=8343
+    disk=40,count=215
+AnalysisDiskDistribution by instance
+    disk=1024,count=8
+    disk=1000,count=1
+    disk=650,count=5
+    disk=600,count=27
+    disk=500,count=60
+    disk=300,count=274
+    disk=250,count=24
+    disk=200,count=1168
+    disk=180,count=21
+    disk=167,count=67
+    disk=150,count=338
+    disk=120,count=117
+    disk=100,count=4832
+    disk=80,count=2448
+    disk=60,count=53542
+    disk=40,count=5287

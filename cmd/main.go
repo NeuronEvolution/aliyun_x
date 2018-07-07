@@ -43,6 +43,10 @@ func main() {
 	fmt.Printf("   instanceDeployDataList=%d\n", len(instanceDeployDataList))
 	fmt.Printf("   machineResourceDataList=%d\n", len(machineResourceDataList))
 
+	for _, v := range appResourcesDataList {
+		v.CalcTimedResourceStatistics()
+	}
+
 	//数据分析
 	analysis := NewAnalysisContext(
 		appInterferenceDataList,
@@ -50,6 +54,8 @@ func main() {
 		machineResourceDataList,
 		instanceDeployDataList)
 	analysis.Run()
+
+	//return
 
 	//调度
 	begin := time.Now()

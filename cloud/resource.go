@@ -12,6 +12,20 @@ type Resource struct {
 
 	ResourceCost          float64
 	ResourceCostDeviation float64
+
+	CpuMax       float64
+	CpuMin       float64
+	CpuAvg       float64
+	CpuDeviation float64
+	MemMax       float64
+	MemMin       float64
+	MemAvg       float64
+	MemDeviation float64
+}
+
+func (r *Resource) CalcTimedResourceStatistics() {
+	r.CpuAvg, r.CpuDeviation, r.CpuMin, r.CpuMax = Statistics(r.Cpu)
+	r.MemAvg, r.MemDeviation, r.MemMin, r.MemMax = Statistics(r.Mem)
 }
 
 func (r *Resource) calcCostEval(config *MachineLevelConfig) {
@@ -47,7 +61,7 @@ func (r *Resource) calcCostEval(config *MachineLevelConfig) {
 func calcResourceCostDeviation(cpu float64, mem float64, disk float64, p float64, m float64, pm float64) float64 {
 	avg := (cpu + mem + disk + p + m + pm) / 6
 	return math.Sqrt(((cpu-avg)*(cpu-avg) + (mem-avg)*(mem-avg) + (disk-avg)*(disk-avg) +
-		(p-avg)*(p-avg) + (m-avg)*(m-avg) + (pm-avg)*(pm-avg)) / 6)
+		(p-avg)*(p-avg) + (m-avg)*(m-avg) + (pm-avg)*(pm-avg)) / float64(6))
 }
 
 func scaleCost(f float64) float64 {

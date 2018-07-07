@@ -34,3 +34,25 @@ func Exp(r float64) float64 {
 func Sqrt(r float64) float64 {
 	return r
 }
+
+func Statistics(arr [TimeSampleCount]float64) (avg float64, dev float64, min float64, max float64) {
+	min = math.MaxFloat64
+	max = -math.MaxFloat64
+	for _, v := range arr {
+		avg += v
+		if v < min {
+			min = v
+		}
+		if v > max {
+			max = v
+		}
+	}
+	avg = avg / float64(len(arr))
+
+	for _, v := range arr {
+		dev += (v - avg) * (v - avg)
+	}
+	dev = math.Sqrt(dev / float64(len(arr)))
+
+	return
+}

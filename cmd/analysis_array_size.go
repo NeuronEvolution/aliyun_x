@@ -59,11 +59,11 @@ func (c *AnalysisContext) AnalysisArraySize() {
 	}
 
 	fmt.Printf("AnalysisArraySize\n")
-	fmt.Printf("    maxAppId=%d\n", maxAppId)
-	fmt.Printf("    maxInstanceId=%d\n", maxInstanceId)
-	fmt.Printf("    maxMachineId=%d\n", maxMachineId)
-	fmt.Printf("    maxAppCount=%d,appId=%d\n", maxAppCount, maxAppCountAppId)
-	fmt.Printf("    deployedInstanceCount=%d\n", len(instanceMachineList))
-	fmt.Printf("    non-deployedInstanceCount=%d\n", len(instanceList))
-	fmt.Printf("    totalInstantCount=%d\n", len(c.instanceDeployList))
+	fmt.Printf("    maxAppId=                    %d\n", maxAppId)
+	fmt.Printf("    maxInstanceId=               %d\n", maxInstanceId)
+	fmt.Printf("    maxMachineId=                %d\n", maxMachineId)
+	fmt.Printf("    maxAppCount=                 %d,appId=%d\n", maxAppCount, maxAppCountAppId)
+	fmt.Printf("    deployedInstanceCount=       %d\n", len(instanceMachineList))
+	fmt.Printf("    non-deployedInstanceCount=   %d\n", len(instanceList))
+	fmt.Printf("    totalInstantCount=           %d\n", len(c.instanceDeployList))
 }
