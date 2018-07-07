@@ -103,10 +103,6 @@ func (c *AnalysisContext) AnalysisDiskDistributionByAppInstance() {
 		})
 	}
 	for _, v := range diskAppCountList {
-		if v.disk <= 100 {
-			continue
-		}
-
 		totalCount := 0
 		for _, appCount := range v.appCountList {
 			totalCount += appCount.count
@@ -115,6 +111,10 @@ func (c *AnalysisContext) AnalysisDiskDistributionByAppInstance() {
 
 		for _, appCount := range v.appCountList {
 			a := c.appResourcesMap[appCount.appId]
+			if v.disk <= 100 && a.CpuAvg < 16 && a.MemAvg < 32 {
+				continue
+			}
+
 			fmt.Printf("    CpuAvg=%4.1f,CpuDev=%4.1f,CpuMin=%4.1f,CpuMax=%4.1f,",
 				a.CpuAvg, a.CpuDeviation, a.CpuMin, a.CpuMax)
 			fmt.Printf("MemAvg=%5.1f,MemDev=%5.1f,MemMin=%5.1f,MemMax=%5.1f,",

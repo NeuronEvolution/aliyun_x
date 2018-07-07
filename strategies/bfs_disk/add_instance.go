@@ -12,7 +12,7 @@ func (s *BestFitStrategy) AddInstanceList(instanceList []*cloud.Instance) (err e
 		panic("BestFitStrategy.AddInstanceList getDeployMachineList failed")
 	}
 
-	instanceList, err = s.preDeploy(instanceList)
+	//instanceList, err = s.preDeploy(instanceList)
 	if err != nil {
 		return err
 	}
