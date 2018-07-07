@@ -109,6 +109,9 @@ func main() {
 	fmt.Printf("deployed=%d,non-deployed=%d,total=%d\n",
 		len(instanceMachineList), len(instanceList), len(instanceDeployDataList))
 
+	analysis(appInterferenceDataList, appResourcesDataList, machineResourceDataList, instanceDeployDataList)
+	return
+
 	begin := time.Now()
 	r := cloud.NewResourceManagement()
 	r.SetStrategy(bfs.NewFreeSmallerStrategy(r))
