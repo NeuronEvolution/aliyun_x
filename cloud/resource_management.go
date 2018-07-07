@@ -58,11 +58,11 @@ func (r *ResourceManagement) DebugStatus(buf *bytes.Buffer) {
 }
 
 func (r *ResourceManagement) DebugPrintStatus() {
-	fmt.Printf("-----------------------------------------------------------------\n")
+	fmt.Printf("----------------------------------------------STATUS-------------------------------------------\n")
 	buf := bytes.NewBufferString("")
 	r.DebugStatus(buf)
 	fmt.Printf(buf.String())
-	fmt.Printf("#################################################################\n")
+	fmt.Printf("-----------------------------------------------------------------------------------------------\n")
 }
 
 func (r *ResourceManagement) SetStrategy(s Strategy) {

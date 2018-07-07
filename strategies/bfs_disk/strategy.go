@@ -1,4 +1,4 @@
-package bfs
+package bfs_disk
 
 import (
 	"github.com/NeuronEvolution/aliyun_x/cloud"

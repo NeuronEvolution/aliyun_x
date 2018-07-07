@@ -1,4 +1,4 @@
-package bfs
+package bfs_disk
 
 import (
 	"fmt"

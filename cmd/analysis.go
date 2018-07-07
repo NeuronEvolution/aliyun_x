@@ -1,32 +1,63 @@
 package main
 
 import (
-	"fmt"
 	"github.com/NeuronEvolution/aliyun_x/cloud"
 )
 
-func analysis(
+type AnalysisContext struct {
+	appInterferenceList  []*cloud.AppInterferenceConfig
+	appResourcesList     []*cloud.AppResourcesConfig
+	machineResourcesList []*cloud.MachineResourcesConfig
+	instanceDeployList   []*cloud.InstanceDeployConfig
+
+	appResourcesMap        map[int]*cloud.AppResourcesConfig
+	machineResourcesMap    map[int]*cloud.MachineResourcesConfig
+	instanceMap            map[int]*cloud.InstanceDeployConfig
+	instanceDeployedMap    map[int]*cloud.InstanceDeployConfig
+	instanceNonDeployedMap map[int]*cloud.InstanceDeployConfig
+}
+
+func NewAnalysisContext(
 	appInterferenceList []*cloud.AppInterferenceConfig,
 	appResourcesList []*cloud.AppResourcesConfig,
 	machineResourcesList []*cloud.MachineResourcesConfig,
-	instanceDeployList []*cloud.InstanceDeployConfig) {
+	instanceDeployList []*cloud.InstanceDeployConfig) *AnalysisContext {
+	c := &AnalysisContext{}
+	c.appInterferenceList = appInterferenceList
+	c.appResourcesList = appResourcesList
+	c.machineResourcesList = machineResourcesList
+	c.instanceDeployList = instanceDeployList
 
-	diskDist := make(map[int]int, 0)
-	for _, v := range instanceDeployList {
-		for _, a := range appResourcesList {
-			if a.AppId == v.AppId {
-				_, has := diskDist[a.Disk]
-				if !has {
-					diskDist[a.Disk] = 1
-				} else {
-					diskDist[a.Disk]++
-				}
-				break
-			}
+	return c
+}
+
+func (c *AnalysisContext) init() {
+	c.appResourcesMap = make(map[int]*cloud.AppResourcesConfig)
+	for _, v := range c.appResourcesList {
+		c.appResourcesMap[v.AppId] = v
+	}
+
+	c.machineResourcesMap = make(map[int]*cloud.MachineResourcesConfig)
+	for _, v := range c.machineResourcesList {
+		c.machineResourcesMap[v.MachineId] = v
+	}
+
+	c.instanceMap = make(map[int]*cloud.InstanceDeployConfig)
+	c.instanceDeployedMap = make(map[int]*cloud.InstanceDeployConfig)
+	c.instanceNonDeployedMap = make(map[int]*cloud.InstanceDeployConfig)
+	for _, v := range c.instanceDeployList {
+		c.instanceMap[v.InstanceId] = v
+		if v.MachineId == 0 {
+			c.instanceNonDeployedMap[v.InstanceId] = v
+		} else {
+			c.instanceDeployedMap[v.InstanceId] = v
 		}
 	}
+}
 
-	for disk, count := range diskDist {
-		fmt.Printf("disk=%d,count=%d\n", disk, count)
-	}
+func (c *AnalysisContext) Run() {
+	c.init()
+
+	c.AnalysisArraySize()
+	c.AnalysisDiskDistribution()
 }

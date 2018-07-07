@@ -6,25 +6,25 @@ import (
 	"sort"
 )
 
-type SortedFirstFitStrategy struct {
+type FirstFitStrategy struct {
 	R *cloud.ResourceManagement
 }
 
-func NewASortedFirstFitStrategy(r *cloud.ResourceManagement) cloud.Strategy {
-	s := &SortedFirstFitStrategy{}
+func NewFirstFitStrategy(r *cloud.ResourceManagement) cloud.Strategy {
+	s := &FirstFitStrategy{}
 	s.R = r
 
 	return s
 }
 
-func (s *SortedFirstFitStrategy) Name() string {
+func (s *FirstFitStrategy) Name() string {
 	return "SortedFirstFitStrategy"
 }
 
-func (s *SortedFirstFitStrategy) PostInit() (err error) {
-	//fmt.Printf("AllocMachineIfDeployFailedStrategy.PostInit\n")
+func (s *FirstFitStrategy) PostInit() (err error) {
+	//fmt.Printf("FirstFitStrategy.PostInit\n")
 	for i := 0; ; i++ {
-		//fmt.Printf("SortedFirstFitStrategy.PostInit %d\n", i)
+		//fmt.Printf("FirstFitStrategy.PostInit %d\n", i)
 		var m *cloud.Machine
 		for _, level := range s.R.MachineDeployPool.MachineLevelDeployArray {
 			for _, v := range level.MachineCollection.List[:level.MachineCollection.ListCount] {
@@ -67,7 +67,7 @@ func (s *SortedFirstFitStrategy) PostInit() (err error) {
 	return nil
 }
 
-func (s *SortedFirstFitStrategy) firstFit(instance *cloud.Instance) *cloud.Machine {
+func (s *FirstFitStrategy) firstFit(instance *cloud.Instance) *cloud.Machine {
 	for _, v := range s.R.MachineDeployPool.MachineLevelDeployArray {
 		for i := 0; i < v.MachineCollection.ListCount; i++ {
 			m := v.MachineCollection.List[i]
@@ -80,7 +80,7 @@ func (s *SortedFirstFitStrategy) firstFit(instance *cloud.Instance) *cloud.Machi
 	return nil
 }
 
-func (s *SortedFirstFitStrategy) findAvailableMachine(instance *cloud.Instance) *cloud.Machine {
+func (s *FirstFitStrategy) findAvailableMachine(instance *cloud.Instance) *cloud.Machine {
 	m := s.firstFit(instance)
 	if m != nil {
 		return m
@@ -88,12 +88,12 @@ func (s *SortedFirstFitStrategy) findAvailableMachine(instance *cloud.Instance) 
 
 	m = s.R.MachineFreePool.PeekMachine()
 	if m == nil {
-		fmt.Printf("SortedFirstFitStrategy.firstFit no machine\n")
+		fmt.Printf("FirstFitStrategy.firstFit no machine\n")
 		return nil
 	}
 
 	if !m.ConstraintCheck(instance) {
-		fmt.Printf("SortedFirstFitStrategy.firstFit ConstraintCheck failed machindId=%d,instanceId=%d\n",
+		fmt.Printf("FirstFitStrategy.firstFit ConstraintCheck failed machindId=%d,instanceId=%d\n",
 			m.MachineId, instance.InstanceId)
 		return nil
 	}
@@ -101,12 +101,12 @@ func (s *SortedFirstFitStrategy) findAvailableMachine(instance *cloud.Instance) 
 	return m
 }
 
-func (s *SortedFirstFitStrategy) AddInstance(instance *cloud.Instance) (err error) {
+func (s *FirstFitStrategy) AddInstance(instance *cloud.Instance) (err error) {
 
 	return nil
 }
 
-func (s *SortedFirstFitStrategy) AddInstanceList(instanceList []*cloud.Instance) (err error) {
+func (s *FirstFitStrategy) AddInstanceList(instanceList []*cloud.Instance) (err error) {
 	sort.Sort(cloud.InstanceListSortByCostEvalDesc(instanceList))
 
 	for i, v := range instanceList {
@@ -118,7 +118,7 @@ func (s *SortedFirstFitStrategy) AddInstanceList(instanceList []*cloud.Instance)
 
 		m := s.findAvailableMachine(v)
 		if m == nil {
-			return fmt.Errorf("SortedFirstFitStrategy.AddInstance no firstFit")
+			return fmt.Errorf("FirstFitStrategy.AddInstance no firstFit")
 		}
 
 		s.R.CommandDeployInstance(v, m)

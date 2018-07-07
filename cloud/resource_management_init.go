@@ -45,7 +45,3 @@ func (r *ResourceManagement) Init(
 
 	return nil
 }
-
-func (r *ResourceManagement) PostInit() (err error) {
-	return r.Strategy.PostInit()
-}
