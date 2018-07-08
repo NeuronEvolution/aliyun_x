@@ -111,35 +111,11 @@ func (m *Machine) RemoveInstance(instanceId int) {
 }
 
 func (m *Machine) allocResource(instance *Instance) {
-	c := instance.Config
-	for i, v := range c.Cpu {
-		m.Cpu[i] += v
-	}
-	for i, v := range c.Mem {
-		m.Mem[i] += v
-	}
-	m.Disk += c.Disk
-	m.M += c.M
-	m.P += c.P
-	m.PM += c.PM
-
-	//m.debugLogResource()
+	m.AddResource(&instance.Config.Resource)
 }
 
 func (m *Machine) freeResource(instance *Instance) {
-	c := instance.Config
-	for i, v := range c.Cpu {
-		m.Cpu[i] -= v
-	}
-	for i, v := range c.Mem {
-		m.Mem[i] -= v
-	}
-	m.Disk -= c.Disk
-	m.M -= c.M
-	m.P -= c.P
-	m.PM -= c.PM
-
-	//m.debugLogResource()
+	m.RemoveResource(&instance.Config.Resource)
 }
 
 func (m *Machine) IsEmpty() bool {
@@ -149,12 +125,12 @@ func (m *Machine) IsEmpty() bool {
 func (m *Machine) ConstraintCheck(instance *Instance) bool {
 	//debugLog("Machine.ConstraintCheck %s %s", m.MachineId, instance.InstanceId)
 
-	if !constraintCheckResourceLimit(m, instance) {
+	if !ConstraintCheckResourceLimit(&m.Resource, &instance.Config.Resource, m.LevelConfig) {
 		//debugLog("Machine.ConstraintCheck constraintCheckResourceLimit failed")
 		return false
 	}
 
-	if !constraintCheckAppInterferenceAddInstance(
+	if !ConstraintCheckAppInterferenceAddInstance(
 		instance.Config.AppId,
 		m.appCountCollection,
 		m.R.AppInterferenceConfigMap) {
@@ -166,7 +142,7 @@ func (m *Machine) ConstraintCheck(instance *Instance) bool {
 }
 
 func (m *Machine) HasBadConstraint() bool {
-	return !constraintCheckAppInterference(m.appCountCollection, m.R.AppInterferenceConfigMap)
+	return !ConstraintCheckAppInterference(m.appCountCollection, m.R.AppInterferenceConfigMap)
 }
 
 func (m *Machine) GetCostReal() float64 {
@@ -273,30 +249,12 @@ func (m *Machine) debugValidation() {
 	m.appCountCollection.debugValidation()
 }
 
-func (m *Machine) debugLogResource() {
-	if DebugEnabled {
-		maxCpu := float64(0)
-		for _, v := range m.Cpu {
-			if v > maxCpu {
-				maxCpu = v
-			}
-		}
-		maxMem := float64(0)
-		for _, v := range m.Mem {
-			if v > maxMem {
-				maxMem = v
-			}
-		}
-		fmt.Printf("Machine.debugLogResource %d %f %f %d %d %d %d\n",
-			m.MachineId, maxCpu, maxMem, m.Disk, m.P, m.M, m.PM)
-	}
-}
-
 func (m *Machine) DebugPrint() {
 	fmt.Printf("Machine.DebugPrint %d %v\n", m.MachineId, m.LevelConfig)
 	for i := 0; i < m.appCountCollection.ListCount; i++ {
-		fmt.Printf("    %v,%v\n", m.appCountCollection.List[i],
-			m.R.AppResourcesConfigMap[m.appCountCollection.List[i].AppId])
+		fmt.Printf("    %v,", m.appCountCollection.List[i])
+		m.R.AppResourcesConfigMap[m.appCountCollection.List[i].AppId].DebugPrint()
 	}
-	m.debugLogResource()
+
+	m.Resource.DebugPrint()
 }

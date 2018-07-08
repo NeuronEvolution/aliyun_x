@@ -1,6 +1,9 @@
 package cloud
 
-import "math"
+import (
+	"fmt"
+	"math"
+)
 
 type Resource struct {
 	Cpu  [TimeSampleCount]float64
@@ -21,6 +24,44 @@ type Resource struct {
 	MemMin       float64
 	MemAvg       float64
 	MemDeviation float64
+}
+
+func (r *Resource) DebugPrint() {
+	r.CalcTimedResourceStatistics()
+
+	fmt.Printf("Resource.DebugPrint ")
+	fmt.Printf("Disk=%4d,", r.Disk)
+	fmt.Printf("P=%d,M=%d,PM=%d,", r.P, r.M, r.PM)
+	fmt.Printf("CpuAvg=%4.1f,CpuDev=%4.1f,CpuMin=%4.1f,CpuMax=%4.1f,",
+		r.CpuAvg, r.CpuDeviation, r.CpuMin, r.CpuMax)
+	fmt.Printf("MemAvg=%5.1f,MemDev=%5.1f,MemMin=%5.1f,MemMax=%5.1f\n",
+		r.MemAvg, r.MemDeviation, r.MemMin, r.MemMax)
+}
+
+func (r *Resource) AddResource(p *Resource) {
+	for i, v := range p.Cpu {
+		r.Cpu[i] += v
+	}
+	for i, v := range p.Mem {
+		r.Mem[i] += v
+	}
+	r.Disk += p.Disk
+	r.M += p.M
+	r.P += p.P
+	r.PM += p.PM
+}
+
+func (r *Resource) RemoveResource(p *Resource) {
+	for i, v := range p.Cpu {
+		r.Cpu[i] -= v
+	}
+	for i, v := range p.Mem {
+		r.Mem[i] -= v
+	}
+	r.Disk -= p.Disk
+	r.M -= p.M
+	r.P -= p.P
+	r.PM -= p.PM
 }
 
 func (r *Resource) CalcTimedResourceStatistics() {

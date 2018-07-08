@@ -12,13 +12,16 @@ func (s *BestFitStrategy) AddInstanceList(instanceList []*cloud.Instance) (err e
 		panic("BestFitStrategy.AddInstanceList getDeployMachineList failed")
 	}
 
-	//instanceList, err = s.preDeploy(instanceList)
+	restInstances, restMachines, err := s.preDeploy(instanceList)
 	if err != nil {
 		return err
 	}
 
-	sort.Sort(cloud.InstanceListSortByCostEvalDesc(instanceList))
-	for i, v := range instanceList {
+	s.machineDeployList = restMachines
+	fmt.Printf("AddInstanceList machineCount=%d\n", len(s.machineDeployList))
+
+	sort.Sort(cloud.InstanceListSortByCostEvalDesc(restInstances))
+	for i, v := range restInstances {
 		if i > 0 && i%1000 == 0 {
 			fmt.Println(i)
 		}

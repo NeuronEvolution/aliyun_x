@@ -1,6 +1,6 @@
 package cloud
 
-func constraintCheckAppInterference(c *AppCountCollection, m [][MaxAppId]int) bool {
+func ConstraintCheckAppInterference(c *AppCountCollection, m [][MaxAppId]int) bool {
 	//debugLog("constraintCheckAppInterference %v", c.List[:c.ListCount])
 	for _, v1 := range c.List[:c.ListCount] {
 		for _, v2 := range c.List[:c.ListCount] {
@@ -23,8 +23,8 @@ func constraintCheckAppInterference(c *AppCountCollection, m [][MaxAppId]int) bo
 //appId:要新增的appId
 //c:当前机器已部署的每个app的数量
 //m:冲突配置
-func constraintCheckAppInterferenceAddInstance(appId int, c *AppCountCollection, m [][MaxAppId]int) bool {
-	//debugLog("constraintCheckAppInterferenceAddInstance appId=%d %v", appId, c.List[:c.ListCount])
+func ConstraintCheckAppInterferenceAddInstance(appId int, c *AppCountCollection, m [][MaxAppId]int) bool {
+	debugLog("constraintCheckAppInterferenceAddInstance appId=%d %v", appId, c.List[:c.ListCount])
 	appCount := 0
 	for _, v := range c.List[:c.ListCount] {
 		if v.AppId == appId {
@@ -69,38 +69,35 @@ func constraintCheckAppInterferenceAddInstance(appId int, c *AppCountCollection,
 	return true
 }
 
-func constraintCheckResourceLimit(m *Machine, instance *Instance) bool {
-	c := m.LevelConfig
-	i := instance.Config
-
-	if m.Disk+i.Disk > c.Disk {
-		//debugLog("constraintCheckResourceLimit failed Disk %d %d %d", m.Disk, i.Disk, c.Disk)
+func ConstraintCheckResourceLimit(r *Resource, i *Resource, c *MachineLevelConfig) bool {
+	if r.Disk+i.Disk > c.Disk {
+		//debugLog("constraintCheckResourceLimit failed Disk %d %d %d", r.Disk, i.Disk, c.Disk)
 		return false
 	}
 
-	if m.P+i.P > c.P {
-		debugLog("constraintCheckResourceLimit failed P %d %d %d", m.P, i.P, c.P)
+	if r.P+i.P > c.P {
+		debugLog("constraintCheckResourceLimit failed P %d %d %d", r.P, i.P, c.P)
 		return false
 	}
 
-	if m.M+i.M > c.M {
-		debugLog("constraintCheckResourceLimit failed M %d %d %d", m.M, i.M, c.M)
+	if r.M+i.M > c.M {
+		debugLog("constraintCheckResourceLimit failed M %d %d %d", r.M, i.M, c.M)
 		return false
 	}
 
-	if m.PM+i.PM > c.PM {
-		debugLog("constraintCheckResourceLimit failed PM %d %d %d", m.PM, i.PM, c.PM)
+	if r.PM+i.PM > c.PM {
+		debugLog("constraintCheckResourceLimit failed PM %d %d %d", r.PM, i.PM, c.PM)
 		return false
 	}
 
-	for index, v := range m.Cpu {
+	for index, v := range r.Cpu {
 		if v+i.Cpu[index] > c.Cpu {
 			debugLog("constraintCheckResourceLimit failed Cpu %d %f %f %f", index, v, i.Cpu[index], c.Cpu)
 			return false
 		}
 	}
 
-	for index, v := range m.Mem {
+	for index, v := range r.Mem {
 		if v+i.Mem[index] > c.Mem {
 			debugLog("constraintCheckResourceLimit failed Mem %d %f %f %f", index, v, i.Mem[index], c.Mem)
 			return false

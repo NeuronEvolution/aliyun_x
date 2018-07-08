@@ -34,7 +34,7 @@ func (r *ResourceManagement) InitInstanceDeploy(configList []*InstanceDeployConf
 			return fmt.Errorf("ResourceManagement.InitInstanceDeploy machine %d not exsits", v.MachineId)
 		}
 
-		if !constraintCheckResourceLimit(m, instance) {
+		if !ConstraintCheckResourceLimit(&m.Resource, &instance.Config.Resource, m.LevelConfig) {
 			//debugLog("Machine.ConstraintCheck constraintCheckResourceLimit failed")
 			return fmt.Errorf("constraintCheckResourceLimit failed %d", m.MachineId)
 		}
