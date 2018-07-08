@@ -24,7 +24,7 @@ func ConstraintCheckAppInterference(c *AppCountCollection, m [][MaxAppId]int) bo
 //c:当前机器已部署的每个app的数量
 //m:冲突配置
 func ConstraintCheckAppInterferenceAddInstance(appId int, c *AppCountCollection, m [][MaxAppId]int) bool {
-	debugLog("constraintCheckAppInterferenceAddInstance appId=%d %v", appId, c.List[:c.ListCount])
+	//debugLog("constraintCheckAppInterferenceAddInstance appId=%d %v", appId, c.List[:c.ListCount])
 	appCount := 0
 	for _, v := range c.List[:c.ListCount] {
 		if v.AppId == appId {
@@ -70,8 +70,9 @@ func ConstraintCheckAppInterferenceAddInstance(appId int, c *AppCountCollection,
 }
 
 func ConstraintCheckResourceLimit(r *Resource, i *Resource, c *MachineLevelConfig) bool {
+	//fmt.Printf("ConstraintCheckResourceLimit\n")
 	if r.Disk+i.Disk > c.Disk {
-		//debugLog("constraintCheckResourceLimit failed Disk %d %d %d", r.Disk, i.Disk, c.Disk)
+		debugLog("constraintCheckResourceLimit failed Disk %d %d %d", r.Disk, i.Disk, c.Disk)
 		return false
 	}
 

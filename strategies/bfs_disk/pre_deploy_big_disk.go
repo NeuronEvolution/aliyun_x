@@ -33,6 +33,8 @@ func (s *BestFitStrategy) preDeployDistance(
 }
 
 func (s *BestFitStrategy) preDeployRestDiskNeedSkip(restDisk int, maxDisk int) bool {
+	//fmt.Println("preDeployRestDiskNeedSkip", restDisk, maxDisk)
+
 	if restDisk < 10 {
 		return false
 	}
@@ -90,13 +92,12 @@ func (s *BestFitStrategy) preDeployRestDiskNeedSkip(restDisk int, maxDisk int) b
 }
 
 func (s *BestFitStrategy) preDeploySearch(m *cloud.Machine, instanceList []*cloud.Instance) ([]*cloud.Instance, error) {
-	if m.MachineId == 3174 {
+	if m.MachineId == 3163 {
 		cloud.SetDebug(true)
 	}
 
-	fmt.Println(len(instanceList))
-
-	fmt.Printf("preDeploySearch machineId=%d,disk=%d\n", m.MachineId, instanceList[0].Config.Disk)
+	fmt.Printf("preDeploySearch machineId=%d,disk=%d,instanceCount=%d\n",
+		m.MachineId, instanceList[0].Config.Disk, len(instanceList))
 	limit := &cloud.MachineLevelConfig{}
 	limit.Cpu = m.LevelConfig.Cpu / float64(2)
 	limit.Mem = m.LevelConfig.Mem
@@ -134,16 +135,58 @@ func (s *BestFitStrategy) preDeploySearch(m *cloud.Machine, instanceList []*clou
 		instance := instanceList[i]
 		same := lastAppId != 0 && instance.Config.AppId == lastAppId
 		restDisk := limit.Disk - (resource.Disk + instance.Config.Disk)
-		if !same && !s.preDeployRestDiskNeedSkip(restDisk, instance.Config.Disk) &&
-			cloud.ConstraintCheckResourceLimit(resource, &instance.Config.Resource, limit) &&
-			cloud.ConstraintCheckAppInterferenceAddInstance(instance.Config.AppId, appCount, s.R.AppInterferenceConfigMap) {
+		skipHigh := first.Config.Disk > 167 && instance.Config.Disk > 167
 
-			if cloud.DebugEnabled {
-				fmt.Printf("preDeploySearch add depth=%d,i=%d,disk=%d,iDisk=%d,\n",
-					depth, i, resource.Disk, instance.Config.Disk)
+		if restDisk >= 40 {
+			maxCpu := float64(0)
+			for t, v := range resource.Cpu {
+				cpu := v + instance.Config.Cpu[t]
+				if cpu > maxCpu {
+					maxCpu = cpu
+				}
 			}
 
-			lastAppId = instance.Config.AppId
+			if maxCpu > 40 {
+				skipHigh = true
+				//fmt.Println("skipHigh ", maxCpu)
+			}
+		}
+
+		finish := false
+		for {
+			if same {
+				break
+			}
+
+			if skipHigh {
+				lastAppId = instance.Config.AppId
+				break
+			}
+
+			skipRestDisk := s.preDeployRestDiskNeedSkip(restDisk, instance.Config.Disk)
+			if skipRestDisk {
+				lastAppId = instance.Config.AppId
+				break
+			}
+
+			resourceLimitOK := cloud.ConstraintCheckResourceLimit(resource, &instance.Config.Resource, limit)
+			if !resourceLimitOK {
+				lastAppId = instance.Config.AppId
+				break
+			}
+
+			appInferenceOK := cloud.ConstraintCheckAppInterferenceAddInstance(
+				instance.Config.AppId, appCount, s.R.AppInterferenceConfigMap)
+			if !appInferenceOK {
+				lastAppId = instance.Config.AppId
+				break
+			}
+
+			if cloud.DebugEnabled {
+				//fmt.Printf("preDeploySearch add depth=%d,i=%d,disk=%d,iDisk=%d,\n",
+				//	depth, i, resource.Disk, instance.Config.Disk)
+			}
+
 			if restDisk < 10 {
 				distance := s.preDeployDistance(resource, instance, limit, false)
 
@@ -161,26 +204,30 @@ func (s *BestFitStrategy) preDeploySearch(m *cloud.Machine, instanceList []*clou
 					bestResult = append(bestResult, instance)
 
 					if distance < 0.1 {
-						break
+						finish = true
 					}
 				}
 
 				count++
 				if count > PreDeploySearchCountMax && len(bestResult) > 1 {
-					break
+					finish = true
 				}
 			} else {
 				resource.AddResource(&instance.Config.Resource)
 				appCount.Add(instance.Config.AppId)
 				lastAppId = 0
 				if cloud.DebugEnabled {
-					fmt.Printf("preDeploySearch depth++ depth=%d,offset=%d,disk=%d\n", depth, i, instance.Config.Disk)
+					//fmt.Printf("preDeploySearch depth++ depth=%d,offset=%d,disk=%d\n", depth, i, instance.Config.Disk)
 				}
 
 				instanceStack[depth] = instance
 				offsetStack[depth] = i
 				depth++
 			}
+		}
+
+		if finish {
+			break
 		}
 
 		for {
@@ -190,6 +237,8 @@ func (s *BestFitStrategy) preDeploySearch(m *cloud.Machine, instanceList []*clou
 			}
 
 			lastAppId = 0
+
+			//fmt.Println("depth--")
 
 			depth--
 			if depth == 0 {
@@ -221,11 +270,11 @@ func (s *BestFitStrategy) preDeploySearch(m *cloud.Machine, instanceList []*clou
 		}
 	}
 
-	fmt.Println(offsetStack)
-	fmt.Println(depth)
-	for _, v := range instanceStack[:depth] {
-		fmt.Println(v.Config.Disk)
-	}
+	//fmt.Println(offsetStack)
+	//fmt.Println(depth)
+	//for _, v := range instanceStack[:depth] {
+	//	fmt.Println(v.Config.Disk)
+	//}
 
 	fmt.Printf("preDeploySearch bestResult=%f,count=%d\n", bestDistance, len(bestResult))
 
