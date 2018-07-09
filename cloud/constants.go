@@ -22,3 +22,5 @@ const ParamDeviationMultiply = 1   //影响大
 const ParamAppInferenceMultiply = 1
 const ParamAppCostMultiply = 5 //影响大
 const ParamCpuCostMultiply = 1
+
+const MaxCpuRatio = float64(0.5)

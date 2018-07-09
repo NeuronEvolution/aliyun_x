@@ -26,7 +26,7 @@ func (s *BestFitStrategy) bestFitResource(
 			continue
 		}
 
-		if m.ConstraintCheck(instance) {
+		if m.ConstraintCheck(instance, cloud.MaxCpuRatio) {
 			minResourceCost = resourceCost
 			minResourceCostMachine = m
 		}
@@ -56,7 +56,7 @@ func (s *BestFitStrategy) bestFitCpuCost(
 			continue
 		}
 
-		if m.ConstraintCheck(instance) {
+		if m.ConstraintCheck(instance, cloud.MaxCpuRatio) {
 			minCpuCost = cost
 			minCpuCostMachine = m
 		}

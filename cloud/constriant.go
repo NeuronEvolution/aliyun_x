@@ -69,7 +69,7 @@ func ConstraintCheckAppInterferenceAddInstance(appId int, c *AppCountCollection,
 	return true
 }
 
-func ConstraintCheckResourceLimit(r *Resource, i *Resource, c *MachineLevelConfig) bool {
+func ConstraintCheckResourceLimit(r *Resource, i *Resource, c *MachineLevelConfig, maxCpuRatio float64) bool {
 	//fmt.Printf("ConstraintCheckResourceLimit\n")
 	if r.Disk+i.Disk > c.Disk {
 		debugLog("constraintCheckResourceLimit failed Disk %d %d %d", r.Disk, i.Disk, c.Disk)
@@ -92,7 +92,7 @@ func ConstraintCheckResourceLimit(r *Resource, i *Resource, c *MachineLevelConfi
 	}
 
 	for index, v := range r.Cpu {
-		if v+i.Cpu[index] > c.Cpu {
+		if v+i.Cpu[index] > c.Cpu*maxCpuRatio {
 			debugLog("constraintCheckResourceLimit failed Cpu %d %f %f %f", index, v, i.Cpu[index], c.Cpu)
 			return false
 		}

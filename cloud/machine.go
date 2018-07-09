@@ -122,10 +122,10 @@ func (m *Machine) IsEmpty() bool {
 	return len(m.InstanceArray) == 0
 }
 
-func (m *Machine) ConstraintCheck(instance *Instance) bool {
+func (m *Machine) ConstraintCheck(instance *Instance, maxCpuRatio float64) bool {
 	//debugLog("Machine.ConstraintCheck %s %s", m.MachineId, instance.InstanceId)
 
-	if !ConstraintCheckResourceLimit(&m.Resource, &instance.Config.Resource, m.LevelConfig) {
+	if !ConstraintCheckResourceLimit(&m.Resource, &instance.Config.Resource, m.LevelConfig, maxCpuRatio) {
 		//debugLog("Machine.ConstraintCheck constraintCheckResourceLimit failed")
 		return false
 	}

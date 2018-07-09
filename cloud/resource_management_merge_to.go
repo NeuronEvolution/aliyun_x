@@ -59,7 +59,7 @@ func (r *ResourceManagement) mergeMachine(m *Machine, pool []*Machine, status *R
 
 		hasFit := false
 		for _, freeMachine := range pool {
-			if freeMachine.ConstraintCheck(instance) {
+			if freeMachine.ConstraintCheck(instance, 1) {
 				m.RemoveInstance(instance.InstanceId)
 				r.CommandDeployInstance(instance, freeMachine)
 				hasFit = true
@@ -72,7 +72,7 @@ func (r *ResourceManagement) mergeMachine(m *Machine, pool []*Machine, status *R
 				return fmt.Errorf("ResourceManagement.mergeMachine no free machine")
 			}
 
-			if !freeMachine.ConstraintCheck(instance) {
+			if !freeMachine.ConstraintCheck(instance, 1) {
 				return fmt.Errorf("ResourceManagement.mergeMachine free machine ConstraintCheck failed")
 			}
 
@@ -93,7 +93,7 @@ func (r *ResourceManagement) mergeMachine(m *Machine, pool []*Machine, status *R
 
 		targetMachineId := r.mergeGetTargetMachineId(instance.InstanceId, status, mapping)
 		if targetMachineId == m.MachineId {
-			if !m.ConstraintCheck(instance) {
+			if !m.ConstraintCheck(instance, 1) {
 				return fmt.Errorf("ResourceManagement.mergeMachine return back ConstraintCheck failed %d %d %d",
 					m.MachineId, instance.InstanceId, status.InstanceDeployedMachineMap[instance.InstanceId].MachineId)
 			}
@@ -115,7 +115,7 @@ func (r *ResourceManagement) mergeNonDeployedMachines(status *ResourceManagement
 		if r.InstanceList[instance.InstanceId] == nil {
 			newInstance := r.CreateInstance(instance.InstanceId, instance.Config)
 			m := r.MachineMap[status.InstanceDeployedMachineMap[instance.InstanceId].MachineId]
-			if !m.ConstraintCheck(instance) {
+			if !m.ConstraintCheck(instance, 1) {
 				return fmt.Errorf("ResourceManagement.MergeTo ConstraintCheck failed %d %d\n",
 					m.MachineId, instance.InstanceId)
 			}

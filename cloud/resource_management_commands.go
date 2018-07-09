@@ -51,7 +51,7 @@ func (r *ResourceManagement) Play(h *DeployCommandHistory) (err error) {
 			currentMachine.RemoveInstance(v.InstanceId)
 		}
 
-		if !m.ConstraintCheck(instance) {
+		if !m.ConstraintCheck(instance, 1) {
 			return fmt.Errorf("ResourceManagement.Play ConstraintCheck failed %d %v ", i, v)
 		}
 
