@@ -48,11 +48,12 @@ func Run(machineResourcesList []*MachineResourcesConfig,
 	if err != nil {
 		return nil, err
 	}
+	merge.DebugPrintStatus()
 
 	fmt.Printf("---------------------------------------------REPLAY-----------------------------------------\n")
 
 	playback := NewResourceManagement()
-	err = playback.Init(machineResourcesList, appResourcesList, appInterferenceList, nil)
+	err = playback.Init(machineResourcesList, appResourcesList, appInterferenceList, instanceMachineList)
 	if err != nil {
 		return nil, err
 	}

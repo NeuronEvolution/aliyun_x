@@ -26,18 +26,12 @@ func (s *BestFitStrategy) AddInstanceList(instanceList []*cloud.Instance) (err e
 			fmt.Println(i)
 		}
 
-		if i > 68000 {
-			cloud.SetDebug(true)
-		}
-
 		err = s.addInstance(v, nil)
 		if err != nil {
 			fmt.Println(i)
 			return err
 		}
 	}
-
-	cloud.SetDebug(false)
 
 	return nil
 }
@@ -46,7 +40,7 @@ func (s *BestFitStrategy) addInstance(instance *cloud.Instance, skip *cloud.Mach
 	//0.6CPU内，插入后最小原则插入
 	m := s.bestFitResource(instance, skip, cloud.MaxCpu)
 	if m != nil {
-		s.R.CommandDeployInstance(instance, m)
+		m.AddInstance(instance)
 		s.sortMachineDeployList()
 		return nil
 	}
@@ -56,7 +50,7 @@ func (s *BestFitStrategy) addInstance(instance *cloud.Instance, skip *cloud.Mach
 		return fmt.Errorf("BestFitStrategy.addInstance bestFitResource failed")
 	}
 
-	s.R.CommandDeployInstance(instance, m)
+	m.AddInstance(instance)
 	s.sortMachineDeployList()
 	return nil
 }

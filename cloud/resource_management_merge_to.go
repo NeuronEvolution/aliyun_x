@@ -127,6 +127,12 @@ func (r *ResourceManagement) mergeNonDeployedMachines(status *ResourceManagement
 }
 
 func (r *ResourceManagement) MergeTo(status *ResourceManagement) (err error) {
+	n := 0
+	for _, v := range status.MachineDeployPool.MachineMap {
+		n += v.InstanceArrayCount
+	}
+	fmt.Println("MergeTo", n)
+
 	mapping := r.mergeGetMachineMapping(status)
 
 	initMachineMap := make([]*Machine, 0)

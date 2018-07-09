@@ -6,306 +6,6 @@ import (
 	"sort"
 )
 
-const minDisk = 40
-
-func (s *BestFitStrategy) preDeployDistance(
-	r *cloud.Resource, instance *cloud.Instance, limit *cloud.MachineLevelConfig, log bool) float64 {
-
-	cpu := float64(0)
-	for i, v := range r.Cpu {
-		cpu += v + instance.Config.Cpu[i]
-	}
-	cpu = cpu / float64(len(r.Cpu))
-	rCpu := (limit.Cpu - cpu) / limit.Cpu
-
-	mem := float64(0)
-	for i, v := range r.Mem {
-		mem += v + instance.Config.Mem[i]
-	}
-	mem = mem / float64(len(r.Mem))
-	rMem := (limit.Mem - mem) / limit.Mem
-
-	if log {
-		fmt.Printf("preDeployDistance %f %f %f %f\n", cpu, rCpu, mem, rMem)
-	}
-
-	return rCpu + rMem
-}
-
-func (s *BestFitStrategy) preDeployRestDiskNeedSkip(restDisk int, maxDisk int) bool {
-	//fmt.Println("preDeployRestDiskNeedSkip", restDisk, maxDisk)
-
-	if restDisk < 10 {
-		return false
-	}
-
-	if restDisk < 40 {
-		return true
-	}
-
-	switch maxDisk {
-	case 40:
-		{
-			if restDisk%40 < 10 {
-				return false
-			} else {
-				return true
-			}
-		}
-	case 60:
-		{
-			if restDisk%20 < 10 {
-				return false
-			} else {
-				return true
-			}
-		}
-	case 80:
-		{
-			if restDisk%20 < 10 {
-				return false
-			} else {
-				return true
-			}
-		}
-	case 100:
-		{
-			if restDisk%20 < 10 {
-				return false
-			} else {
-				return true
-			}
-		}
-	case 120:
-		{
-			if restDisk%20 < 10 {
-				return false
-			} else {
-				return true
-			}
-		}
-	default:
-		return false
-	}
-
-	return false
-}
-
-func (s *BestFitStrategy) preDeploySearch(m *cloud.Machine, instanceList []*cloud.Instance) ([]*cloud.Instance, error) {
-	if m.MachineId == 3163 {
-		cloud.SetDebug(true)
-	}
-
-	fmt.Printf("preDeploySearch machineId=%d,disk=%d,instanceCount=%d\n",
-		m.MachineId, instanceList[0].Config.Disk, len(instanceList))
-	limit := &cloud.MachineLevelConfig{}
-	limit.Cpu = m.LevelConfig.Cpu / float64(2)
-	limit.Mem = m.LevelConfig.Mem
-	limit.Disk = m.LevelConfig.Disk
-	limit.P = m.LevelConfig.P
-	limit.M = m.LevelConfig.M
-	limit.PM = m.LevelConfig.PM
-
-	first := instanceList[0]
-	if limit.Disk-first.Config.Disk < minDisk {
-		//fmt.Printf("preDeploySearch limit.Disk-first.Config.Disk < minDisk  %d %d\n", limit.Disk, first.Config.Disk)
-		return []*cloud.Instance{first}, nil
-	}
-
-	resource := &cloud.Resource{}
-	resource.AddResource(&first.Config.Resource)
-	appCount := cloud.NewAppCountCollection()
-	appCount.Add(first.Config.AppId)
-
-	var bestResult []*cloud.Instance
-	bestDistance := float64(2)
-
-	depth := 0
-	instanceStack := make([]*cloud.Instance, 32)
-	instanceStack[depth] = first
-	offsetStack := make([]int, 32)
-	offsetStack[depth] = 0
-	depth++
-	offsetStack[depth] = 1
-
-	size := len(instanceList)
-	lastAppId := 0
-	count := 0
-	for i := offsetStack[depth]; i < size; {
-		instance := instanceList[i]
-		same := lastAppId != 0 && instance.Config.AppId == lastAppId
-		restDisk := limit.Disk - (resource.Disk + instance.Config.Disk)
-		skipHigh := first.Config.Disk > 167 && instance.Config.Disk > 167
-
-		if restDisk >= 40 {
-			maxCpu := float64(0)
-			for t, v := range resource.Cpu {
-				cpu := v + instance.Config.Cpu[t]
-				if cpu > maxCpu {
-					maxCpu = cpu
-				}
-			}
-
-			if maxCpu > 40 {
-				skipHigh = true
-				//fmt.Println("skipHigh ", maxCpu)
-			}
-		}
-
-		finish := false
-		for {
-			if same {
-				break
-			}
-
-			if skipHigh {
-				lastAppId = instance.Config.AppId
-				break
-			}
-
-			skipRestDisk := s.preDeployRestDiskNeedSkip(restDisk, instance.Config.Disk)
-			if skipRestDisk {
-				lastAppId = instance.Config.AppId
-				break
-			}
-
-			resourceLimitOK := cloud.ConstraintCheckResourceLimit(resource, &instance.Config.Resource, limit, cloud.MaxCpuRatio)
-			if !resourceLimitOK {
-				lastAppId = instance.Config.AppId
-				break
-			}
-
-			appInferenceOK := cloud.ConstraintCheckAppInterferenceAddInstance(
-				instance.Config.AppId, appCount, s.R.AppInterferenceConfigMap)
-			if !appInferenceOK {
-				lastAppId = instance.Config.AppId
-				break
-			}
-
-			if cloud.DebugEnabled {
-				//fmt.Printf("preDeploySearch add depth=%d,i=%d,disk=%d,iDisk=%d,\n",
-				//	depth, i, resource.Disk, instance.Config.Disk)
-			}
-
-			if restDisk < 10 {
-				distance := s.preDeployDistance(resource, instance, limit, false)
-
-				if cloud.DebugEnabled {
-					fmt.Printf("preDeploySearch %d,%d %f %f\n", resource.Disk, instance.Config.Disk, distance, bestDistance)
-				}
-
-				if distance < bestDistance-0.000001 {
-					fmt.Printf("preDeploySearch best %d,%d %f\n",
-						resource.Disk, instance.Config.Disk, distance)
-					//resource.DebugPrint()
-					bestDistance = distance
-					bestResult = make([]*cloud.Instance, 0)
-					bestResult = append(bestResult, instanceStack[:depth]...)
-					bestResult = append(bestResult, instance)
-
-					if distance < 0.1 {
-						finish = true
-					}
-				}
-
-				count++
-				if count > PreDeploySearchCountMax && len(bestResult) > 1 {
-					finish = true
-				}
-			} else {
-				resource.AddResource(&instance.Config.Resource)
-				appCount.Add(instance.Config.AppId)
-				lastAppId = 0
-				if cloud.DebugEnabled {
-					//fmt.Printf("preDeploySearch depth++ depth=%d,offset=%d,disk=%d\n", depth, i, instance.Config.Disk)
-				}
-
-				instanceStack[depth] = instance
-				offsetStack[depth] = i
-				depth++
-			}
-		}
-
-		if finish {
-			break
-		}
-
-		for {
-			if i < size-1 {
-				i++
-				break
-			}
-
-			lastAppId = 0
-
-			//fmt.Println("depth--")
-
-			depth--
-			if depth == 0 {
-				break
-			}
-
-			ins := instanceStack[depth]
-			if ins != nil {
-				resource.RemoveResource(&ins.Config.Resource)
-				appCount.Remove(ins.Config.AppId)
-			}
-
-			i = offsetStack[depth] + 1
-			if i == size-1 || i == size {
-				fmt.Printf("preDeploySearch i = offsetStack[depth] + 1 i == size-1\n")
-				fmt.Println(resource.Disk, depth, offsetStack)
-				for _, v := range instanceStack[:depth+1] {
-					fmt.Println(v.Config.Disk)
-				}
-				cloud.AnalysisDiskDistributionByInstance(instanceList)
-			} else {
-				break
-			}
-		}
-
-		if depth == 0 {
-			fmt.Printf("preDeploySearch finished\n")
-			break
-		}
-	}
-
-	//fmt.Println(offsetStack)
-	//fmt.Println(depth)
-	//for _, v := range instanceStack[:depth] {
-	//	fmt.Println(v.Config.Disk)
-	//}
-
-	fmt.Printf("preDeploySearch bestResult=%f,count=%d\n", bestDistance, len(bestResult))
-
-	return bestResult, nil
-}
-
-func (s *BestFitStrategy) preDeployFill(m *cloud.Machine, instanceList []*cloud.Instance) ([]*cloud.Instance, error) {
-	deployed := make(map[int]*cloud.Instance)
-
-	result, err := s.preDeploySearch(m, instanceList)
-	if err != nil {
-		return nil, err
-	}
-
-	if result != nil {
-		for _, instance := range result {
-			if !m.ConstraintCheck(instance, cloud.MaxCpuRatio) {
-				return nil, fmt.Errorf("BestFitStrategy.preDeployFill ConstraintCheck failed,machineId=%d,instanceId=%d",
-					m.MachineId, instance.InstanceId)
-			}
-
-			s.R.CommandDeployInstance(instance, m)
-			deployed[instance.InstanceId] = instance
-		}
-
-		//m.DebugPrint()
-	}
-
-	return s.preDeployRemoveDeployed(instanceList, deployed), nil
-}
-
 //机器按照磁盘从大到小排序，再按平均内存加磁盘从小到大排序
 func (s *BestFitStrategy) sortMachineByDiskDescCpuMem(machines []*cloud.Machine, cpuMemAsc bool) {
 	for _, v := range machines {
@@ -448,7 +148,7 @@ func (s *BestFitStrategy) fillMachine(m *cloud.Machine, i80 []*cloud.Instance, i
 			i40Deployed[i40DeployedCount] = instance
 			i40DeployedCount++
 			disk -= 40
-			fmt.Printf("fillMachine 40 disk=%d\n", disk)
+			//fmt.Printf("fillMachine 40 disk=%d\n", disk)
 			if disk == 0 {
 				break
 			}
@@ -464,7 +164,7 @@ func (s *BestFitStrategy) fillMachine(m *cloud.Machine, i80 []*cloud.Instance, i
 						continue
 					}
 
-					fmt.Println("fillMachine 40 80", disk)
+					//fmt.Println("fillMachine 40 80", disk)
 					m.AddInstance(instance80)
 					i80Deployed[i80DeployedCount] = instance80
 					i80DeployedCount++
@@ -492,7 +192,7 @@ func (s *BestFitStrategy) fillMachine(m *cloud.Machine, i80 []*cloud.Instance, i
 							continue
 						}
 
-						fmt.Println("fillMachine 80 60")
+						//fmt.Println("fillMachine 80 60")
 						m.AddInstance(instance)
 						i80Deployed[i80DeployedCount] = instance
 						i80DeployedCount++
@@ -516,7 +216,7 @@ func (s *BestFitStrategy) fillMachine(m *cloud.Machine, i80 []*cloud.Instance, i
 							continue
 						}
 
-						fmt.Println("fillMachine 80 60")
+						//fmt.Println("fillMachine 80 60")
 						m.AddInstance(instance)
 						i60Deployed[i60DeployedCount] = instance
 						i60DeployedCount++
@@ -536,7 +236,7 @@ func (s *BestFitStrategy) fillMachine(m *cloud.Machine, i80 []*cloud.Instance, i
 					continue
 				}
 
-				fmt.Println("fillMachine 60")
+				//fmt.Println("fillMachine 60")
 				m.AddInstance(instance)
 				i60Deployed[i60DeployedCount] = instance
 				i60DeployedCount++
@@ -562,7 +262,7 @@ func (s *BestFitStrategy) fillMachine(m *cloud.Machine, i80 []*cloud.Instance, i
 				disk -= 60
 			}
 
-			fmt.Println("80 need60", need60)
+			//fmt.Println("80 need60", need60)
 
 			for _, instance := range i80 {
 				if !m.ConstraintCheck(instance, cloud.MaxCpuRatio) {
@@ -573,14 +273,14 @@ func (s *BestFitStrategy) fillMachine(m *cloud.Machine, i80 []*cloud.Instance, i
 				i80Deployed[i80DeployedCount] = instance
 				i80DeployedCount++
 				disk -= 80
-				fmt.Printf("fillMachine 80 disk=%d\n", disk)
+				//fmt.Printf("fillMachine 80 disk=%d\n", disk)
 				if disk == 0 {
 					break
 				}
 			}
 
 			if disk > 0 { //这里是80的整数倍
-				fmt.Println("fill 80 disk>0 这里是80的整数倍 disk=", disk)
+				//fmt.Println("fill 80 disk>0 这里是80的整数倍 disk=", disk)
 				for _, instance := range i60 {
 					if s.instanceContains(i60Deployed[:i60DeployedCount], instance.InstanceId) {
 						continue
@@ -594,14 +294,14 @@ func (s *BestFitStrategy) fillMachine(m *cloud.Machine, i80 []*cloud.Instance, i
 					i60Deployed[i60DeployedCount] = instance
 					i60DeployedCount++
 					disk -= 60
-					fmt.Printf("fillMachine 80 disk=%d\n", disk)
+					//fmt.Printf("fillMachine 80 disk=%d\n", disk)
 					if disk < 60 {
 						break
 					}
 				}
 
 				if disk > 0 { //这里可能是20或40，20不用考虑，如果是40，拿走一个80补两个60，80放到另一个里，还是会多40
-					fmt.Println("fill 80 disk>0 这里是80的整数倍 restDisk=", disk)
+					//fmt.Println("fill 80 disk>0 这里是80的整数倍 restDisk=", disk)
 				}
 			}
 
@@ -617,7 +317,7 @@ func (s *BestFitStrategy) fillMachine(m *cloud.Machine, i80 []*cloud.Instance, i
 							continue
 						}
 
-						fmt.Println("fillMachine 80 60")
+						//fmt.Println("fillMachine 80 60")
 						m.AddInstance(instance)
 						i60Deployed[i60DeployedCount] = instance
 						i60DeployedCount++
@@ -667,7 +367,7 @@ func (s *BestFitStrategy) fillMachine(m *cloud.Machine, i80 []*cloud.Instance, i
 				i60Deployed[i60DeployedCount] = instance
 				i60DeployedCount++
 				disk -= 60
-				fmt.Printf("fillMachine 60 disk=%d\n", disk)
+				//fmt.Printf("fillMachine 60 disk=%d\n", disk)
 				if disk == 0 { //肯定是60的整数倍
 					break
 				}
@@ -679,7 +379,7 @@ func (s *BestFitStrategy) fillMachine(m *cloud.Machine, i80 []*cloud.Instance, i
 		}
 	}
 
-	m.Resource.DebugPrint()
+	//m.Resource.DebugPrint()
 
 	return s.removeInstances(i80, i80Deployed[:i80DeployedCount]),
 		s.removeInstances(i60, i60Deployed[:i60DeployedCount]),
@@ -687,7 +387,7 @@ func (s *BestFitStrategy) fillMachine(m *cloud.Machine, i80 []*cloud.Instance, i
 }
 
 func (s *BestFitStrategy) fillMachines(machines []*cloud.Machine, instances []*cloud.Instance) (restInstances []*cloud.Instance, err error) {
-	s.analysisMachineDiskDistribution(machines)
+	//s.analysisMachineDiskDistribution(machines)
 	//cloud.AnalysisDiskDistributionByInstance(instances)
 
 	//机器按照磁盘从大到小，cpu内存从小到大排序
@@ -709,27 +409,6 @@ func (s *BestFitStrategy) fillMachines(machines []*cloud.Machine, instances []*c
 	s.sortInstanceByCpuMem(i80Rest, false)
 	s.sortInstanceByCpuMem(i60Rest, false)
 	s.sortInstanceByCpuMem(i40Rest, false)
-
-	for i, v := range i80Rest {
-		v.Config.DebugPrint()
-		if i > 10 {
-			break
-		}
-	}
-
-	for i, v := range i60Rest {
-		v.Config.DebugPrint()
-		if i > 10 {
-			break
-		}
-	}
-
-	for i, v := range i40Rest {
-		v.Config.DebugPrint()
-		if i > 10 {
-			break
-		}
-	}
 
 	//使用磁盘40补齐所有机器到60的倍数
 	i40Deployed := make(map[int]*cloud.Instance)
@@ -779,30 +458,24 @@ func (s *BestFitStrategy) fillMachines(machines []*cloud.Machine, instances []*c
 	fmt.Printf("fillMachines rest %d,deployed=%d\n", len(i40Rest), len(i40Deployed))
 
 	//补满所有已部署的机器
-	n := 0
-	for i, m := range machines {
-		if i >= 424 {
-			//cloud.SetDebug(true)
-		}
-
-		fmt.Println("fillMachines m.Disk", m.Disk)
+	for _, m := range machines {
+		//fmt.Println("fillMachines m.Disk", m.Disk)
 		i80Rest, i60Rest, i40Rest, err = s.fillMachine(m, i80Rest, i60Rest, i40Rest)
 		if err != nil {
 			fmt.Println(err)
 			return nil, err
 		}
 
-		fmt.Println("fillMachines", len(i80Rest), len(i60Rest), len(i40Rest))
+		//fmt.Println("fillMachines", len(i80Rest), len(i60Rest), len(i40Rest))
 
-		if len(i40Rest) == 1 {
-			n++
-			if n == 20 {
-				break
-			}
+		n := 0
+		for _, mm := range machines {
+			n += mm.InstanceArrayCount
 		}
 
-		if i >= 1000 {
-			//break
+		nn := len(i80Rest) + len(i60Rest) + len(i40Rest)
+		if nn+n != 68219 {
+			panic(fmt.Errorf("n=%d,nn=%d,80=%d,60=%d,40=%d\n", n, nn, len(i80Rest), len(i60Rest), len(i40Rest)))
 		}
 	}
 
@@ -842,14 +515,14 @@ func (s *BestFitStrategy) preDeployBigDisk(instanceList []*cloud.Instance, machi
 					if !m.ConstraintCheck(instance, cloud.MaxCpuRatio) {
 						return nil, nil, fmt.Errorf("preDeployBigDisk.167 ConstraintCheck failed")
 					}
-					s.R.CommandDeployInstance(instance, m)
+					m.AddInstance(instance)
 					deployedInstances[instance.InstanceId] = instance
 					deployed167 = true
 					break
 				}
 			}
 			if !deployed167 {
-				s.R.CommandDeployInstance(instance, machineList[machineIndex])
+				machineList[machineIndex].AddInstance(instance)
 				deployedInstances[instance.InstanceId] = instance
 				deployedMachines = append(deployedMachines, machineList[machineIndex])
 				machineIndex++
@@ -874,19 +547,19 @@ func (s *BestFitStrategy) preDeployBigDisk(instanceList []*cloud.Instance, machi
 				if !m.ConstraintCheck(instance, cloud.MaxCpuRatio) {
 					continue
 				}
-				s.R.CommandDeployInstance(instance, m)
+				m.AddInstance(instance)
 				deployedInstances[instance.InstanceId] = instance
 				deployed100 = true
 				break
 			}
 			if !deployed100 {
-				s.R.CommandDeployInstance(instance, machineList[machineIndex])
+				machineList[machineIndex].AddInstance(instance)
 				deployedInstances[instance.InstanceId] = instance
 				deployedMachines = append(deployedMachines, machineList[machineIndex])
 				machineIndex++
 			}
 		} else {
-			s.R.CommandDeployInstance(instance, machineList[machineIndex])
+			machineList[machineIndex].AddInstance(instance)
 			deployedInstances[instance.InstanceId] = instance
 			deployedMachines = append(deployedMachines, machineList[machineIndex])
 			machineIndex++
@@ -919,7 +592,7 @@ func (s *BestFitStrategy) preDeployBigDisk(instanceList []*cloud.Instance, machi
 					continue
 				}
 
-				s.R.CommandDeployInstance(instance, m)
+				m.AddInstance(instance)
 				deployedInstances[instance.InstanceId] = instance
 				deployed150 = true
 				break
@@ -944,14 +617,14 @@ func (s *BestFitStrategy) preDeployBigDisk(instanceList []*cloud.Instance, machi
 				if !m.ConstraintCheck(instance, cloud.MaxCpuRatio) {
 					return nil, nil, fmt.Errorf("preDeployBigDisk.150 ConstraintCheck failed")
 				}
-				s.R.CommandDeployInstance(instance, m)
+				m.AddInstance(instance)
 				deployedInstances[instance.InstanceId] = instance
 				deployed150 = true
 				break
 			}
 		}
 		if !deployed150 {
-			s.R.CommandDeployInstance(instance, machineList[machineIndex])
+			machineList[machineIndex].AddInstance(instance)
 			deployedInstances[instance.InstanceId] = instance
 			deployedMachines = append(deployedMachines, machineList[machineIndex])
 			machineIndex++

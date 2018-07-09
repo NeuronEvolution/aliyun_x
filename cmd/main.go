@@ -48,12 +48,8 @@ func main() {
 	}
 
 	//数据分析
-	analysis := NewAnalysisContext(
-		appInterferenceDataList,
-		appResourcesDataList,
-		machineResourceDataList,
-		instanceDeployDataList)
-	analysis.Run()
+	//analysis := NewAnalysisContext(appInterferenceDataList, appResourcesDataList, machineResourceDataList, instanceDeployDataList)
+	//analysis.Run()
 
 	//return
 
