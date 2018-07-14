@@ -21,7 +21,7 @@ func output(result *cloud.ResourceManagement, duration time.Duration) {
 
 	summaryBuf := bytes.NewBufferString("")
 	result.DebugStatus(summaryBuf)
-	summaryBuf.WriteString(fmt.Sprintf("time=%f\n", duration.Seconds()))
+	summaryBuf.WriteString(fmt.Sprintf("time=%f秒\n", duration.Seconds()))
 	err = ioutil.WriteFile(fmt.Sprintf(outputFile+"_summary.csv"),
 		summaryBuf.Bytes(), os.ModePerm)
 	if err != nil {

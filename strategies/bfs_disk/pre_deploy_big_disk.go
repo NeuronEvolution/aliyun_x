@@ -6,31 +6,37 @@ import (
 	"sort"
 )
 
-//机器按照磁盘从大到小排序，再按平均内存加磁盘从小到大排序
+//机器按照磁盘从大到小排序，再按平均内存加磁盘从小到大排序(高配机器在前)
 func (s *BestFitStrategy) sortMachineByDiskDescCpuMem(machines []*cloud.Machine, cpuMemAsc bool) {
 	for _, v := range machines {
 		v.CalcTimedResourceStatistics()
 	}
 	sort.Slice(machines, func(i, j int) bool {
-		if machines[i].Disk > machines[j].Disk {
+		if machines[i].LevelConfig.Disk > machines[j].LevelConfig.Disk {
 			return true
-		} else if machines[i].Disk == machines[j].Disk {
-			a1 := machines[i].CpuAvg*(float64(288)/float64(46)) + machines[i].MemAvg
-			a2 := machines[j].CpuAvg*(float64(288)/float64(46)) + machines[j].MemAvg
-			if cpuMemAsc {
-				if a1 < a2 {
-					return true
+		} else if machines[i].LevelConfig.Disk == machines[j].LevelConfig.Disk {
+			if machines[i].Disk > machines[j].Disk {
+				return true
+			} else if machines[i].Disk == machines[j].Disk {
+				a1 := machines[i].CpuAvg*(float64(288)/float64(46)) + machines[i].MemAvg
+				a2 := machines[j].CpuAvg*(float64(288)/float64(46)) + machines[j].MemAvg
+				if cpuMemAsc {
+					if a1 < a2 {
+						return true
+					} else {
+						return false
+					}
 				} else {
-					return false
+					if a1 > a2 {
+						return true
+					} else {
+						return false
+					}
 				}
-			} else {
-				if a1 > a2 {
-					return true
-				} else {
-					return false
-				}
-			}
 
+			} else {
+				return false
+			}
 		} else {
 			return false
 		}
@@ -114,6 +120,125 @@ func (s *BestFitStrategy) instanceContains(instances []*cloud.Instance, instance
 	return false
 }
 
+func (s *BestFitStrategy) isCpuMemHigh(m *cloud.Machine, instance *cloud.Instance, diskRest int, disk int) bool {
+	cpuMax := float64(0)
+	for _, v := range m.Cpu {
+		if v > cpuMax {
+			cpuMax = v
+		}
+	}
+
+	if m.LevelConfig.Cpu == 92 {
+		if cpuMax >= float64(32) {
+			cpuRest := float64(46) - cpuMax
+			count := float64(diskRest) / float64(disk)
+			cpuHigh := false
+			for _, v := range instance.Config.Cpu {
+				if count > 5 {
+					if v > (cpuRest * 2 / count) {
+						cpuHigh = true
+						break
+					}
+				} else {
+					if v > (cpuRest * 1.2 / count) {
+						cpuHigh = true
+						break
+					}
+				}
+			}
+			if cpuHigh {
+				if cloud.DebugEnabled {
+					fmt.Println("fill cpu high ", cpuMax)
+					m.Resource.DebugPrint()
+					instance.Config.DebugPrint()
+				}
+				return true
+			}
+		}
+	} else if m.LevelConfig.Cpu == 32 {
+		if cpuMax >= float64(4) {
+			cpuRest := float64(16) - cpuMax
+			count := float64(diskRest) / float64(disk)
+			cpuHigh := false
+			if cloud.DebugEnabled {
+				fmt.Println("fill", cpuRest, count, diskRest)
+			}
+			for _, v := range instance.Config.Cpu {
+				if count > 5 {
+					if v > (cpuRest * 2 / count) {
+						cpuHigh = true
+						break
+					}
+				} else {
+					if v > (cpuRest * 1.2 / count) {
+						cpuHigh = true
+						break
+					}
+				}
+			}
+			if cpuHigh {
+				if cloud.DebugEnabled {
+					fmt.Println("fill cpu high ", cpuMax)
+					m.Resource.DebugPrint()
+					instance.Config.DebugPrint()
+				}
+				return true
+			}
+		}
+	}
+
+	memMax := float64(0)
+	for _, v := range m.Mem {
+		if v > memMax {
+			memMax = v
+		}
+	}
+
+	if m.LevelConfig.Mem == 288 {
+		if memMax >= float64(144) {
+			memRest := float64(288) - memMax
+			count := float64(diskRest) / float64(disk)
+			memHigh := false
+			for _, v := range instance.Config.Mem {
+				if v > memRest/count {
+					memHigh = true
+					break
+				}
+			}
+			if memHigh {
+				if cloud.DebugEnabled {
+					fmt.Println("fill mem high ", memMax)
+					m.Resource.DebugPrint()
+					instance.Config.DebugPrint()
+				}
+				return true
+			}
+		}
+	} else if m.LevelConfig.Mem == 64 {
+		if memMax >= float64(32) {
+			memRest := float64(64) - memMax
+			count := float64(diskRest) / float64(disk)
+			memHigh := false
+			for _, v := range instance.Config.Mem {
+				if v > memRest/count {
+					memHigh = true
+					break
+				}
+			}
+			if memHigh {
+				if cloud.DebugEnabled {
+					fmt.Println("fill mem high ", memMax)
+					m.Resource.DebugPrint()
+					instance.Config.DebugPrint()
+				}
+				return true
+			}
+		}
+	}
+
+	return false
+}
+
 func (s *BestFitStrategy) fillMachine(m *cloud.Machine, i80 []*cloud.Instance, i60 []*cloud.Instance, i40 []*cloud.Instance) (
 	i80Rest []*cloud.Instance, i60Rest []*cloud.Instance, i40Rest []*cloud.Instance, err error) {
 
@@ -126,7 +251,7 @@ func (s *BestFitStrategy) fillMachine(m *cloud.Machine, i80 []*cloud.Instance, i
 
 	//todo 降低同一app在同一机器的部署
 
-	disk := 1024 - m.Disk
+	disk := m.LevelConfig.Disk - m.Disk
 	disk = disk - disk%20
 	if disk < 40 {
 		return i80, i60, i40, err
@@ -140,6 +265,10 @@ func (s *BestFitStrategy) fillMachine(m *cloud.Machine, i80 []*cloud.Instance, i
 		}
 
 		for _, instance := range i40 { //上面去掉了60，这里的disk是40的倍数
+			if s.isCpuMemHigh(m, instance, disk, 40) {
+				continue
+			}
+
 			if !m.ConstraintCheck(instance, cloud.MaxCpuRatio) {
 				continue
 			}
@@ -158,6 +287,10 @@ func (s *BestFitStrategy) fillMachine(m *cloud.Machine, i80 []*cloud.Instance, i
 				for _, instance80 := range i80 {
 					if disk == 120 { //后面补2个60
 						break
+					}
+
+					if s.isCpuMemHigh(m, instance80, disk, 80) {
+						continue
 					}
 
 					if !m.ConstraintCheck(instance80, cloud.MaxCpuRatio) {
@@ -188,6 +321,10 @@ func (s *BestFitStrategy) fillMachine(m *cloud.Machine, i80 []*cloud.Instance, i
 							continue
 						}
 
+						if s.isCpuMemHigh(m, instance, disk, 80) {
+							continue
+						}
+
 						if !m.ConstraintCheck(instance, cloud.MaxCpuRatio) {
 							continue
 						}
@@ -212,6 +349,10 @@ func (s *BestFitStrategy) fillMachine(m *cloud.Machine, i80 []*cloud.Instance, i
 							continue
 						}
 
+						if s.isCpuMemHigh(m, instance, disk, 60) {
+							continue
+						}
+
 						if !m.ConstraintCheck(instance, cloud.MaxCpuRatio) {
 							continue
 						}
@@ -231,6 +372,7 @@ func (s *BestFitStrategy) fillMachine(m *cloud.Machine, i80 []*cloud.Instance, i
 		}
 
 		if need60 {
+			deployed := false
 			for _, instance := range i60 {
 				if !m.ConstraintCheck(instance, cloud.MaxCpuRatio) {
 					continue
@@ -240,6 +382,10 @@ func (s *BestFitStrategy) fillMachine(m *cloud.Machine, i80 []*cloud.Instance, i
 				m.AddInstance(instance)
 				i60Deployed[i60DeployedCount] = instance
 				i60DeployedCount++
+				deployed = true
+			}
+			if !deployed {
+				return nil, nil, nil, fmt.Errorf("40 need60 not deployed")
 			}
 		}
 	} else {
@@ -269,6 +415,10 @@ func (s *BestFitStrategy) fillMachine(m *cloud.Machine, i80 []*cloud.Instance, i
 					continue
 				}
 
+				if s.isCpuMemHigh(m, instance, disk, 80) {
+					continue
+				}
+
 				m.AddInstance(instance)
 				i80Deployed[i80DeployedCount] = instance
 				i80DeployedCount++
@@ -283,6 +433,10 @@ func (s *BestFitStrategy) fillMachine(m *cloud.Machine, i80 []*cloud.Instance, i
 				//fmt.Println("fill 80 disk>0 这里是80的整数倍 disk=", disk)
 				for _, instance := range i60 {
 					if s.instanceContains(i60Deployed[:i60DeployedCount], instance.InstanceId) {
+						continue
+					}
+
+					if s.isCpuMemHigh(m, instance, disk, 60) {
 						continue
 					}
 
@@ -313,6 +467,10 @@ func (s *BestFitStrategy) fillMachine(m *cloud.Machine, i80 []*cloud.Instance, i
 							continue
 						}
 
+						if s.isCpuMemHigh(m, instance, disk, 60) {
+							continue
+						}
+
 						if !m.ConstraintCheck(instance, cloud.MaxCpuRatio) {
 							continue
 						}
@@ -330,9 +488,20 @@ func (s *BestFitStrategy) fillMachine(m *cloud.Machine, i80 []*cloud.Instance, i
 				}
 			}
 		} else { //最后用60的补满
-			//cloud.SetDebug(true)
+			lastAppId := 0
 			for _, instance := range i60 {
+				if instance.InstanceId == lastAppId {
+					if cloud.DebugEnabled {
+						fmt.Println("fill 60 instance.InstanceId == lastAppId ")
+					}
+					continue
+				}
+
 				if s.instanceContains(i60Deployed[:i60DeployedCount], instance.InstanceId) {
+					continue
+				}
+
+				if s.isCpuMemHigh(m, instance, disk, 60) {
 					continue
 				}
 
@@ -340,34 +509,14 @@ func (s *BestFitStrategy) fillMachine(m *cloud.Machine, i80 []*cloud.Instance, i
 					continue
 				}
 
-				cpuMax := float64(0)
-				for _, v := range m.Cpu {
-					if v > cpuMax {
-						cpuMax = v
-					}
-				}
-				if cpuMax >= float64(32) {
-					cpuRest := float64(46) - cpuMax
-					count := float64(disk) / float64(60)
-					cpuHigh := false
-					for _, v := range instance.Config.Cpu {
-						if v > cpuRest/count {
-							cpuHigh = true
-							break
-						}
-					}
-					if cpuHigh {
-						//fmt.Println("fill cpu high ", cpuMax)
-						continue
-					}
-				}
-
 				m.AddInstance(instance)
-
+				lastAppId = instance.InstanceId
 				i60Deployed[i60DeployedCount] = instance
 				i60DeployedCount++
 				disk -= 60
-				//fmt.Printf("fillMachine 60 disk=%d\n", disk)
+				if cloud.DebugEnabled {
+					fmt.Printf("fillMachine 60 disk=%d\n", disk)
+				}
 				if disk == 0 { //肯定是60的整数倍
 					break
 				}
@@ -458,12 +607,26 @@ func (s *BestFitStrategy) fillMachines(machines []*cloud.Machine, instances []*c
 	fmt.Printf("fillMachines rest %d,deployed=%d\n", len(i40Rest), len(i40Deployed))
 
 	//补满所有已部署的机器
-	for _, m := range machines {
-		//fmt.Println("fillMachines m.Disk", m.Disk)
+	for i, m := range machines {
+		if i > 0 && i%100 == 0 {
+			fmt.Println("fillMachines", i)
+		}
+
 		i80Rest, i60Rest, i40Rest, err = s.fillMachine(m, i80Rest, i60Rest, i40Rest)
 		if err != nil {
-			fmt.Println(err)
+			fmt.Println("fillMachines", i)
 			return nil, err
+		}
+
+		if m.LevelConfig.Disk == 1024 {
+			if m.Disk < 1000 {
+				return nil, fmt.Errorf("not filled,disk=%d,%d", m.Disk, i)
+			}
+		}
+
+		if len(i60Rest) == 0 {
+			fmt.Println("great finish")
+			break
 		}
 
 		//fmt.Println("fillMachines", len(i80Rest), len(i60Rest), len(i40Rest))
@@ -478,6 +641,8 @@ func (s *BestFitStrategy) fillMachines(machines []*cloud.Machine, instances []*c
 			panic(fmt.Errorf("n=%d,nn=%d,80=%d,60=%d,40=%d\n", n, nn, len(i80Rest), len(i60Rest), len(i40Rest)))
 		}
 	}
+
+	cloud.SetDebug(false)
 
 	restInstances = make([]*cloud.Instance, 0)
 	restInstances = append(restInstances, i80Rest...)
@@ -631,10 +796,28 @@ func (s *BestFitStrategy) preDeployBigDisk(instanceList []*cloud.Instance, machi
 		}
 	}
 
+	for ; machineIndex < 5505; machineIndex++ {
+		deployedMachines = append(deployedMachines, machineList[machineIndex])
+	}
+
 	//填充这些机器
 	restInstances = s.preDeployRemoveDeployed(instanceList, deployedInstances)
 	restInstances, err = s.fillMachines(deployedMachines, restInstances)
 	if err != nil {
+		//fmt.Println("lalala")
+		for _, v := range machineList {
+			if v.Disk > 0 {
+				if v.LevelConfig.Disk == 1024 {
+					if v.Disk <= 1000 {
+						//fmt.Println(i, v.Disk)
+					}
+				} else {
+					if v.Disk < 600 {
+						//fmt.Println(i, v.Disk)
+					}
+				}
+			}
+		}
 		return nil, nil, err
 	}
 
