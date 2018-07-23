@@ -51,8 +51,6 @@ func main() {
 	//analysis := NewAnalysisContext(appInterferenceDataList, appResourcesDataList, machineResourceDataList, instanceDeployDataList)
 	//analysis.Run()
 
-	//return
-
 	//调度
 	begin := time.Now()
 	result, err := cloud.Run(

@@ -17,18 +17,15 @@ func NewInstance(r *ResourceManagement, instanceId int, config *AppResourcesConf
 	return i
 }
 
-type InstanceListSortByCostEvalDesc []*Instance
+func CopyInstanceList(p []*Instance) (r []*Instance) {
+	if p == nil {
+		return nil
+	}
 
-func (p InstanceListSortByCostEvalDesc) Len() int {
-	return len(p)
-}
+	r = make([]*Instance, len(p))
+	for i, v := range p {
+		r[i] = v
+	}
 
-func (p InstanceListSortByCostEvalDesc) Less(i, j int) bool {
-	return p[i].ResourceCost > p[j].ResourceCost
-}
-
-func (p InstanceListSortByCostEvalDesc) Swap(i, j int) {
-	temp := p[i]
-	p[i] = p[j]
-	p[j] = temp
+	return r
 }

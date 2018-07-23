@@ -2,7 +2,6 @@ package cloud
 
 import (
 	"fmt"
-	"sort"
 )
 
 func (r *ResourceManagement) CreateInstance(instanceId int, config *AppResourcesConfig) *Instance {
@@ -51,7 +50,7 @@ func (r *ResourceManagement) AddInstanceList(configList []*InstanceDeployConfig)
 		return nil
 	}
 
-	instanceList := make(InstanceListSortByCostEvalDesc, 0)
+	instanceList := make([]*Instance, 0)
 	for _, c := range configList {
 		appResourcesConfig := r.AppResourcesConfigMap[c.AppId]
 		if appResourcesConfig == nil {
@@ -76,20 +75,4 @@ func (r *ResourceManagement) SetInstanceDeployedMachine(instance *Instance, m *M
 	}
 
 	r.InstanceDeployedMachineMap[instance.InstanceId] = m
-}
-
-func (r *ResourceManagement) GetInstanceOrderByCodeDescList() (instanceList []*Instance) {
-	if !r.instanceDeployedOrderByCostDescValid {
-		r.instanceDeployedOrderByCostDescListCount = 0
-		for i := range r.InstanceDeployedMachineMap {
-			r.instanceDeployedOrderByCostDescList[r.instanceDeployedOrderByCostDescListCount] = r.InstanceList[i]
-			r.instanceDeployedOrderByCostDescListCount++
-		}
-		sort.Sort(InstanceListSortByCostEvalDesc(
-			r.instanceDeployedOrderByCostDescList[:r.instanceDeployedOrderByCostDescListCount]))
-
-		r.instanceDeployedOrderByCostDescValid = true
-	}
-
-	return r.instanceDeployedOrderByCostDescList[:r.instanceDeployedOrderByCostDescListCount]
 }

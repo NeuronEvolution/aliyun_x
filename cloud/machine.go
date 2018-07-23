@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"math"
 	"math/rand"
-	"sort"
 )
 
 type Machine struct {
@@ -13,7 +12,7 @@ type Machine struct {
 	Rand               *rand.Rand
 	MachineId          int
 	LevelConfig        *MachineLevelConfig
-	InstanceArray      InstanceListSortByCostEvalDesc
+	InstanceArray      []*Instance
 	InstanceArrayCount int
 	appCountCollection *AppCountCollection
 
@@ -56,9 +55,8 @@ func (m *Machine) AddInstance(instance *Instance) {
 	m.InstanceArray[m.InstanceArrayCount] = instance
 	m.InstanceArrayCount++
 	m.appCountCollection.Add(instance.Config.AppId)
-	m.allocResource(instance)
+	m.AddResource(&instance.Config.Resource)
 
-	sort.Sort(m.InstanceArray[:m.InstanceArrayCount])
 	m.R.SetInstanceDeployedMachine(instance, m)
 	if m.InstanceArrayCount == 1 {
 		m.R.MachineFreePool.RemoveMachine(m.MachineId)
@@ -90,7 +88,7 @@ func (m *Machine) RemoveInstance(instanceId int) {
 
 			m.InstanceArrayCount--
 			m.appCountCollection.Remove(instance.Config.AppId)
-			m.freeResource(instance)
+			m.RemoveResource(&instance.Config.Resource)
 
 			if m.InstanceArrayCount == 0 {
 				m.R.MachineDeployPool.RemoveMachine(m.MachineId)
@@ -108,14 +106,6 @@ func (m *Machine) RemoveInstance(instanceId int) {
 	if DebugEnabled {
 		//m.debugValidation()
 	}
-}
-
-func (m *Machine) allocResource(instance *Instance) {
-	m.AddResource(&instance.Config.Resource)
-}
-
-func (m *Machine) freeResource(instance *Instance) {
-	m.RemoveResource(&instance.Config.Resource)
 }
 
 func (m *Machine) IsEmpty() bool {
@@ -159,7 +149,7 @@ func (m *Machine) GetCostReal() float64 {
 	return totalCost / TimeSampleCount
 }
 
-func (m *Machine) GetCost() float64 {
+func (m *Machine) GetCpuCost() float64 {
 	if m.cpuCostValid {
 		return m.cpuCost
 	}

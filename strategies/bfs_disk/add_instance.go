@@ -3,7 +3,6 @@ package bfs_disk
 import (
 	"fmt"
 	"github.com/NeuronEvolution/aliyun_x/cloud"
-	"sort"
 )
 
 func (s *BestFitStrategy) AddInstanceList(instanceList []*cloud.Instance) (err error) {
@@ -20,7 +19,6 @@ func (s *BestFitStrategy) AddInstanceList(instanceList []*cloud.Instance) (err e
 	s.machineDeployList = restMachines
 	fmt.Printf("AddInstanceList machineCount=%d\n", len(s.machineDeployList))
 
-	sort.Sort(cloud.InstanceListSortByCostEvalDesc(restInstances))
 	for i, v := range restInstances {
 		if i > 0 && i%1000 == 0 {
 			fmt.Println(i)
