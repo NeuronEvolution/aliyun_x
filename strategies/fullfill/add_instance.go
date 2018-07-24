@@ -97,16 +97,16 @@ func (s *Strategy) measureTooHigh(m *cloud.Machine) (typ int, d float64) {
 
 	switch typ {
 	case TypeDisk:
-		d = ((disk - cpu) + (disk - mem)) / 2
+		d = (disk - cpu) + (disk - mem)
 	case TypeCpu:
-		d = ((cpu - disk) + (cpu - mem)) / 2
+		d = (cpu - disk) + (cpu - mem)
 	case TypeMem:
-		d = ((mem - disk) + (mem - cpu)) / 2
+		d = (mem - disk) + (mem - cpu)
 	default:
 		break
 	}
 
-	return typ, d * math.Pow(max+0.2, 10)
+	return typ, math.Pow(max+0.6, 10) / 50
 }
 
 func (s *Strategy) measureWithInstance(m *cloud.Machine, instance *cloud.Instance) (d float64) {
