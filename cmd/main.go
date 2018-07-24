@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/NeuronEvolution/aliyun_x/cloud"
-	"github.com/NeuronEvolution/aliyun_x/strategies/bfs_disk"
+	"github.com/NeuronEvolution/aliyun_x/strategies/fullfill"
 	"time"
 )
 
@@ -58,7 +58,7 @@ func main() {
 		appResourcesDataList,
 		appInterferenceDataList,
 		instanceDeployDataList, func(r *cloud.ResourceManagement) cloud.Strategy {
-			return bfs_disk.NewBestFitStrategy(r)
+			return fullfill.NewFullFillStrategy(r)
 		})
 	if err != nil {
 		fmt.Println(err)

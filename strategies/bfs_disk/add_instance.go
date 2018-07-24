@@ -39,7 +39,6 @@ func (s *BestFitStrategy) addInstance(instance *cloud.Instance, skip *cloud.Mach
 	m := s.bestFitResource(instance, skip, cloud.MaxCpu)
 	if m != nil {
 		m.AddInstance(instance)
-		s.sortMachineDeployList()
 		return nil
 	}
 
@@ -49,6 +48,5 @@ func (s *BestFitStrategy) addInstance(instance *cloud.Instance, skip *cloud.Mach
 	}
 
 	m.AddInstance(instance)
-	s.sortMachineDeployList()
 	return nil
 }

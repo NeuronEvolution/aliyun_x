@@ -184,6 +184,33 @@ func (m *Machine) GetCostWithInstance(instance *Instance) float64 {
 	return totalCost / TimeSampleCount
 }
 
+func (m *Machine) CalcDeviationWithInstance(inst *Instance) float64 {
+	cpuMax := float64(0)
+	for i, v := range m.Cpu {
+		cpu := v + inst.Config.Cpu[i]
+		if cpu > cpuMax {
+			cpuMax = cpu
+		}
+	}
+
+	avgMem := float64(0)
+	for i, v := range m.Mem {
+		avgMem += v + inst.Config.Mem[i]
+	}
+	avgMem = avgMem / float64(len(m.Mem))
+
+	cpu := cpuMax / (m.LevelConfig.Cpu * MaxCpuRatio)
+	mem := avgMem / m.LevelConfig.Mem
+	disk := float64(m.Disk+inst.Config.Disk) / float64(m.LevelConfig.Disk)
+	p := float64(m.P+inst.Config.P) / float64(m.LevelConfig.P)
+	mCost := float64(m.M+inst.Config.M) / float64(m.LevelConfig.M)
+	pm := float64(m.PM+inst.Config.PM) / float64(m.LevelConfig.PM)
+
+	//debugLog("calcResourceCostDeviation %f %f %f %f %f %f\n", cpu, mem, disk, p, mCost, pm)
+
+	return calcResourceCostDeviation(cpu, mem, disk, p, mCost, pm)
+}
+
 func (m *Machine) GetResourceCostWithInstance(inst *Instance) float64 {
 	avgCpu := float64(0)
 	for i, v := range m.Cpu {

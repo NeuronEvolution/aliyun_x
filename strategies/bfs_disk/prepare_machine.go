@@ -3,7 +3,6 @@ package bfs_disk
 import (
 	"fmt"
 	"github.com/NeuronEvolution/aliyun_x/cloud"
-	"sort"
 )
 
 func (s *BestFitStrategy) getDeployMachineList(totalCount int) []*cloud.Machine {
@@ -22,10 +21,4 @@ func (s *BestFitStrategy) getDeployMachineList(totalCount int) []*cloud.Machine 
 	machineList = append(machineList, s.R.MachineFreePool.PeekMachineList(freeCount)...)
 
 	return machineList
-}
-
-func (s *BestFitStrategy) sortMachineDeployList() {
-	sort.Slice(s.machineDeployList, func(i, j int) bool {
-		return s.machineDeployList[i].ResourceCost < s.machineDeployList[j].ResourceCost
-	})
 }
