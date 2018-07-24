@@ -106,7 +106,7 @@ func (s *Strategy) measureTooHigh(m *cloud.Machine) (typ int, d float64) {
 		break
 	}
 
-	return typ, d * math.Pow(max+0.5, 2)
+	return typ, d * math.Pow(max+0.2, 10)
 }
 
 func (s *Strategy) measureWithInstance(m *cloud.Machine, instance *cloud.Instance) (d float64) {
@@ -186,6 +186,7 @@ func (s *Strategy) fillMachine(
 	deployedCount++
 
 	trySameApp := false
+	resetOffset := false
 
 	for {
 		has := false
@@ -207,30 +208,34 @@ func (s *Strategy) fillMachine(
 		offset = int(float64(len(pool)) * d)
 		n := len(instances)
 		if n > 60000 {
-			if offset > len(pool)*8/10 {
-				offset = len(pool) * 8 / 10
+			if offset > len(pool)*95/100 {
+				offset = len(pool) * 95 / 100
 			}
 		} else if n > 50000 {
-			if offset > len(pool)*8/10 {
-				offset = len(pool) * 8 / 10
+			if offset > len(pool)*95/100 {
+				offset = len(pool) * 95 / 100
 			}
 		} else if n > 40000 {
-			if offset > len(pool)*8/10 {
-				offset = len(pool) * 8 / 10
+			if offset > len(pool)*95/100 {
+				offset = len(pool) * 95 / 100
 			}
 		} else if n > 30000 {
-			if offset > len(pool)*8/10 {
-				offset = 0
+			if offset > len(pool)*95/100 {
+				offset = len(pool) * 95 / 100
 			}
 		} else if n > 20000 {
-			if offset > len(pool)*8/10 {
-				offset = 0
+			if offset > len(pool)*95/100 {
+				offset = len(pool) * 95 / 100
 			}
 		} else if n > 10000 {
-			if offset > len(pool)*8/10 {
-				offset = 0
+			if offset > len(pool)*95/100 {
+				offset = len(pool) * 95 / 100
 			}
 		} else {
+			offset = 0
+		}
+
+		if resetOffset {
 			offset = 0
 		}
 
@@ -273,7 +278,11 @@ func (s *Strategy) fillMachine(
 			if !trySameApp {
 				trySameApp = true
 			} else {
-				break
+				if !resetOffset {
+					resetOffset = true
+				} else {
+					break
+				}
 			}
 		}
 	}
