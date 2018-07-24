@@ -63,8 +63,21 @@ func (s *Strategy) AddInstanceList(instances []*cloud.Instance) (err error) {
 
 func (s *Strategy) measureTooHigh(m *cloud.Machine) (typ int, d float64) {
 	disk := float64(m.Disk) / float64(m.LevelConfig.Disk)
-	cpu := m.CpuMax / (m.LevelConfig.Cpu * cloud.MaxCpuRatio)
-	mem := m.MemMax / m.LevelConfig.Mem
+	cpuMax := float64(0)
+	for _, v := range m.Cpu {
+		if v > cpuMax {
+			cpuMax = v
+		}
+	}
+	memMax := float64(0)
+	for _, v := range m.Mem {
+		if v > memMax {
+			memMax = v
+		}
+	}
+
+	cpu := cpuMax / (m.LevelConfig.Cpu * cloud.MaxCpuRatio)
+	mem := memMax / m.LevelConfig.Mem
 
 	max := float64(0)
 	if disk > max {
@@ -93,7 +106,59 @@ func (s *Strategy) measureTooHigh(m *cloud.Machine) (typ int, d float64) {
 		break
 	}
 
-	return typ, d
+	return typ, d * math.Pow(max+0.5, 2)
+}
+
+func (s *Strategy) measureWithInstance(m *cloud.Machine, instance *cloud.Instance) (d float64) {
+	cpuMax := float64(0)
+	for i, v := range m.Cpu {
+		cpu := v + instance.Config.Cpu[i]
+		if cpu > cpuMax {
+			cpuMax = cpu
+		}
+	}
+
+	memMax := float64(0)
+	for i, v := range m.Mem {
+		mem := v + instance.Config.Mem[i]
+		if mem > memMax {
+			memMax = mem
+		}
+	}
+
+	cpu := cpuMax / (m.LevelConfig.Cpu * cloud.MaxCpuRatio)
+	mem := memMax / m.LevelConfig.Mem
+	disk := float64(m.Disk+instance.Config.Disk) / float64(m.LevelConfig.Disk)
+
+	typ := 0
+	max := float64(0)
+	if disk > max {
+		typ = TypeDisk
+		max = disk
+	}
+
+	if cpu > max {
+		typ = TypeCpu
+		max = cpu
+	}
+
+	if mem > max {
+		typ = TypeMem
+		max = mem
+	}
+
+	switch typ {
+	case TypeDisk:
+		d = ((disk - cpu) + (disk - mem)) / 2
+	case TypeCpu:
+		d = ((cpu - disk) + (cpu - mem)) / 2
+	case TypeMem:
+		d = ((mem - disk) + (mem - cpu)) / 2
+	default:
+		break
+	}
+
+	return d * max
 }
 
 func (s *Strategy) fillMachine(
@@ -139,8 +204,33 @@ func (s *Strategy) fillMachine(
 			pool = instances
 		}
 
-		offset = int(float64(len(pool)) * 2 * d)
-		if len(pool)-offset < 10000 {
+		offset = int(float64(len(pool)) * d)
+		n := len(instances)
+		if n > 60000 {
+			if offset > len(pool)*8/10 {
+				offset = len(pool) * 8 / 10
+			}
+		} else if n > 50000 {
+			if offset > len(pool)*8/10 {
+				offset = len(pool) * 8 / 10
+			}
+		} else if n > 40000 {
+			if offset > len(pool)*8/10 {
+				offset = len(pool) * 8 / 10
+			}
+		} else if n > 30000 {
+			if offset > len(pool)*8/10 {
+				offset = 0
+			}
+		} else if n > 20000 {
+			if offset > len(pool)*8/10 {
+				offset = 0
+			}
+		} else if n > 10000 {
+			if offset > len(pool)*8/10 {
+				offset = 0
+			}
+		} else {
 			offset = 0
 		}
 
@@ -158,7 +248,7 @@ func (s *Strategy) fillMachine(
 				}
 			}
 
-			derivation := m.CalcDeviationWithInstance(instance)
+			derivation := s.measureWithInstance(m, instance)
 			if derivation < minDerivation {
 				if !m.ConstraintCheck(instance, cloud.MaxCpuRatio) {
 					continue
