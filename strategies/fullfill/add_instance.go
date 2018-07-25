@@ -20,6 +20,7 @@ func (s *Strategy) AddInstanceList(instances []*cloud.Instance) (err error) {
 	instancesByMem := cloud.InstancesCopy(instances)
 	cloud.SortInstanceByMem(instancesByMem)
 
+	n := 0
 	for i := 0; ; i++ {
 		m := s.R.MachineFreePool.PeekMachine()
 		if m == nil {
@@ -33,18 +34,20 @@ func (s *Strategy) AddInstanceList(instances []*cloud.Instance) (err error) {
 		}
 
 		if len(restInstances) == 0 {
-			return nil
+			break
 		}
 
 		if m.LevelConfig.Disk == 1024 {
-			if m.Disk <= 980 {
-				fmt.Println(i)
-				m.DebugPrint()
+			if m.Disk <= 1020 {
+				//fmt.Println(i)
+				//m.DebugPrint()
+				n++
 			}
 		} else {
-			if m.Disk <= 560 {
-				fmt.Println(i)
-				m.DebugPrint()
+			if m.Disk < 600 {
+				//fmt.Println(i)
+				//m.DebugPrint()
+				n++
 			}
 		}
 
@@ -55,7 +58,51 @@ func (s *Strategy) AddInstanceList(instances []*cloud.Instance) (err error) {
 		}
 
 		fmt.Printf("AddInstanceList restInstances count %d,%d,%d\n", i, len(restInstances), m.Disk)
+
 		//m.DebugPrint()
+	}
+
+	fmt.Println("AddInstanceList rest", len(restInstances), n)
+
+	deployed := make([]*cloud.Instance, len(restInstances))
+	deployedCount := 0
+	for _, instance := range restInstances {
+		err = s.forceAddInstance(instance)
+		if err != nil {
+			fmt.Println("forceAddInstance failed", err)
+			continue
+		}
+
+		deployed[deployedCount] = instance
+		deployedCount++
+	}
+
+	fmt.Println(len(restInstances), len(instancesByDisk), len(instancesByCpu), len(instancesByMem))
+
+	restInstances = cloud.InstancesRemove(restInstances, deployed[:deployedCount])
+	instancesByDisk = cloud.InstancesRemove(instancesByDisk, deployed[:deployedCount])
+	instancesByCpu = cloud.InstancesRemove(instancesByCpu, deployed[:deployedCount])
+	instancesByMem = cloud.InstancesRemove(instancesByMem, deployed[:deployedCount])
+
+	fmt.Println(len(restInstances), len(instancesByDisk), len(instancesByCpu), len(instancesByMem))
+
+	for i := 0; ; i++ {
+		if len(restInstances) == 0 {
+			break
+		}
+
+		m := s.R.MachineFreePool.PeekMachine()
+		if m == nil {
+			return fmt.Errorf("AddInstanceList PeekMachine no machine")
+		}
+
+		restInstances, instancesByDisk, instancesByCpu, instancesByMem, err =
+			s.fillMachine(m, restInstances, instancesByDisk, instancesByCpu, instancesByMem)
+		if err != nil {
+			return err
+		}
+
+		fmt.Printf("AddInstanceList again restInstances count %d,%d,%d\n", i, len(restInstances), m.Disk)
 	}
 
 	return nil
@@ -206,32 +253,7 @@ func (s *Strategy) fillMachine(
 		}
 
 		offset = int(float64(len(pool)) * d)
-		n := len(instances)
-		if n > 60000 {
-			if offset > len(pool)*95/100 {
-				offset = len(pool) * 95 / 100
-			}
-		} else if n > 50000 {
-			if offset > len(pool)*95/100 {
-				offset = len(pool) * 95 / 100
-			}
-		} else if n > 40000 {
-			if offset > len(pool)*95/100 {
-				offset = len(pool) * 95 / 100
-			}
-		} else if n > 30000 {
-			if offset > len(pool)*95/100 {
-				offset = len(pool) * 95 / 100
-			}
-		} else if n > 20000 {
-			if offset > len(pool)*95/100 {
-				offset = len(pool) * 95 / 100
-			}
-		} else if n > 10000 {
-			if offset > len(pool)*95/100 {
-				offset = len(pool) * 95 / 100
-			}
-		} else {
+		if offset >= len(pool) {
 			offset = 0
 		}
 
@@ -239,7 +261,7 @@ func (s *Strategy) fillMachine(
 			offset = 0
 		}
 
-		fmt.Printf("%d %d %f\n", typ, offset, d)
+		//fmt.Printf("%d %d %f\n", typ, offset, d)
 
 		minDerivation := math.MaxFloat64
 		for _, instance := range instances[offset:] {
@@ -292,4 +314,9 @@ func (s *Strategy) fillMachine(
 		cloud.InstancesRemove(instancesByCpu, deployed[:deployedCount]),
 		cloud.InstancesRemove(instancesByMem, deployed[:deployedCount]),
 		nil
+}
+
+func (s *Strategy) forceAddInstance(instance *cloud.Instance) (err error) {
+
+	return fmt.Errorf("forceAddInstance")
 }
