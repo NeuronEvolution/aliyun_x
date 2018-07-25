@@ -106,7 +106,7 @@ func (s *Strategy) measureTooHigh(m *cloud.Machine) (typ int, d float64) {
 		break
 	}
 
-	return typ, math.Pow(max+0.6, 10) / 50
+	return typ, math.Pow(max+1, 10) / 780
 }
 
 func (s *Strategy) measureWithInstance(m *cloud.Machine, instance *cloud.Instance) (d float64) {
