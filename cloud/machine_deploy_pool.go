@@ -62,20 +62,18 @@ func (p MachineLevelDeployListSortByMachineLevelDesc) Last() *MachineLevelDeploy
 }
 
 type MachineDeployPool struct {
-	MachineMap              map[int]*Machine
+	R                       *ResourceManagement
 	MachineLevelDeployArray MachineLevelDeployListSortByMachineLevelDesc
 }
 
-func NewMachineDeployPool() *MachineDeployPool {
-	p := &MachineDeployPool{}
-	p.MachineMap = make(map[int]*Machine)
+func NewMachineDeployPool(r *ResourceManagement) *MachineDeployPool {
+	p := &MachineDeployPool{R: r}
 
 	return p
 }
 
 func (p *MachineDeployPool) AddMachine(m *Machine) {
 	//debugLog("MachineDeployPool.AddMachine %d", m.MachineId)
-	p.MachineMap[m.MachineId] = m
 
 	var pool *MachineLevelDeploy
 	for _, v := range p.MachineLevelDeployArray {
@@ -95,12 +93,7 @@ func (p *MachineDeployPool) AddMachine(m *Machine) {
 
 func (p *MachineDeployPool) RemoveMachine(machineId int) *Machine {
 	//debugLog("MachineDeployPool.RemoveMachine %d", machineId)
-	m, has := p.MachineMap[machineId]
-	if !has {
-		return nil
-	}
-	delete(p.MachineMap, machineId)
-
+	m := p.R.MachineMap[machineId]
 	for _, v := range p.MachineLevelDeployArray {
 		if v.LevelConfig == m.LevelConfig {
 			v.RemoveMachine(machineId)
@@ -114,33 +107,36 @@ func (p *MachineDeployPool) RemoveMachine(machineId int) *Machine {
 func (p *MachineDeployPool) DebugPrint(buf *bytes.Buffer) {
 	buf.WriteString("MachineDeployPool.DebugPrint\n")
 	instanceCount := 0
-	for _, v := range p.MachineMap {
+	machineCount := 0
+	machineDeployed := make([]*Machine, 0)
+	cpuHighCount := 0
+	highCpuLimit := 1.01
+	for _, m := range p.R.MachineMap {
 		//v.DebugPrint()
-		instanceCount += v.InstanceArrayCount
+		if m != nil && m.InstanceArrayCount > 0 {
+			instanceCount += m.InstanceArrayCount
+			machineCount++
+			machineDeployed = append(machineDeployed, m)
+
+			if m.GetCpuCost() > highCpuLimit {
+				cpuHighCount++
+			}
+		}
 	}
 	for _, v := range p.MachineLevelDeployArray {
 		buf.WriteString(fmt.Sprintf("    %v machineCount=%d\n",
 			v.LevelConfig, v.MachineCollection.ListCount))
 	}
 
-	cpuHighCount := 0
-	cpuHighMachineList := make([]*Machine, 0)
-	highCpuLimit := MaxCpu
-	for _, v := range p.MachineMap {
-		if v.GetCpuCost() > highCpuLimit {
-			cpuHighCount++
-			cpuHighMachineList = append(cpuHighMachineList, v)
+	SortMachineByCpuCost(machineDeployed)
+	for i, m := range machineDeployed {
+		if i < 100 {
+			buf.WriteString(fmt.Sprintf("    cpuCost=%f,machineId=%d\n", m.GetCpuCost(), m.MachineId))
+			m.Resource.DebugPrint()
 		}
 	}
-
-	SortMachineByCpuCost(cpuHighMachineList)
-	for _, v := range cpuHighMachineList {
-		if v.GetCpuCost() > 1.05 {
-			//buf.WriteString(fmt.Sprintf("    cpuCost=%f,machineId=%d\n", v.GetCpuCost(), v.MachineId))
-		}
-	}
-	buf.WriteString(fmt.Sprintf("total high cpu(%f) count=%d\n", highCpuLimit, len(cpuHighMachineList)))
+	buf.WriteString(fmt.Sprintf("total high cpu(%f) count=%d\n", highCpuLimit, cpuHighCount))
 
 	buf.WriteString(fmt.Sprintf("MachineDeployPool.DebugPrint machineCount=%d,instanceCount=%d\n",
-		len(p.MachineMap), instanceCount))
+		machineCount, instanceCount))
 }

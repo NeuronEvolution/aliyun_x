@@ -36,7 +36,7 @@ func NewResourceManagement() *ResourceManagement {
 	}
 	r.MachineLevelConfigPool = NewMachineLevelConfigPool()
 	r.MachineFreePool = NewMachineFreePool()
-	r.MachineDeployPool = NewMachineDeployPool()
+	r.MachineDeployPool = NewMachineDeployPool(r)
 	r.DeployCommandHistory = NewDeployCommandHistory()
 
 	return r
@@ -68,8 +68,10 @@ func (r *ResourceManagement) SetStrategy(s Strategy) {
 
 func (r *ResourceManagement) CalculateTotalCostScore() float64 {
 	totalCost := float64(0)
-	for _, m := range r.MachineDeployPool.MachineMap {
-		totalCost += m.GetCostReal()
+	for _, m := range r.MachineMap {
+		if m != nil && m.InstanceArrayCount > 0 {
+			totalCost += m.GetCostReal()
+		}
 	}
 
 	return totalCost

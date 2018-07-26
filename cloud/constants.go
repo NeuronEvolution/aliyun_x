@@ -15,7 +15,6 @@ const MachinePMMax = 9
 const MaxDeployCommandCount = 1024 * 1024
 const MaxInstancePerMachine = 1024
 const MaxAppPerMachine = 64
-const MaxCpu = 1.01
 
 const ParamMachineCostMultiply = 4 //影响大
 const ParamDeviationMultiply = 1   //影响大

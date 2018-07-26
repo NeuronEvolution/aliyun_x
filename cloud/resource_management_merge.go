@@ -6,8 +6,10 @@ import (
 
 func (r *ResourceManagement) MergeTo(status *ResourceManagement) (err error) {
 	n := 0
-	for _, v := range status.MachineDeployPool.MachineMap {
-		n += v.InstanceArrayCount
+	for _, v := range status.InstanceList {
+		if v != nil {
+			n++
+		}
 	}
 	fmt.Println("MergeTo totalInstance", n)
 

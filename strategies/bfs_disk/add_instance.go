@@ -6,7 +6,7 @@ import (
 )
 
 func (s *BestFitStrategy) AddInstanceList(instanceList []*cloud.Instance) (err error) {
-	s.machineDeployList = s.getDeployMachineList(MachineDeployCount)
+	s.machineDeployList = s.R.MachineFreePool.PeekMachineList(MachineDeployCount)
 	if len(s.machineDeployList) != MachineDeployCount {
 		panic("BestFitStrategy.AddInstanceList getDeployMachineList failed")
 	}
@@ -36,7 +36,7 @@ func (s *BestFitStrategy) AddInstanceList(instanceList []*cloud.Instance) (err e
 
 func (s *BestFitStrategy) addInstance(instance *cloud.Instance, skip *cloud.Machine) (err error) {
 	//0.6CPU内，插入后最小原则插入
-	m := s.bestFitResource(instance, skip, cloud.MaxCpu)
+	m := s.bestFitResource(instance, skip, cloud.MaxCpuRatio)
 	if m != nil {
 		m.AddInstance(instance)
 		return nil
