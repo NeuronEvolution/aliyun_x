@@ -9,14 +9,23 @@ import (
 	"time"
 )
 
-func output(result *cloud.ResourceManagement, duration time.Duration) {
+func output(result *cloud.ResourceManagement, duration time.Duration) (err error) {
 	fmt.Printf("time=%f\n", duration.Seconds())
 
-	outputFile := fmt.Sprintf("_output/submit_%s", time.Now().Format("20060102_150405"))
-	err := ioutil.WriteFile(outputFile+".csv", result.DeployCommandHistory.OutputCSV(), os.ModePerm)
+	a5506, err := ioutil.ReadFile("./_output/submit_20180710_031628.csv")
 	if err != nil {
-		fmt.Println(err)
-		return
+		return err
+	}
+
+	outputFile := fmt.Sprintf("_output/submit_%s", time.Now().Format("20060102_150405"))
+
+	buf := bytes.NewBuffer(a5506)
+	buf.WriteString("#\n")
+	buf.Write(result.DeployCommandHistory.OutputCSV())
+
+	err = ioutil.WriteFile(outputFile+".csv", buf.Bytes(), os.ModePerm)
+	if err != nil {
+		return err
 	}
 
 	summaryBuf := bytes.NewBufferString("")
@@ -25,7 +34,8 @@ func output(result *cloud.ResourceManagement, duration time.Duration) {
 	err = ioutil.WriteFile(fmt.Sprintf(outputFile+"_summary.csv"),
 		summaryBuf.Bytes(), os.ModePerm)
 	if err != nil {
-		fmt.Println(err)
-		return
+		return err
 	}
+
+	return nil
 }

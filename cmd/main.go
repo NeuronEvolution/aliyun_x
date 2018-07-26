@@ -73,5 +73,8 @@ func main() {
 	end := time.Now()
 
 	//输出
-	output(result, end.Sub(begin))
+	err = output(result, end.Sub(begin))
+	if err != nil {
+		fmt.Println(err)
+	}
 }
