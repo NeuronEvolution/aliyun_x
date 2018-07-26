@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/NeuronEvolution/aliyun_x/cloud"
-	"github.com/NeuronEvolution/aliyun_x/strategies/ffs"
+	"github.com/NeuronEvolution/aliyun_x/strategies/bfs_v2"
 	"time"
 )
 
@@ -64,7 +64,7 @@ func main() {
 		appResourcesDataList,
 		appInterferenceDataList,
 		instanceDeployDataList, func(r *cloud.ResourceManagement) cloud.Strategy {
-			return ffs.NewStrategy(r)
+			return bfs_v2.NewStrategy(r)
 		})
 	if err != nil {
 		fmt.Println(err)
