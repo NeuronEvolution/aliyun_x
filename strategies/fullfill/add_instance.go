@@ -21,7 +21,7 @@ func (s *Strategy) AddInstanceList(instances []*cloud.Instance) (err error) {
 	cloud.SortInstanceByMem(instancesByMem)
 
 	n := 0
-	for i := 0; ; i++ {
+	for i := 0; i < 15500; i++ {
 		m := s.R.MachineFreePool.PeekMachine()
 		if m == nil {
 			return fmt.Errorf("AddInstanceList PeekMachine no machine")
@@ -38,15 +38,15 @@ func (s *Strategy) AddInstanceList(instances []*cloud.Instance) (err error) {
 		}
 
 		if m.LevelConfig.Disk == 1024 {
-			if m.Disk <= 1020 {
+			if m.Disk <= 980 {
 				//fmt.Println(i)
-				//m.DebugPrint()
+				m.DebugPrint()
 				n++
 			}
 		} else {
-			if m.Disk < 600 {
+			if m.Disk < 560 {
 				//fmt.Println(i)
-				//m.DebugPrint()
+				m.DebugPrint()
 				n++
 			}
 		}
@@ -67,6 +67,7 @@ func (s *Strategy) AddInstanceList(instances []*cloud.Instance) (err error) {
 	deployed := make([]*cloud.Instance, len(restInstances))
 	deployedCount := 0
 	for _, instance := range restInstances {
+		instance.Config.DebugPrint()
 		err = s.forceAddInstance(instance)
 		if err != nil {
 			fmt.Println("forceAddInstance failed", err)
@@ -157,12 +158,21 @@ func (s *Strategy) measureTooHigh(m *cloud.Machine) (typ int, d float64) {
 }
 
 func (s *Strategy) measureWithInstance(m *cloud.Machine, instance *cloud.Instance) (d float64) {
+	disk := m.Disk + instance.Config.Disk/m.LevelConfig.Disk
+	if disk > 1 {
+		return disk
+	}
+
 	cpuMax := float64(0)
 	for i, v := range m.Cpu {
 		cpu := v + instance.Config.Cpu[i]
 		if cpu > cpuMax {
 			cpuMax = cpu
 		}
+	}
+	cpu := cpuMax / (m.LevelConfig.Cpu * cloud.MaxCpuRatio)
+	if cpu > 1 {
+		return cpuMax
 	}
 
 	memMax := float64(0)
@@ -172,10 +182,10 @@ func (s *Strategy) measureWithInstance(m *cloud.Machine, instance *cloud.Instanc
 			memMax = mem
 		}
 	}
-
-	cpu := cpuMax / (m.LevelConfig.Cpu * cloud.MaxCpuRatio)
 	mem := memMax / m.LevelConfig.Mem
-	disk := float64(m.Disk+instance.Config.Disk) / float64(m.LevelConfig.Disk)
+	if mem > 1 {
+		return mem
+	}
 
 	typ := 0
 	max := float64(0)
@@ -235,11 +245,13 @@ func (s *Strategy) fillMachine(
 	trySameApp := false
 	resetOffset := false
 
+	resetCount := 0
+	offset := 0
 	for {
 		has := false
 
 		var pool []*cloud.Instance
-		offset := 0
+
 		typ, d := s.measureTooHigh(m)
 		switch typ {
 		case TypeDisk:
@@ -252,12 +264,20 @@ func (s *Strategy) fillMachine(
 			pool = instances
 		}
 
-		offset = int(float64(len(pool)) * d)
-		if offset >= len(pool) {
-			offset = 0
+		if resetOffset {
+			resetCount++
+			offset = len(pool) - int(math.Pow(float64(2), float64(resetCount)))
+			if offset <= 0 {
+				offset = 0
+			}
+		} else {
+			offset = int(float64(len(pool)) * d)
+			if offset >= len(pool) {
+				offset = len(pool) - 1
+			}
 		}
 
-		if resetOffset {
+		if trySameApp {
 			offset = 0
 		}
 
@@ -276,6 +296,10 @@ func (s *Strategy) fillMachine(
 			}
 
 			derivation := s.measureWithInstance(m, instance)
+			if derivation > 1 {
+				continue
+			}
+
 			if derivation < minDerivation {
 				if !m.ConstraintCheck(instance, cloud.MaxCpuRatio) {
 					continue
@@ -297,13 +321,15 @@ func (s *Strategy) fillMachine(
 		}
 
 		if !has {
-			if !trySameApp {
-				trySameApp = true
+			if !resetOffset {
+				resetOffset = true
 			} else {
-				if !resetOffset {
-					resetOffset = true
-				} else {
-					break
+				if offset <= 0 {
+					if !trySameApp {
+						trySameApp = true
+					} else {
+						break
+					}
 				}
 			}
 		}

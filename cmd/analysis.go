@@ -58,6 +58,6 @@ func (c *AnalysisContext) init() {
 func (c *AnalysisContext) Run() {
 	c.init()
 
-	//c.AnalysisArraySize()
+	c.AnalysisArraySize()
 	c.AnalysisDiskDistribution()
 }

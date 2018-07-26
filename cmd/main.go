@@ -7,10 +7,15 @@ import (
 	"time"
 )
 
-const appInterferenceFile = "./data/scheduling_preliminary_app_interference_20180606.csv"
-const appResourcesFile = "./data/scheduling_preliminary_app_resources_20180606.csv"
-const instanceDeployFile = "./data/scheduling_preliminary_instance_deploy_20180606.csv"
-const machineResourceFile = "./data/scheduling_preliminary_machine_resources_20180606.csv"
+//const appInterferenceFile = "./data/scheduling_preliminary_app_interference_20180606.csv"
+//const appResourcesFile = "./data/scheduling_preliminary_app_resources_20180606.csv"
+//const instanceDeployFile = "./data/scheduling_preliminary_instance_deploy_20180606.csv"
+//const machineResourceFile = "./data/scheduling_preliminary_machine_resources_20180606.csv"
+
+const appInterferenceFile = "./data/scheduling_preliminary_b_app_interference_20180726.csv"
+const appResourcesFile = "./data/scheduling_preliminary_b_app_resources_20180726.csv"
+const instanceDeployFile = "./data/scheduling_preliminary_b_instance_deploy_20180726.csv"
+const machineResourceFile = "./data/scheduling_preliminary_b_machine_resources_20180726.csv"
 
 func main() {
 	appInterferenceDataList, err := loadAppInterferenceData(appInterferenceFile)
@@ -48,8 +53,9 @@ func main() {
 	}
 
 	//数据分析
-	//analysis := NewAnalysisContext(appInterferenceDataList, appResourcesDataList, machineResourceDataList, instanceDeployDataList)
-	//analysis.Run()
+	analysis := NewAnalysisContext(appInterferenceDataList, appResourcesDataList, machineResourceDataList, instanceDeployDataList)
+	analysis.Run()
+	return
 
 	//调度
 	begin := time.Now()
@@ -58,7 +64,7 @@ func main() {
 		appResourcesDataList,
 		appInterferenceDataList,
 		instanceDeployDataList, func(r *cloud.ResourceManagement) cloud.Strategy {
-			return fullfill.NewFullFillStrategy(r)
+			return fullfill.NewStrategy(r)
 		})
 	if err != nil {
 		fmt.Println(err)

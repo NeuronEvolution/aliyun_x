@@ -125,7 +125,7 @@ func loadAppResourceData(file string) (result []*cloud.AppResourcesConfig, err e
 		}
 		column++
 
-		item.Disk, err = strconv.Atoi(v[column])
+		item.Disk, err = strconv.ParseFloat(v[column], 64)
 		if err != nil {
 			return nil, err
 		}
@@ -222,7 +222,7 @@ func loadMachineResourcesData(file string) (result []*cloud.MachineResourcesConf
 		}
 		column++
 
-		item.Disk, err = strconv.Atoi(v[column])
+		item.Disk, err = strconv.ParseFloat(v[column], 64)
 		if err != nil {
 			return nil, err
 		}

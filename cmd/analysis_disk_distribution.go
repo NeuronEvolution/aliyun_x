@@ -125,7 +125,7 @@ func (c *AnalysisContext) AnalysisDiskDistributionByAppInstance() {
 }
 
 func (c *AnalysisContext) AnalysisDiskDistribution() {
-	//.AnalysisDiskDistributionByApp()
-	//c.AnalysisDiskDistributionByInstance()
+	c.AnalysisDiskDistributionByApp()
+	c.AnalysisDiskDistributionByInstance()
 	c.AnalysisDiskDistributionByAppInstance()
 }

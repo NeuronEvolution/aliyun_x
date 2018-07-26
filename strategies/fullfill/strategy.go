@@ -8,7 +8,7 @@ type Strategy struct {
 	R *cloud.ResourceManagement
 }
 
-func NewFullFillStrategy(r *cloud.ResourceManagement) *Strategy {
+func NewStrategy(r *cloud.ResourceManagement) *Strategy {
 	s := &Strategy{}
 	s.R = r
 
