@@ -8,12 +8,12 @@ import (
 type ResourceManagement struct {
 	Strategy                    Strategy
 	InitialInstanceDeployConfig []*InstanceDeployConfig
-	AppResourcesConfigMap       map[int]*AppResourcesConfig
+	AppResourcesConfigMap       [MaxAppId]*AppResourcesConfig
 	AppInterferenceConfigMap    [][MaxAppId]int
 	Initializing                bool
-	MachineConfigMap            map[int]*MachineResourcesConfig
+	MachineConfigMap            [MaxMachineId]*MachineResourcesConfig
 	MachineLevelConfigPool      *MachineLevelConfigPool
-	MachineMap                  map[int]*Machine
+	MachineMap                  [MaxMachineId]*Machine
 	MachineFreePool             *MachineFreePool
 	MachineDeployPool           *MachineDeployPool
 	DeployCommandHistory        *DeployCommandHistory
@@ -28,16 +28,13 @@ type ResourceManagement struct {
 func NewResourceManagement() *ResourceManagement {
 	r := &ResourceManagement{}
 	r.Strategy = &defaultStrategy{}
-	r.AppResourcesConfigMap = make(map[int]*AppResourcesConfig)
 	r.AppInterferenceConfigMap = make([][MaxAppId]int, MaxAppId)
 	for i := 0; i < MaxAppId; i++ {
 		for j := 0; j < MaxAppId; j++ {
 			r.AppInterferenceConfigMap[i][j] = -1
 		}
 	}
-	r.MachineConfigMap = make(map[int]*MachineResourcesConfig)
 	r.MachineLevelConfigPool = NewMachineLevelConfigPool()
-	r.MachineMap = make(map[int]*Machine)
 	r.MachineFreePool = NewMachineFreePool()
 	r.MachineDeployPool = NewMachineDeployPool()
 	r.DeployCommandHistory = NewDeployCommandHistory()

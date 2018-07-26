@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/NeuronEvolution/aliyun_x/cloud"
-	"github.com/NeuronEvolution/aliyun_x/strategies/fullfill"
+	"github.com/NeuronEvolution/aliyun_x/strategies/ffs"
 	"time"
 )
 
@@ -53,9 +53,9 @@ func main() {
 	}
 
 	//数据分析
-	analysis := NewAnalysisContext(appInterferenceDataList, appResourcesDataList, machineResourceDataList, instanceDeployDataList)
-	analysis.Run()
-	return
+	//analysis := NewAnalysisContext(appInterferenceDataList, appResourcesDataList, machineResourceDataList, instanceDeployDataList)
+	//analysis.Run()
+	//return
 
 	//调度
 	begin := time.Now()
@@ -64,7 +64,7 @@ func main() {
 		appResourcesDataList,
 		appInterferenceDataList,
 		instanceDeployDataList, func(r *cloud.ResourceManagement) cloud.Strategy {
-			return fullfill.NewStrategy(r)
+			return ffs.NewStrategy(r)
 		})
 	if err != nil {
 		fmt.Println(err)

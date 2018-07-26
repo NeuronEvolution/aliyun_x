@@ -4,18 +4,18 @@ import (
 	"github.com/NeuronEvolution/aliyun_x/cloud"
 )
 
-type BestFitStrategy struct {
+type Strategy struct {
 	R                 *cloud.ResourceManagement
 	machineDeployList []*cloud.Machine
 }
 
-func NewBestFitStrategy(r *cloud.ResourceManagement) *BestFitStrategy {
-	s := &BestFitStrategy{}
+func NewStrategy(r *cloud.ResourceManagement) *Strategy {
+	s := &Strategy{}
 	s.R = r
 
 	return s
 }
 
-func (s *BestFitStrategy) Name() string {
+func (s *Strategy) Name() string {
 	return "BestFitV2"
 }

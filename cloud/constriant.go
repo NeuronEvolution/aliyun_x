@@ -92,14 +92,14 @@ func ConstraintCheckResourceLimit(r *Resource, i *Resource, c *MachineLevelConfi
 	}
 
 	for index, v := range r.Cpu {
-		if v+i.Cpu[index] > c.Cpu*maxCpuRatio {
+		if v+i.Cpu[index] > c.Cpu*maxCpuRatio+ConstraintE {
 			debugLog("constraintCheckResourceLimit failed Cpu %d %f %f %f", index, v, i.Cpu[index], c.Cpu)
 			return false
 		}
 	}
 
 	for index, v := range r.Mem {
-		if v+i.Mem[index] > c.Mem {
+		if v+i.Mem[index] > c.Mem+ConstraintE {
 			debugLog("constraintCheckResourceLimit failed Mem %d %f %f %f", index, v, i.Mem[index], c.Mem)
 			return false
 		}

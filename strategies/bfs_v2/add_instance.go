@@ -5,7 +5,7 @@ import (
 	"github.com/NeuronEvolution/aliyun_x/cloud"
 )
 
-func (s *BestFitStrategy) AddInstanceList(instanceList []*cloud.Instance) (err error) {
+func (s *Strategy) AddInstanceList(instanceList []*cloud.Instance) (err error) {
 	s.machineDeployList = s.getDeployMachineList(MachineDeployCount)
 	if len(s.machineDeployList) != MachineDeployCount {
 		panic("BestFitStrategy.AddInstanceList getDeployMachineList failed")
@@ -14,9 +14,9 @@ func (s *BestFitStrategy) AddInstanceList(instanceList []*cloud.Instance) (err e
 	cloud.SortInstanceByTotalMax(instanceList)
 
 	for i, v := range instanceList {
-		if i > 0 && i%1000 == 0 {
-			fmt.Println(i)
-		}
+		//if i > 0 && i%1000 == 0 {
+		fmt.Println(i)
+		//}
 
 		err = s.addInstance(v)
 		if err != nil {
@@ -35,7 +35,7 @@ func (s *BestFitStrategy) AddInstanceList(instanceList []*cloud.Instance) (err e
 	return nil
 }
 
-func (s *BestFitStrategy) addInstance(instance *cloud.Instance) (err error) {
+func (s *Strategy) addInstance(instance *cloud.Instance) (err error) {
 	m := s.bestFitResource(instance, cloud.MaxCpuRatio)
 	if m != nil {
 		m.AddInstance(instance)
@@ -48,8 +48,8 @@ func (s *BestFitStrategy) addInstance(instance *cloud.Instance) (err error) {
 	}
 
 	m.AddInstance(instance)
-	fmt.Printf("cpu ")
-	m.Resource.DebugPrint()
+	//fmt.Printf("cpu ")
+	//m.Resource.DebugPrint()
 
 	return nil
 }

@@ -3,14 +3,13 @@ package ffs
 import (
 	"fmt"
 	"github.com/NeuronEvolution/aliyun_x/cloud"
-	"sort"
 )
 
 type FirstFitStrategy struct {
 	R *cloud.ResourceManagement
 }
 
-func NewFirstFitStrategy(r *cloud.ResourceManagement) cloud.Strategy {
+func NewStrategy(r *cloud.ResourceManagement) cloud.Strategy {
 	s := &FirstFitStrategy{}
 	s.R = r
 
@@ -71,7 +70,7 @@ func (s *FirstFitStrategy) firstFit(instance *cloud.Instance) *cloud.Machine {
 	for _, v := range s.R.MachineDeployPool.MachineLevelDeployArray {
 		for i := 0; i < v.MachineCollection.ListCount; i++ {
 			m := v.MachineCollection.List[i]
-			if m.ConstraintCheck(instance) {
+			if m.ConstraintCheck(instance, 1) {
 				return m
 			}
 		}
@@ -92,7 +91,7 @@ func (s *FirstFitStrategy) findAvailableMachine(instance *cloud.Instance) *cloud
 		return nil
 	}
 
-	if !m.ConstraintCheck(instance) {
+	if !m.ConstraintCheck(instance, 1) {
 		fmt.Printf("FirstFitStrategy.firstFit ConstraintCheck failed machindId=%d,instanceId=%d\n",
 			m.MachineId, instance.InstanceId)
 		return nil
@@ -107,7 +106,7 @@ func (s *FirstFitStrategy) AddInstance(instance *cloud.Instance) (err error) {
 }
 
 func (s *FirstFitStrategy) AddInstanceList(instanceList []*cloud.Instance) (err error) {
-	sort.Sort(cloud.InstanceListSortByCostEvalDesc(instanceList))
+	cloud.SortInstanceByTotalMax(instanceList)
 
 	for i, v := range instanceList {
 		//fmt.Println(v.CostEval)

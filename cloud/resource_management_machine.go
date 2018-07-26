@@ -25,8 +25,8 @@ func (r *ResourceManagement) RemoveMachine(machineId int) error {
 			machineId, m.InstanceArrayCount)
 	}
 
-	delete(r.MachineConfigMap, machineId)
-	delete(r.MachineMap, machineId)
+	r.MachineConfigMap[machineId] = nil
+	r.MachineMap[machineId] = nil
 	r.removeFromFreeMachine(machineId)
 
 	return nil

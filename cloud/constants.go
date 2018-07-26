@@ -2,8 +2,8 @@ package cloud
 
 const TimeSampleCount = 98
 
-const MaxAppId = 9338 + 1
-const MaxInstanceId = 99998 + 1
+const MaxAppId = 10000
+const MaxInstanceId = 100000
 const MaxMachineId = 6000 + 1
 const MachineCpuMax = 92
 const MachineMemMax = 288
@@ -24,3 +24,5 @@ const ParamAppCostMultiply = 5 //影响大
 const ParamCpuCostMultiply = 1
 
 const MaxCpuRatio = float64(0.5)
+
+const ConstraintE = float64(0.0000001)

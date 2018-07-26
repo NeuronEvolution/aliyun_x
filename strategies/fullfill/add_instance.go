@@ -40,13 +40,13 @@ func (s *Strategy) AddInstanceList(instances []*cloud.Instance) (err error) {
 		if m.LevelConfig.Disk == 1024 {
 			if m.Disk <= 980 {
 				//fmt.Println(i)
-				m.DebugPrint()
+				//m.DebugPrint()
 				n++
 			}
 		} else {
 			if m.Disk < 560 {
 				//fmt.Println(i)
-				m.DebugPrint()
+				//m.DebugPrint()
 				n++
 			}
 		}
@@ -57,9 +57,9 @@ func (s *Strategy) AddInstanceList(instances []*cloud.Instance) (err error) {
 			//}
 		}
 
-		fmt.Printf("AddInstanceList restInstances count %d,%d,%d\n", i, len(restInstances), m.Disk)
+		//fmt.Printf("AddInstanceList restInstances count %d,%d,%d\n", i, len(restInstances), m.Disk)
 
-		//m.DebugPrint()
+		m.Resource.DebugPrint()
 	}
 
 	fmt.Println("AddInstanceList rest", len(restInstances), n)
@@ -103,7 +103,8 @@ func (s *Strategy) AddInstanceList(instances []*cloud.Instance) (err error) {
 			return err
 		}
 
-		fmt.Printf("AddInstanceList again restInstances count %d,%d,%d\n", i, len(restInstances), m.Disk)
+		m.Resource.DebugPrint()
+		//fmt.Printf("AddInstanceList again restInstances count %d,%d,%d\n", i, len(restInstances), m.Disk)
 	}
 
 	return nil
@@ -158,7 +159,7 @@ func (s *Strategy) measureTooHigh(m *cloud.Machine) (typ int, d float64) {
 }
 
 func (s *Strategy) measureWithInstance(m *cloud.Machine, instance *cloud.Instance) (d float64) {
-	disk := m.Disk + instance.Config.Disk/m.LevelConfig.Disk
+	disk := float64(m.Disk+instance.Config.Disk) / float64(m.LevelConfig.Disk)
 	if disk > 1 {
 		return disk
 	}
@@ -233,7 +234,9 @@ func (s *Strategy) fillMachine(
 	deployed := make([]*cloud.Instance, 32)
 	deployedCount := 0
 
-	if !m.ConstraintCheck(instances[0], cloud.MaxCpuRatio) {
+	if !m.ConstraintCheck(instances[0], 1) {
+		m.Resource.DebugPrint()
+		instances[0].Config.DebugPrint()
 		return nil, nil, nil, nil,
 			fmt.Errorf("fillMachine ConstraintCheck instances[0] failed")
 	}
@@ -301,7 +304,7 @@ func (s *Strategy) fillMachine(
 			}
 
 			if derivation < minDerivation {
-				if !m.ConstraintCheck(instance, cloud.MaxCpuRatio) {
+				if !m.ConstraintCheck(instance, 1) {
 					continue
 				}
 
@@ -343,6 +346,5 @@ func (s *Strategy) fillMachine(
 }
 
 func (s *Strategy) forceAddInstance(instance *cloud.Instance) (err error) {
-
 	return fmt.Errorf("forceAddInstance")
 }

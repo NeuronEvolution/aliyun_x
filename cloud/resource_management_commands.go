@@ -51,7 +51,13 @@ func (r *ResourceManagement) Play(h *DeployCommandHistory) (err error) {
 			currentMachine.RemoveInstance(v.InstanceId)
 		}
 
+		if i > 92510 {
+			SetDebug(true)
+		}
+
 		if !m.ConstraintCheck(instance, 1) {
+			m.DebugPrint()
+			instance.Config.DebugPrint()
 			return fmt.Errorf("ResourceManagement.Play ConstraintCheck failed %d %v ", i, v)
 		}
 

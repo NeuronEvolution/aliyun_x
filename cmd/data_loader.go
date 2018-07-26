@@ -125,10 +125,15 @@ func loadAppResourceData(file string) (result []*cloud.AppResourcesConfig, err e
 		}
 		column++
 
-		item.Disk, err = strconv.ParseFloat(v[column], 64)
+		fDisk, err := strconv.ParseFloat(v[column], 64)
 		if err != nil {
 			return nil, err
 		}
+		if float64(int(fDisk)) != fDisk {
+			return nil, fmt.Errorf("disk not integer %f", fDisk)
+		}
+
+		item.Disk = int(fDisk)
 		column++
 
 		item.P, err = strconv.Atoi(v[column])
@@ -222,10 +227,14 @@ func loadMachineResourcesData(file string) (result []*cloud.MachineResourcesConf
 		}
 		column++
 
-		item.Disk, err = strconv.ParseFloat(v[column], 64)
+		fDisk, err := strconv.ParseFloat(v[column], 64)
 		if err != nil {
 			return nil, err
 		}
+		if float64(int(fDisk)) != fDisk {
+			return nil, fmt.Errorf("disk not integer %f", fDisk)
+		}
+		item.Disk = int(fDisk)
 		column++
 
 		item.P, err = strconv.Atoi(v[column])

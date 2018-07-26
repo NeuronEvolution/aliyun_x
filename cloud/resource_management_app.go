@@ -22,13 +22,13 @@ func (r *ResourceManagement) SaveAppResourceConfig(config *AppResourcesConfig) e
 //todo 将触发调度
 //todo 异步将该app相关instance拉出再重新拉入
 func (r *ResourceManagement) SaveAppInterferenceConfig(config *AppInterferenceConfig) error {
-	_, hasAppResource := r.AppResourcesConfigMap[config.AppId1]
-	if !hasAppResource {
+	appResource1 := r.AppResourcesConfigMap[config.AppId1]
+	if appResource1 == nil {
 		return fmt.Errorf("SaveAppInterferenceConfig app %d not exists", config.AppId1)
 	}
 
-	_, hasAppResource = r.AppResourcesConfigMap[config.AppId2]
-	if !hasAppResource {
+	appResource2 := r.AppResourcesConfigMap[config.AppId2]
+	if appResource2 == nil {
 		return fmt.Errorf("SaveAppInterferenceConfig app %d not esists", config.AppId2)
 	}
 
