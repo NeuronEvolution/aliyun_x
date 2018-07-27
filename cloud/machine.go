@@ -212,6 +212,38 @@ func (m *Machine) GetDerivationWithInstance(instance *Instance) float64 {
 	return d
 }
 
+func (m *Machine) GetDerivationWithInstances(instances []*Instance) float64 {
+	var cpu [TimeSampleCount]float64
+	for i := 0; i < TimeSampleCount; i++ {
+		total := m.Cpu[i]
+		for _, instance := range instances {
+			total += instance.Config.Cpu[i]
+		}
+		cpu[i] = total / m.LevelConfig.Cpu
+	}
+
+	avg := float64(0)
+	for i := 0; i < TimeSampleCount; i++ {
+		total := m.Cpu[i]
+		for _, instance := range instances {
+			total += instance.Config.Cpu[i]
+		}
+
+		r := total / m.LevelConfig.Cpu
+		avg += r
+	}
+
+	avg = avg / float64(TimeSampleCount)
+	d := float64(0)
+	for i := 0; i < TimeSampleCount; i++ {
+		r := (m.Cpu[i] + instance.Config.Cpu[i]) / m.LevelConfig.Cpu
+		d += (r - avg) * (r - avg)
+	}
+	d = math.Sqrt(d / TimeSampleCount)
+
+	return d
+}
+
 func (m *Machine) GetLinearCostWithInstance(instance *Instance) float64 {
 	totalCost := float64(0)
 	for i := 0; i < TimeSampleCount; i++ {
