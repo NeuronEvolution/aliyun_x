@@ -131,6 +131,16 @@ func (m *Machine) ConstraintCheck(instance *Instance, maxCpuRatio float64) bool 
 	return true
 }
 
+func (m *Machine) ConstraintCheckResourceLimit(instance *Instance, maxCpuRatio float64) bool {
+	return ConstraintCheckResourceLimit(&m.Resource, &instance.Config.Resource, m.LevelConfig, maxCpuRatio)
+}
+
+func (m *Machine) ConstraintCheckAppInterferenceAddInstance(instance *Instance) bool {
+	return ConstraintCheckAppInterferenceAddInstance(instance.Config.AppId,
+		m.appCountCollection,
+		m.R.AppInterferenceConfigMap)
+}
+
 func (m *Machine) HasBadConstraint() bool {
 	return !ConstraintCheckAppInterference(m.appCountCollection, m.R.AppInterferenceConfigMap)
 }

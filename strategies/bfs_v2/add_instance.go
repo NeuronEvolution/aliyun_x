@@ -3,22 +3,46 @@ package bfs_v2
 import (
 	"fmt"
 	"github.com/NeuronEvolution/aliyun_x/cloud"
+	"sort"
 )
 
-func (s *Strategy) AddInstanceList(instanceList []*cloud.Instance) (err error) {
+func (s *Strategy) AddInstanceList(instances []*cloud.Instance) (err error) {
 	s.machineDeployList = s.R.MachineFreePool.PeekMachineList(MachineDeployCount)
 	if len(s.machineDeployList) != MachineDeployCount {
 		panic("BestFitStrategy.AddInstanceList getDeployMachineList failed")
 	}
 
-	cloud.SortInstanceByTotalMax(instanceList)
+	restInstances := instances
+	sort.Slice(restInstances, func(i, j int) bool {
+		return restInstances[i].Config.GetCpuDerivation() > restInstances[j].Config.GetCpuDerivation()
+	})
 
-	for i, v := range instanceList {
+	for i, m := range s.machineDeployList {
+		fmt.Println("predploy", i)
+		restInstances, err = s.preDeploy(m, restInstances)
+		if err != nil {
+			return err
+		}
+
+		if i >= 3000 {
+			break
+		}
+	}
+
+	for _, m := range s.machineDeployList {
+		if m.InstanceArrayCount > 0 {
+			m.DebugPrint()
+		}
+	}
+
+	cloud.SortInstanceByTotalMax(restInstances)
+
+	for i, v := range restInstances {
 		//if i > 0 && i%1000 == 0 {
 		fmt.Println(i)
 		//}
 
-		err = s.addInstance(v, float64(i)/float64(len(instanceList)))
+		err = s.addInstance(v, float64(i)/float64(len(restInstances)))
 		if err != nil {
 			for _, m := range s.machineDeployList {
 				m.Resource.DebugPrint()

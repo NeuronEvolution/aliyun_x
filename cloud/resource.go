@@ -99,6 +99,24 @@ func (r *Resource) calcCostEval(config *MachineLevelConfig) {
 	r.ResourceCostDeviation = calcResourceCostDeviation(cpu, mem, disk, p, m, pm)
 }
 
+func (r *Resource) GetCpuDerivation() float64 {
+	avg := float64(0)
+	for i := 0; i < TimeSampleCount; i++ {
+		ratio := r.Cpu[i] / HighCpu
+		avg += ratio
+	}
+
+	avg = avg / float64(TimeSampleCount)
+	d := float64(0)
+	for i := 0; i < TimeSampleCount; i++ {
+		ratio := r.Cpu[i] / HighCpu
+		d += (ratio - avg) * (ratio - avg)
+	}
+	d = math.Sqrt(d / TimeSampleCount)
+
+	return d
+}
+
 func calcResourceCostDeviation(cpu float64, mem float64, disk float64, p float64, m float64, pm float64) float64 {
 	avg := (cpu + mem + disk + p + m + pm) / 6
 	return math.Sqrt(((cpu-avg)*(cpu-avg) + (mem-avg)*(mem-avg) + (disk-avg)*(disk-avg) +

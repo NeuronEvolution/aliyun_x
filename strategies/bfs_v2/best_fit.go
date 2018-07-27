@@ -1,7 +1,6 @@
 package bfs_v2
 
 import (
-	"fmt"
 	"github.com/NeuronEvolution/aliyun_x/cloud"
 	"math"
 )
@@ -60,17 +59,22 @@ func (s *Strategy) bestFitResource(instance *cloud.Instance, cpuMax float64, pro
 	min := math.MaxFloat64
 	var machine *cloud.Machine
 	for _, m := range s.machineDeployList {
+		if !m.ConstraintCheckResourceLimit(instance, cpuMax) {
+			continue
+		}
+
 		d := s.costWithInstance(m, instance, progress)
 		if d >= min {
 			continue
 		}
 
-		if m.ConstraintCheck(instance, cpuMax) {
-			min = d
-			machine = m
-
-			fmt.Println(d)
+		if !m.ConstraintCheckAppInterferenceAddInstance(instance) {
+			continue
 		}
+
+		//fmt.Println(d)
+		min = d
+		machine = m
 	}
 
 	if machine != nil {
@@ -86,15 +90,21 @@ func (s *Strategy) bestFitCpuCost(instance *cloud.Instance) *cloud.Machine {
 	var minCpuCostMachine *cloud.Machine
 
 	for _, m := range s.machineDeployList {
+		if !m.ConstraintCheckResourceLimit(instance, 1) {
+			continue
+		}
+
 		cost := m.GetLinearCostWithInstance(instance)
 		if cost > minCpuCost {
 			continue
 		}
 
-		if m.ConstraintCheck(instance, 1) {
-			minCpuCost = cost
-			minCpuCostMachine = m
+		if !m.ConstraintCheckAppInterferenceAddInstance(instance) {
+			continue
 		}
+
+		minCpuCost = cost
+		minCpuCostMachine = m
 	}
 
 	if minCpuCostMachine != nil {
