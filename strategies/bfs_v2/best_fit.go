@@ -5,10 +5,6 @@ import (
 	"math"
 )
 
-const TypeDisk = 1
-const TypeCpu = 2
-const TypeMem = 3
-
 func (s *Strategy) measureWithInstance(m *cloud.Machine, instance *cloud.Instance) (d float64) {
 	disk := float64(m.Disk+instance.Config.Disk) / float64(m.LevelConfig.Disk)
 	if disk > 1 {
@@ -55,7 +51,7 @@ func (s *Strategy) measureWithInstance(m *cloud.Machine, instance *cloud.Instanc
 	return (cpu + disk + mem) * max
 }
 
-func (s *Strategy) bestFitResource(instance *cloud.Instance, cpuMax float64) *cloud.Machine {
+func (s *Strategy) bestFitResource(instance *cloud.Instance, cpuMax float64, progress float64) *cloud.Machine {
 	minD := math.MaxFloat64
 	var machine *cloud.Machine
 	for _, m := range s.machineDeployList {
@@ -84,7 +80,7 @@ func (s *Strategy) bestFitCpuCost(instance *cloud.Instance) *cloud.Machine {
 	var minCpuCostMachine *cloud.Machine
 
 	for _, m := range s.machineDeployList {
-		cost := m.GetCostWithInstance(instance)
+		cost := m.GetLinearCostWithInstance(instance)
 		if cost > minCpuCost {
 			continue
 		}

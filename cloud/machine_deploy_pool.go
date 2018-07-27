@@ -130,9 +130,8 @@ func (p *MachineDeployPool) DebugPrint(buf *bytes.Buffer) {
 
 	SortMachineByCpuCost(machineDeployed)
 	for i, m := range machineDeployed {
-		if i < 100 {
+		if i < 10 {
 			buf.WriteString(fmt.Sprintf("    cpuCost=%f,machineId=%d\n", m.GetCpuCost(), m.MachineId))
-			m.Resource.DebugPrint()
 		}
 	}
 	buf.WriteString(fmt.Sprintf("total high cpu(%f) count=%d\n", highCpuLimit, cpuHighCount))

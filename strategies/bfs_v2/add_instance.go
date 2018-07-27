@@ -18,7 +18,7 @@ func (s *Strategy) AddInstanceList(instanceList []*cloud.Instance) (err error) {
 		fmt.Println(i)
 		//}
 
-		err = s.addInstance(v)
+		err = s.addInstance(v, float64(i)/float64(len(instanceList)))
 		if err != nil {
 			for _, m := range s.machineDeployList {
 				m.Resource.DebugPrint()
@@ -35,8 +35,8 @@ func (s *Strategy) AddInstanceList(instanceList []*cloud.Instance) (err error) {
 	return nil
 }
 
-func (s *Strategy) addInstance(instance *cloud.Instance) (err error) {
-	m := s.bestFitResource(instance, cloud.MaxCpuRatio)
+func (s *Strategy) addInstance(instance *cloud.Instance, progress float64) (err error) {
+	m := s.bestFitResource(instance, cloud.MaxCpuRatio, progress)
 	if m != nil {
 		m.AddInstance(instance)
 		return nil
