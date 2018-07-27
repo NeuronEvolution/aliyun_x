@@ -25,3 +25,8 @@ const ParamCpuCostMultiply = 1
 const MaxCpuRatio = float64(0.5)
 
 const ConstraintE = float64(0.0000001)
+
+//- 92,288,2457,7,7,9
+const HighCpu = 92
+const HighMem = 288
+const HighDisk = 2457
