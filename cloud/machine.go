@@ -214,14 +214,6 @@ func (m *Machine) GetDerivationWithInstance(instance *Instance) float64 {
 
 func (m *Machine) GetDerivationWithInstances(instances []*Instance) float64 {
 	var cpu [TimeSampleCount]float64
-	for i := 0; i < TimeSampleCount; i++ {
-		total := m.Cpu[i]
-		for _, instance := range instances {
-			total += instance.Config.Cpu[i]
-		}
-		cpu[i] = total / m.LevelConfig.Cpu
-	}
-
 	avg := float64(0)
 	for i := 0; i < TimeSampleCount; i++ {
 		total := m.Cpu[i]
@@ -229,15 +221,18 @@ func (m *Machine) GetDerivationWithInstances(instances []*Instance) float64 {
 			total += instance.Config.Cpu[i]
 		}
 
-		r := total / m.LevelConfig.Cpu
-		avg += r
-	}
+		if total > m.LevelConfig.Cpu {
+			return math.MaxFloat64
+		}
 
+		cpu[i] = total / m.LevelConfig.Cpu
+		avg += cpu[i]
+	}
 	avg = avg / float64(TimeSampleCount)
+
 	d := float64(0)
 	for i := 0; i < TimeSampleCount; i++ {
-		r := (m.Cpu[i] + instance.Config.Cpu[i]) / m.LevelConfig.Cpu
-		d += (r - avg) * (r - avg)
+		d += (cpu[i] - avg) * (cpu[i] - avg)
 	}
 	d = math.Sqrt(d / TimeSampleCount)
 

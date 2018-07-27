@@ -18,7 +18,7 @@ func (s *Strategy) AddInstanceList(instances []*cloud.Instance) (err error) {
 	})
 
 	for i, m := range s.machineDeployList {
-		fmt.Println("predploy", i)
+		fmt.Println("predploy", i, len(restInstances))
 		restInstances, err = s.preDeploy(m, restInstances)
 		if err != nil {
 			return err

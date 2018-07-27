@@ -14,7 +14,7 @@ func (s *Strategy) preDeploy(m *cloud.Machine, instances []*cloud.Instance) (res
 	minD := math.MaxFloat64
 	var minInstance *cloud.Instance
 	for _, instance := range instances[1 : len(instances)/3] {
-		d := m.GetDerivationWithInstance(instance)
+		d := m.GetDerivationWithInstances([]*cloud.Instance{instance})
 		if d >= minD {
 			continue
 		}
@@ -26,7 +26,6 @@ func (s *Strategy) preDeploy(m *cloud.Machine, instances []*cloud.Instance) (res
 		minD = d
 		minInstance = instance
 		//fmt.Println("minD", minD)
-
 	}
 
 	if minInstance != nil {
