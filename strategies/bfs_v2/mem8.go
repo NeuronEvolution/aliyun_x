@@ -37,5 +37,15 @@ func (s *Strategy) mem8(instances []*cloud.Instance) (restInstances []*cloud.Ins
 		}
 	}
 
+	//deployed := make([]*cloud.Instance, 0)
+	//for i, m := range machines {
+	//	instance := i8s[i]
+	//	if !m.ConstraintCheck(instance, 1) {
+	//		continue
+	//	}
+	//	m.AddInstance(instance)
+	//	deployed = append(deployed, instance)
+	//}
+
 	return instances, nil
 }
