@@ -59,6 +59,14 @@ func (s *Strategy) bestFitResource(instance *cloud.Instance, cpuMax float64, pro
 	min := math.MaxFloat64
 	var machine *cloud.Machine
 	for _, m := range s.machineDeployList {
+		if progress < 0 && m.LevelConfig.Cpu != cloud.HighCpu {
+			continue
+		}
+
+		if cloud.InstancesContainsApp(m.InstanceArray[:m.InstanceArrayCount], instance.Config.AppId) {
+			continue
+		}
+
 		if !m.ConstraintCheckResourceLimit(instance, cpuMax) {
 			continue
 		}
@@ -85,11 +93,19 @@ func (s *Strategy) bestFitResource(instance *cloud.Instance, cpuMax float64, pro
 	return machine
 }
 
-func (s *Strategy) bestFitCpuCost(instance *cloud.Instance) *cloud.Machine {
+func (s *Strategy) bestFitCpuCost(instance *cloud.Instance, progress float64, all bool) *cloud.Machine {
 	minCpuCost := math.MaxFloat64
 	var minCpuCostMachine *cloud.Machine
 
 	for _, m := range s.machineDeployList {
+		if !all && progress < 0 && m.LevelConfig.Cpu != cloud.HighCpu {
+			continue
+		}
+
+		if !all && cloud.InstancesContainsApp(m.InstanceArray[:m.InstanceArrayCount], instance.Config.AppId) {
+			continue
+		}
+
 		if !m.ConstraintCheckResourceLimit(instance, 1) {
 			continue
 		}

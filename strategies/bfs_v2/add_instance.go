@@ -12,10 +12,14 @@ func (s *Strategy) AddInstanceList(instances []*cloud.Instance) (err error) {
 		panic("BestFitStrategy.AddInstanceList getDeployMachineList failed")
 	}
 
-	restInstances := instances
-	sort.Slice(restInstances, func(i, j int) bool {
-		return restInstances[i].Config.GetCpuDerivation() > restInstances[j].Config.GetCpuDerivation()
-	})
+	restInstances, err := s.mem8(instances)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println("mem8 rest count", len(restInstances))
+
+	cloud.SortInstanceByTotalMaxLow(restInstances)
 
 	for i, m := range s.machineDeployList {
 		if i >= 3000 {
@@ -24,16 +28,21 @@ func (s *Strategy) AddInstanceList(instances []*cloud.Instance) (err error) {
 
 		fmt.Println("predploy", i, len(restInstances))
 		restInstances, err = s.preDeploy(m, restInstances)
-		m.DebugPrint()
-		fmt.Println(m.Resource.GetCpuCost(m.LevelConfig.Cpu), m.Resource.GetLinearCpuCost(m.LevelConfig.Cpu))
+		//m.DebugPrint()
+		//fmt.Println(m.Resource.GetCpuCost(m.LevelConfig.Cpu), m.Resource.GetLinearCpuCost(m.LevelConfig.Cpu))
 		if err != nil {
 			return err
 		}
 	}
 
-	cloud.SortInstanceByTotalMax(restInstances)
+	cloud.SortInstanceByTotalMaxLowWithInference(restInstances)
 
 	fmt.Println("AddInstanceList restInstances ", len(restInstances))
+	for i, v := range restInstances {
+		if i < 0 {
+			v.Config.DebugPrint()
+		}
+	}
 
 	for i, v := range restInstances {
 		//if i > 0 && i%1000 == 0 {
@@ -42,16 +51,30 @@ func (s *Strategy) AddInstanceList(instances []*cloud.Instance) (err error) {
 
 		err = s.addInstance(v, float64(i)/float64(len(restInstances)))
 		if err != nil {
-			for _, m := range s.machineDeployList {
-				m.Resource.DebugPrint()
-			}
+			//for _, m := range s.machineDeployList {
+			//m.DebugPrint()
+			//}
 			fmt.Println(i)
 			return err
 		}
 	}
 
+	sort.Slice(s.machineDeployList, func(i, j int) bool {
+		if s.machineDeployList[i].LevelConfig.Cpu > s.machineDeployList[j].LevelConfig.Cpu {
+			return true
+		} else if s.machineDeployList[i].LevelConfig.Cpu == s.machineDeployList[j].LevelConfig.Cpu {
+			return s.machineDeployList[i].GetCpuCost() > s.machineDeployList[j].GetCpuCost()
+		} else {
+			return false
+		}
+	})
 	for _, m := range s.machineDeployList {
-		m.Resource.DebugPrint()
+		fmt.Printf("cost=%f %f\n", m.GetCpuCost(), m.GetLinearCpuCost(m.LevelConfig.Cpu))
+		if m.GetLinearCpuCost(m.LevelConfig.Cpu) < 0.9 {
+			m.DebugPrint()
+		} else {
+			m.Resource.DebugPrint()
+		}
 	}
 
 	return nil
@@ -64,14 +87,18 @@ func (s *Strategy) addInstance(instance *cloud.Instance, progress float64) (err 
 		return nil
 	}
 
-	m = s.bestFitCpuCost(instance)
+	m = s.bestFitCpuCost(instance, progress, false)
+	if m != nil {
+		m.AddInstance(instance)
+		return nil
+	}
+
+	m = s.bestFitCpuCost(instance, progress, true)
 	if m == nil {
 		return fmt.Errorf("BestFitStrategy.addInstance bestFitCpuCost failed")
 	}
 
 	m.AddInstance(instance)
-	//fmt.Printf("cpu ")
-	//m.Resource.DebugPrint()
 
 	return nil
 }

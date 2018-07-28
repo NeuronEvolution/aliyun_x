@@ -29,7 +29,7 @@ type Resource struct {
 func (r *Resource) DebugPrint() {
 	r.CalcTimedResourceStatistics()
 
-	fmt.Printf("Resource.DebugPrint ")
+	fmt.Printf("Resource.Print ")
 	fmt.Printf("Disk=%4d,", r.Disk)
 	fmt.Printf("P=%d,M=%d,PM=%d,", r.P, r.M, r.PM)
 	fmt.Printf("CpuAvg=%4.1f,CpuDev=%4.1f,CpuMin=%4.1f,CpuMax=%4.1f,",

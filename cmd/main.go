@@ -50,12 +50,17 @@ func main() {
 
 	for _, v := range appResourcesDataList {
 		v.CalcTimedResourceStatistics()
+
+		for _, inference := range appInterferenceDataList {
+			if inference.AppId1 == v.AppId || inference.AppId2 == v.AppId {
+				v.InferenceAppCount++
+			}
+		}
 	}
 
 	//数据分析
-	//analysis := NewAnalysisContext(appInterferenceDataList, appResourcesDataList, machineResourceDataList, instanceDeployDataList)
-	//analysis.Run()
-	//return
+	analysis := NewAnalysisContext(appInterferenceDataList, appResourcesDataList, machineResourceDataList, instanceDeployDataList)
+	analysis.Run()
 
 	//调度
 	begin := time.Now()

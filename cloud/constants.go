@@ -26,7 +26,12 @@ const MaxCpuRatio = float64(0.5)
 
 const ConstraintE = float64(0.0000001)
 
-//- 92,288,2457,7,7,9
+//92,288,2457,7,7,9
 const HighCpu = 92
 const HighMem = 288
 const HighDisk = 2457
+
+//32,64,1440,7,3,7
+const LowCpu = 32
+const LowMem = 64
+const LowDisk = 1440

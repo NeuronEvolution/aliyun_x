@@ -124,8 +124,88 @@ func (c *AnalysisContext) AnalysisDiskDistributionByAppInstance() {
 	}
 }
 
+func (c *AnalysisContext) AnalysisMemAvgDistributionByInstance() {
+	fmt.Printf("AnalysisMemAvgDistributionByInstance\n")
+	instanceMemDist := make(map[int]int)
+	for _, v := range c.instanceDeployList {
+		appResource := c.appResourcesMap[v.AppId]
+		_, has := instanceMemDist[int(appResource.MemAvg)]
+		if !has {
+			instanceMemDist[int(appResource.MemAvg)] = 1
+		} else {
+			instanceMemDist[int(appResource.MemAvg)]++
+		}
+	}
+	instanceDiskCountList := make([]*diskCount, 0)
+	for i, v := range instanceMemDist {
+		instanceDiskCountList = append(instanceDiskCountList, &diskCount{disk: i, count: v})
+	}
+	sort.Slice(instanceDiskCountList, func(i, j int) bool {
+		return instanceDiskCountList[i].disk > instanceDiskCountList[j].disk
+	})
+	for _, v := range instanceDiskCountList {
+		fmt.Printf("    memAvg=%5d,count=%7d\n", v.disk, v.count)
+	}
+}
+
+func (c *AnalysisContext) AnalysisMemMaxDistributionByInstance() {
+	fmt.Printf("AnalysisMemMaxDistributionByInstance\n")
+	instanceMemDist := make(map[int]int)
+	for _, v := range c.instanceDeployList {
+		appResource := c.appResourcesMap[v.AppId]
+		_, has := instanceMemDist[int(appResource.MemMax)]
+		if !has {
+			instanceMemDist[int(appResource.MemMax)] = 1
+		} else {
+			instanceMemDist[int(appResource.MemMax)]++
+		}
+	}
+	instanceDiskCountList := make([]*diskCount, 0)
+	for i, v := range instanceMemDist {
+		instanceDiskCountList = append(instanceDiskCountList, &diskCount{disk: i, count: v})
+	}
+	sort.Slice(instanceDiskCountList, func(i, j int) bool {
+		return instanceDiskCountList[i].disk > instanceDiskCountList[j].disk
+	})
+	for _, v := range instanceDiskCountList {
+		fmt.Printf("    memAvg=%5d,count=%7d\n", v.disk, v.count)
+	}
+}
+
+func (c *AnalysisContext) AnalysisMemSameDistributionByInstance() {
+	fmt.Printf("AnalysisMemSameDistributionByInstance\n")
+	instanceMemDist := make(map[int]int)
+	for _, v := range c.instanceDeployList {
+		appResource := c.appResourcesMap[v.AppId]
+		if (appResource.MemMax - appResource.MemAvg) > 0.001 {
+			continue
+		}
+
+		_, has := instanceMemDist[int(appResource.MemMax)]
+		if !has {
+			instanceMemDist[int(appResource.MemMax)] = 1
+		} else {
+			instanceMemDist[int(appResource.MemMax)]++
+		}
+	}
+	instanceDiskCountList := make([]*diskCount, 0)
+	for i, v := range instanceMemDist {
+		instanceDiskCountList = append(instanceDiskCountList, &diskCount{disk: i, count: v})
+	}
+	sort.Slice(instanceDiskCountList, func(i, j int) bool {
+		return instanceDiskCountList[i].disk > instanceDiskCountList[j].disk
+	})
+	for _, v := range instanceDiskCountList {
+		fmt.Printf("    memAvg=%5d,count=%7d\n", v.disk, v.count)
+	}
+}
+
 func (c *AnalysisContext) AnalysisDiskDistribution() {
 	c.AnalysisDiskDistributionByApp()
 	c.AnalysisDiskDistributionByInstance()
 	c.AnalysisDiskDistributionByAppInstance()
+
+	c.AnalysisMemAvgDistributionByInstance()
+	c.AnalysisMemMaxDistributionByInstance()
+	c.AnalysisMemSameDistributionByInstance()
 }

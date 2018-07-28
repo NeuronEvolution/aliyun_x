@@ -9,6 +9,8 @@ type AppInterferenceConfig struct {
 type AppResourcesConfig struct {
 	AppId int
 	Resource
+
+	InferenceAppCount int
 }
 
 type InstanceDeployConfig struct {

@@ -60,4 +60,5 @@ func (c *AnalysisContext) Run() {
 
 	c.AnalysisArraySize()
 	c.AnalysisDiskDistribution()
+	c.AnalysisAppInference()
 }
