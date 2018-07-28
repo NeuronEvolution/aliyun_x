@@ -54,5 +54,7 @@ func Statistics(arr [TimeSampleCount]float64) (avg float64, dev float64, min flo
 	}
 	dev = math.Sqrt(dev / float64(len(arr)))
 
+	//fmt.Println("Statistics",avg,dev)
+
 	return
 }

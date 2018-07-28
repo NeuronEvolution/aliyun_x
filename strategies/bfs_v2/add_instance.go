@@ -3,6 +3,7 @@ package bfs_v2
 import (
 	"fmt"
 	"github.com/NeuronEvolution/aliyun_x/cloud"
+	"sort"
 )
 
 func (s *Strategy) AddInstanceList(instances []*cloud.Instance) (err error) {
@@ -12,7 +13,9 @@ func (s *Strategy) AddInstanceList(instances []*cloud.Instance) (err error) {
 	}
 
 	restInstances := instances
-	cloud.SortInstanceByTotalMax(restInstances)
+	sort.Slice(restInstances, func(i, j int) bool {
+		return restInstances[i].Config.GetCpuDerivation() > restInstances[j].Config.GetCpuDerivation()
+	})
 
 	for i, m := range s.machineDeployList {
 		if i >= 3000 {

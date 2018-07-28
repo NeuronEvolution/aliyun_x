@@ -21,7 +21,7 @@ func (s *Strategy) preDeploy(m *cloud.Machine, instances []*cloud.Instance) (res
 		var minDeployed []*cloud.Instance
 		for {
 			subInstances := make([]*cloud.Instance, 0)
-			for ; offset < len(instances)/2; offset++ {
+			for ; offset < len(instances)/3; offset++ {
 				if !cloud.InstancesContainsApp(subInstances, instances[offset].Config.AppId) {
 					subInstances = append(subInstances, instances[offset])
 					if len(subInstances) > 256 {
@@ -48,7 +48,7 @@ func (s *Strategy) preDeploy(m *cloud.Machine, instances []*cloud.Instance) (res
 					continue
 				}
 
-				if resource.GetCostWithInstance(instance, m.LevelConfig.Cpu) > 1 {
+				if resource.GetCostWithInstance(instance, m.LevelConfig.Cpu) > 10 {
 					continue
 				}
 
