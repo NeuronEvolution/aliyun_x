@@ -6,32 +6,87 @@ import (
 )
 
 func (s *Strategy) preDeploy(m *cloud.Machine, instances []*cloud.Instance) (restInstances []*cloud.Instance, err error) {
-	deployed := make([]*cloud.Instance, 0)
+	deployed := make([]*cloud.Instance, 128)
+	deployedCount := 0
+	deployed[0] = instances[0]
+	deployedCount++
+	appCount := cloud.NewAppCountCollection()
+	appCount.Add(instances[0].Config.AppId)
+	resource := &cloud.Resource{}
+	resource.AddResource(&instances[0].Config.Resource)
 
-	m.AddInstance(instances[0])
-	deployed = append(deployed, instances[0])
+	for i := 0; i < 3; i++ {
+		offset := 0
+		minD := math.MaxFloat64
+		var minDeployed []*cloud.Instance
+		for {
+			subInstances := make([]*cloud.Instance, 0)
+			for ; offset < len(instances)/2; offset++ {
+				if !cloud.InstancesContainsApp(subInstances, instances[offset].Config.AppId) {
+					subInstances = append(subInstances, instances[offset])
+					if len(subInstances) > 256 {
+						break
+					}
+				}
+			}
+			if len(subInstances) == 0 {
+				break
+			}
 
-	minD := math.MaxFloat64
-	var minInstance *cloud.Instance
-	for _, instance := range instances[1 : len(instances)/3] {
-		d := m.GetDerivationWithInstances([]*cloud.Instance{instance})
-		if d >= minD {
-			continue
+			subMinD := math.MaxFloat64
+			var subMinDeployed []*cloud.Instance
+			for _, instance := range subInstances {
+				if !cloud.ConstraintCheckResourceLimit(resource, &instance.Config.Resource, m.LevelConfig, 1) {
+					continue
+				}
+
+				if !cloud.ConstraintCheckAppInterferenceAddInstance(instance.Config.AppId, appCount, s.R.AppInterferenceConfigMap) {
+					continue
+				}
+
+				if resource.GetCostWithInstance(instance, m.LevelConfig.Cpu) > 1 {
+					continue
+				}
+
+				d := resource.GetDerivationWithInstances([]*cloud.Instance{instance})
+				if d >= subMinD {
+					continue
+				}
+
+				subMinD = d
+				subMinDeployed = []*cloud.Instance{instance}
+			}
+
+			if subMinDeployed != nil && len(subMinDeployed) > 0 {
+				if subMinD < minD {
+					minD = subMinD
+					minDeployed = subMinDeployed
+
+					//fmt.Println("minD", minD)
+				}
+			}
 		}
 
+		if minDeployed == nil || len(minDeployed) == 0 {
+			break
+		}
+
+		for _, instance := range minDeployed {
+			deployed[deployedCount] = instance
+			deployedCount++
+			appCount.Add(instance.Config.AppId)
+			resource.AddResource(&instance.Config.Resource)
+		}
+	}
+
+	for _, instance := range deployed[:deployedCount] {
 		if !m.ConstraintCheck(instance, 1) {
-			continue
+			m.DebugPrint()
+			panic("ConstraintCheck")
 		}
 
-		minD = d
-		minInstance = instance
-		//fmt.Println("minD", minD)
+		m.AddInstance(instance)
 	}
 
-	if minInstance != nil {
-		m.AddInstance(minInstance)
-		deployed = append(deployed, minInstance)
-	}
-
-	return cloud.InstancesRemove(instances, deployed), nil
+	return cloud.InstancesRemove(instances, deployed[:deployedCount]), nil
 }

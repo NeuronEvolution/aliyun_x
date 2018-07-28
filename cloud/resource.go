@@ -117,6 +117,34 @@ func (r *Resource) GetCpuDerivation() float64 {
 	return d
 }
 
+func (r *Resource) GetCpuCost(cpuLimit float64) float64 {
+	totalCost := float64(0)
+	for i := 0; i < TimeSampleCount; i++ {
+		r := r.Cpu[i] / cpuLimit
+		if r > 0.5 {
+			totalCost += 1 + 10*(Exp(r-0.5)-1)
+		} else {
+			totalCost += 1
+		}
+	}
+
+	return totalCost / TimeSampleCount
+}
+
+func (r *Resource) GetCostWithInstance(instance *Instance, cpuLimit float64) float64 {
+	totalCost := float64(0)
+	for i := 0; i < TimeSampleCount; i++ {
+		r := (r.Cpu[i] + instance.Config.Cpu[i]) / cpuLimit
+		if r > 0.5 {
+			totalCost += 1 + 10*(Exp(r-0.5)-1)
+		} else {
+			totalCost += r * 2
+		}
+	}
+
+	return totalCost / TimeSampleCount
+}
+
 func calcResourceCostDeviation(cpu float64, mem float64, disk float64, p float64, m float64, pm float64) float64 {
 	avg := (cpu + mem + disk + p + m + pm) / 6
 	return math.Sqrt(((cpu-avg)*(cpu-avg) + (mem-avg)*(mem-avg) + (disk-avg)*(disk-avg) +
