@@ -10,8 +10,9 @@ func (c *AnalysisContext) AnalysisAppInference() {
 		return c.appResourcesList[i].InferenceAppCount > c.appResourcesList[j].InferenceAppCount
 	})
 
+	n := 0
 	for _, resource := range c.appResourcesList {
-		if resource.InferenceAppCount < 200 {
+		if resource.InferenceAppCount < 2 {
 			continue
 		}
 
@@ -22,6 +23,7 @@ func (c *AnalysisContext) AnalysisAppInference() {
 		for _, instance := range c.instanceDeployList {
 			if instance.AppId == resource.AppId {
 				instanceCount++
+				n++
 			}
 		}
 		fmt.Println("instanceCount", instanceCount)
@@ -53,4 +55,6 @@ func (c *AnalysisContext) AnalysisAppInference() {
 			}
 		}
 	}
+
+	fmt.Println("AnalysisAppInference total instance count by inference limit", n)
 }

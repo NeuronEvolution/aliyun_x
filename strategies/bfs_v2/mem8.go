@@ -6,11 +6,16 @@ import (
 	"sort"
 )
 
+func (s *Strategy) isMem8(instance *cloud.Instance) bool {
+	return instance.Config.Disk == 60 &&
+		instance.Config.MemMax-instance.Config.MemAvg < 0.0000001 &&
+		math.Abs(instance.Config.MemMax-8) < 0.0000001
+}
+
 func (s *Strategy) mem8(instances []*cloud.Instance) (restInstances []*cloud.Instance, err error) {
 	i8s := make([]*cloud.Instance, 0)
 	for _, instance := range instances {
-		if instance.Config.Disk == 60 &&
-			instance.Config.MemMax-instance.Config.MemAvg < 0.0000001 && math.Abs(instance.Config.MemMax-8) < 0.0000001 {
+		if s.isMem8(instance) {
 			i8s = append(i8s, instance)
 		}
 	}

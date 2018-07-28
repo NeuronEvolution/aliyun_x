@@ -87,12 +87,6 @@ func (s *Strategy) addInstance(instance *cloud.Instance, progress float64) (err 
 		return nil
 	}
 
-	m = s.bestFitCpuCost(instance, progress, false)
-	if m != nil {
-		m.AddInstance(instance)
-		return nil
-	}
-
 	m = s.bestFitCpuCost(instance, progress, true)
 	if m == nil {
 		return fmt.Errorf("BestFitStrategy.addInstance bestFitCpuCost failed")
