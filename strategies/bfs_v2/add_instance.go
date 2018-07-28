@@ -22,7 +22,7 @@ func (s *Strategy) AddInstanceList(instances []*cloud.Instance) (err error) {
 		fmt.Println("predploy", i, len(restInstances))
 		restInstances, err = s.preDeploy(m, restInstances)
 		m.DebugPrint()
-		fmt.Println(m.Resource.GetCpuCost(m.LevelConfig.Cpu))
+		fmt.Println(m.Resource.GetCpuCost(m.LevelConfig.Cpu), m.Resource.GetLinearCpuCost(m.LevelConfig.Cpu))
 		if err != nil {
 			return err
 		}

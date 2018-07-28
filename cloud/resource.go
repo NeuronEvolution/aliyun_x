@@ -131,6 +131,20 @@ func (r *Resource) GetCpuCost(cpuLimit float64) float64 {
 	return totalCost / TimeSampleCount
 }
 
+func (r *Resource) GetLinearCpuCost(cpuLimit float64) float64 {
+	totalCost := float64(0)
+	for i := 0; i < TimeSampleCount; i++ {
+		r := r.Cpu[i] / cpuLimit
+		if r > 0.5 {
+			totalCost += 1 + 10*(Exp(r-0.5)-1)
+		} else {
+			totalCost += r * 2
+		}
+	}
+
+	return totalCost / TimeSampleCount
+}
+
 func (r *Resource) GetCostWithInstance(instance *Instance, cpuLimit float64) float64 {
 	totalCost := float64(0)
 	for i := 0; i < TimeSampleCount; i++ {

@@ -15,7 +15,7 @@ func (s *Strategy) preDeploy(m *cloud.Machine, instances []*cloud.Instance) (res
 	resource := &cloud.Resource{}
 	resource.AddResource(&instances[0].Config.Resource)
 
-	for i := 0; i < 3; i++ {
+	for i := 0; i < 1; i++ {
 		offset := 0
 		minD := math.MaxFloat64
 		var minDeployed []*cloud.Instance
