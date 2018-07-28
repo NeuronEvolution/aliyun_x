@@ -36,6 +36,10 @@ func (s *Strategy) preDeploy(m *cloud.Machine, instances []*cloud.Instance) (res
 			subMinD := math.MaxFloat64
 			var subMinDeployed []*cloud.Instance
 			for _, instance := range subInstances {
+				if cloud.InstancesContainsApp(deployed[:deployedCount], instance.Config.AppId) {
+					continue
+				}
+
 				if !cloud.ConstraintCheckResourceLimit(resource, &instance.Config.Resource, m.LevelConfig, 1) {
 					continue
 				}
