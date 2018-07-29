@@ -16,7 +16,7 @@ func SortInstanceByTotalMaxHigh(p []*Instance) {
 }
 
 //32,64,1440,7,3,7
-func SortInstanceByTotalMaxLowWithInference(p []*Instance) {
+func SortInstanceByTotalMaxLowWithInference(p []*Instance, inferenceLimit int) {
 	sort.Slice(p, func(i, j int) bool {
 		c1 := p[i].Config
 		c2 := p[j].Config
@@ -25,7 +25,6 @@ func SortInstanceByTotalMaxLowWithInference(p []*Instance) {
 		a2 := float64(c2.Disk)/float64(LowDisk) + c2.CpuMax/float64(LowCpu*MaxCpuRatio) + c2.MemMax/float64(LowMem) +
 			float64(c2.P)/float64(7) + float64(c2.M)/float64(3) + float64(c2.PM)/float64(7)
 
-		const inferenceLimit = 2
 		if c1.InferenceAppCount < inferenceLimit && c2.InferenceAppCount < inferenceLimit {
 			return a1 > a2
 		}

@@ -5,50 +5,16 @@ import (
 	"math"
 )
 
-func (s *Strategy) measureWithInstance(m *cloud.Machine, instance *cloud.Instance) (d float64) {
-	disk := float64(m.Disk+instance.Config.Disk) / float64(m.LevelConfig.Disk)
-	if disk > 1 {
-		return math.MaxFloat64
+func (s *Strategy) skipLow(instance *cloud.Instance) bool {
+	if !s.isMem8(instance) {
+		return true
 	}
 
-	cpuMax := float64(0)
-	for i, v := range m.Cpu {
-		cpu := v + instance.Config.Cpu[i]
-		if cpu > cpuMax {
-			cpuMax = cpu
-		}
-	}
-	cpu := cpuMax / (m.LevelConfig.Cpu * cloud.MaxCpuRatio)
-	if cpu > 1 {
-		return math.MaxFloat64
+	if instance.Config.CpuAvg >= 8 || instance.Config.CpuAvg >= 6 {
+		return true
 	}
 
-	memMax := float64(0)
-	for i, v := range m.Mem {
-		mem := v + instance.Config.Mem[i]
-		if mem > memMax {
-			memMax = mem
-		}
-	}
-	mem := memMax / m.LevelConfig.Mem
-	if mem > 1 {
-		return math.MaxFloat64
-	}
-
-	max := float64(0)
-	if disk > max {
-		max = disk
-	}
-
-	if cpu > max {
-		max = cpu
-	}
-
-	if mem > max {
-		max = mem
-	}
-
-	return (cpu + disk + mem) * max
+	return false
 }
 
 func (s *Strategy) costWithInstance(m *cloud.Machine, instance *cloud.Instance, progress float64) (cost float64) {
@@ -62,6 +28,10 @@ func (s *Strategy) bestFitResource(instance *cloud.Instance, cpuMax float64, pro
 		if progress < 0 && m.LevelConfig.Cpu != cloud.HighCpu {
 			continue
 		}
+
+		//if s.skipLow(instance) {
+		//	continue
+		//}
 
 		if cloud.InstancesContainsApp(m.InstanceArray[:m.InstanceArrayCount], instance.Config.AppId) {
 			continue
@@ -101,6 +71,10 @@ func (s *Strategy) bestFitCpuCost(instance *cloud.Instance, progress float64, al
 		if !all && progress < 0 && m.LevelConfig.Cpu != cloud.HighCpu {
 			continue
 		}
+
+		//if !all && s.skipLow(instance) {
+		//	continue
+		//}
 
 		if !all && cloud.InstancesContainsApp(m.InstanceArray[:m.InstanceArrayCount], instance.Config.AppId) {
 			continue

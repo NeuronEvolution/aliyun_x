@@ -17,6 +17,25 @@ const appResourcesFile = "./data/scheduling_preliminary_b_app_resources_20180726
 const instanceDeployFile = "./data/scheduling_preliminary_b_instance_deploy_20180726.csv"
 const machineResourceFile = "./data/scheduling_preliminary_b_machine_resources_20180726.csv"
 
+func testCase(machines []*cloud.MachineResourcesConfig, instances []*cloud.InstanceDeployConfig,
+	highMachineCount int, lowMachineCount int, instanceCount int) (
+	restMachines []*cloud.MachineResourcesConfig, restInstances []*cloud.InstanceDeployConfig) {
+
+	highCount := 0
+	lowCount := 0
+	for _, m := range machines {
+		if m.MachineLevelConfig.Disk == cloud.HighDisk {
+			restMachines = append(restMachines, m)
+			highCount++
+		} else if m.MachineLevelConfig.Disk == cloud.LowDisk {
+			restMachines = append(restMachines, m)
+			lowCount++
+		}
+	}
+
+	return nil, nil
+}
+
 func main() {
 	appInterferenceDataList, err := loadAppInterferenceData(appInterferenceFile)
 	if err != nil {

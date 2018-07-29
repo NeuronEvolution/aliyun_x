@@ -1,11 +1,33 @@
 package bfs_v2
 
 import (
+	"fmt"
 	"github.com/NeuronEvolution/aliyun_x/cloud"
 	"math"
 )
 
-func (s *Strategy) preDeploy(m *cloud.Machine, instances []*cloud.Instance) (restInstances []*cloud.Instance, err error) {
+func (s *Strategy) preDeployHigh(instances []*cloud.Instance) (restInstances []*cloud.Instance, err error) {
+	cloud.SortInstanceByTotalMaxLow(instances)
+	restInstances = instances
+	for i, m := range s.machineDeployList {
+		if i >= 3000 {
+			break
+		}
+
+		if i > 0 && i%100 == 0 {
+			fmt.Println("predploy", i, len(restInstances))
+		}
+		restInstances, err = s.preDeployHighMachine(m, restInstances)
+		//fmt.Println(m.Resource.GetCpuCost(m.LevelConfig.Cpu), m.Resource.GetLinearCpuCost(m.LevelConfig.Cpu))
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return restInstances, nil
+}
+
+func (s *Strategy) preDeployHighMachine(m *cloud.Machine, instances []*cloud.Instance) (restInstances []*cloud.Instance, err error) {
 	deployed := make([]*cloud.Instance, 128)
 	deployedCount := 0
 	deployed[0] = instances[0]

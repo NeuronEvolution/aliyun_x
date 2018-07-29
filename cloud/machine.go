@@ -209,7 +209,7 @@ func (m *Machine) GetDerivationWithInstance(instance *Instance) float64 {
 	}
 	d = math.Sqrt(d / TimeSampleCount)
 
-	return d
+	return d / avg
 }
 
 func (r *Resource) GetDerivationWithInstances(instances []*Instance) float64 {
@@ -236,7 +236,7 @@ func (r *Resource) GetDerivationWithInstances(instances []*Instance) float64 {
 	}
 	d = math.Sqrt(d / TimeSampleCount)
 
-	return d
+	return d / avg
 }
 
 func (m *Machine) GetLinearCostWithInstance(instance *Instance) float64 {

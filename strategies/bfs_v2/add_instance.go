@@ -11,32 +11,19 @@ func (s *Strategy) AddInstanceList(instances []*cloud.Instance) (err error) {
 		panic("BestFitStrategy.AddInstanceList getDeployMachineList failed")
 	}
 
-	restInstances, err := s.mem8(instances)
+	restInstances, err := s.preDeployLow(instances, 4)
 	if err != nil {
 		return err
 	}
+	fmt.Println("preDeployLow rest count", len(restInstances))
 
-	fmt.Println("mem8 rest count", len(restInstances))
-
-	cloud.SortInstanceByTotalMaxLow(restInstances)
-	for i, m := range s.machineDeployList {
-		if i >= 3000 {
-			break
-		}
-
-		if i > 0 && i%100 == 0 {
-			fmt.Println("predploy", i, len(restInstances))
-		}
-		restInstances, err = s.preDeploy(m, restInstances)
-		//fmt.Println(m.Resource.GetCpuCost(m.LevelConfig.Cpu), m.Resource.GetLinearCpuCost(m.LevelConfig.Cpu))
-		if err != nil {
-			return err
-		}
+	restInstances, err = s.preDeployHigh(restInstances)
+	if err != nil {
+		return err
 	}
+	fmt.Println("preDeployHigh rest count", len(restInstances))
 
-	cloud.SortInstanceByTotalMaxLowWithInference(restInstances)
-
-	fmt.Println("AddInstanceList restInstances ", len(restInstances))
+	cloud.SortInstanceByTotalMaxLowWithInference(restInstances, 4)
 	for i, v := range restInstances {
 		if i > 0 && i%1000 == 0 {
 			fmt.Println(i)
@@ -55,7 +42,13 @@ func (s *Strategy) AddInstanceList(instances []*cloud.Instance) (err error) {
 }
 
 func (s *Strategy) addInstance(instance *cloud.Instance, progress float64) (err error) {
-	m := s.bestFitCpuCost(instance, progress, false)
+	m := s.bestFitResource(instance, cloud.MaxCpuRatio, progress)
+	if m != nil {
+		m.AddInstance(instance)
+		return nil
+	}
+
+	m = s.bestFitCpuCost(instance, progress, false)
 	if m != nil {
 		m.AddInstance(instance)
 		return nil
