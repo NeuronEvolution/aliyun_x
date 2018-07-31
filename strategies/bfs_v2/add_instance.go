@@ -36,7 +36,9 @@ func (s *Strategy) AddInstanceList(instances []*cloud.Instance) (err error) {
 		}
 	}
 
-	s.debug()
+	s.merge()
+
+	//s.debug()
 
 	return nil
 }

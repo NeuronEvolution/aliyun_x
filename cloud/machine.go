@@ -337,7 +337,8 @@ func (m *Machine) debugValidation() {
 }
 
 func (m *Machine) DebugPrint() {
-	fmt.Printf("Machine.DebugPrint %d %v\n", m.MachineId, m.LevelConfig)
+	fmt.Printf("Machine.DebugPrint %d %v cost=%f linearCost=%f\n",
+		m.MachineId, m.LevelConfig, m.GetCostReal(), m.GetLinearCpuCost(m.LevelConfig.Cpu))
 	for i := 0; i < m.appCountCollection.ListCount; i++ {
 		fmt.Printf("    %v,", m.appCountCollection.List[i])
 		m.R.AppResourcesConfigMap[m.appCountCollection.List[i].AppId].DebugPrint()

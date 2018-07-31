@@ -25,15 +25,27 @@ func testCase(machines []*cloud.MachineResourcesConfig, instances []*cloud.Insta
 	lowCount := 0
 	for _, m := range machines {
 		if m.MachineLevelConfig.Disk == cloud.HighDisk {
-			restMachines = append(restMachines, m)
-			highCount++
+			if highCount < highMachineCount {
+				restMachines = append(restMachines, m)
+				highCount++
+			}
 		} else if m.MachineLevelConfig.Disk == cloud.LowDisk {
-			restMachines = append(restMachines, m)
-			lowCount++
+			if lowCount < lowMachineCount {
+				restMachines = append(restMachines, m)
+				lowCount++
+			}
 		}
 	}
 
-	return nil, nil
+	for i, inst := range instances {
+		if i >= instanceCount {
+			break
+		}
+
+		restInstances = append(restInstances, inst)
+	}
+
+	return restMachines, restInstances
 }
 
 func main() {
@@ -61,6 +73,10 @@ func main() {
 		return
 	}
 
+	machineResourceDataList, instanceDeployDataList = testCase(
+		machineResourceDataList, instanceDeployDataList,
+		100, 100, 2000)
+
 	fmt.Printf("DataSize\n")
 	fmt.Printf("   appInterferenceDataList=%d\n", len(appInterferenceDataList))
 	fmt.Printf("   appResourcesDataList=%d\n", len(appResourcesDataList))
@@ -78,8 +94,8 @@ func main() {
 	}
 
 	//数据分析
-	analysis := NewAnalysisContext(appInterferenceDataList, appResourcesDataList, machineResourceDataList, instanceDeployDataList)
-	analysis.Run()
+	//analysis := NewAnalysisContext(appInterferenceDataList, appResourcesDataList, machineResourceDataList, instanceDeployDataList)
+	//analysis.Run()
 
 	//调度
 	begin := time.Now()
