@@ -6,79 +6,6 @@ import (
 	"sort"
 )
 
-func (s *Strategy) mergeMachine(machines []*cloud.Machine) bool {
-	cost := float64(0)
-	instances := make([]*cloud.Instance, 0)
-	for _, m := range machines {
-		//m.DebugPrint()
-		cost += m.GetCpuCost()
-		instances = append(instances, m.InstanceArray[:m.InstanceArrayCount]...)
-	}
-
-	sort.Slice(machines, func(i, j int) bool {
-		return machines[i].Disk > machines[j].Disk
-	})
-
-	//PSO优化
-	ctx := &PsoContext{Machines: machines, Instances: instances, InferenceMap: s.R.AppInterferenceConfigMap}
-	ctx.Run()
-	if ctx.BestCost >= cost {
-		fmt.Printf("mergeMachine failed,cost=%f best=%f\n", cost, ctx.BestCost)
-		//return false
-	}
-
-	fmt.Printf("mergeMachine ok,cost=%f best=%f\n", cost, ctx.BestCost)
-
-	//纪录当前状态
-	instanceMachineMap := make(map[*cloud.Instance]*cloud.Machine)
-	for _, m := range machines {
-		for _, instance := range cloud.InstancesCopy(m.InstanceArray[:m.InstanceArrayCount]) {
-			instanceMachineMap[instance] = m
-		}
-	}
-
-	//将所有实例迁出
-	for _, m := range machines {
-		for _, inst := range cloud.InstancesCopy(m.InstanceArray[:m.InstanceArrayCount]) {
-			m.RemoveInstance(inst.InstanceId)
-		}
-	}
-
-	//使用PSO最优结果
-	failed := false
-	cloud.SetDebug(true)
-	for instanceIndex, machineIndex := range ctx.BestParticle.BestPosition {
-		m := machines[machineIndex]
-		instance := instances[instanceIndex]
-		if !m.ConstraintCheck(instance, 1) {
-			failed = true
-			fmt.Println("mergeMachine pso ConstraintCheck failed")
-			m.DebugPrint()
-			instance.Config.DebugPrint()
-			break
-		}
-		m.AddInstance(instance)
-	}
-	cloud.SetDebug(false)
-
-	//PSO最优结果无效，恢复到原状态
-	if failed {
-		for _, m := range machines {
-			for _, inst := range cloud.InstancesCopy(m.InstanceArray[:m.InstanceArrayCount]) {
-				m.RemoveInstance(inst.InstanceId)
-			}
-		}
-
-		for instance, m := range instanceMachineMap {
-			m.AddInstance(instance)
-		}
-
-		return false
-	}
-
-	return true
-}
-
 func (s *Strategy) merge() {
 	fmt.Println("merge start cpu cost", s.R.CalculateTotalCostScore())
 
@@ -99,9 +26,5 @@ func (s *Strategy) merge() {
 	machines := make([]*cloud.Machine, 0)
 	machines = append(s.machineDeployList[:10], s.machineDeployList[len(s.machineDeployList)-10:]...)
 
-	for _, m := range machines {
-		m.DebugPrint()
-	}
-
-	s.mergeMachine(machines)
+	s.mergeMachineSA(machines)
 }

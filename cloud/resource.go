@@ -24,6 +24,9 @@ type Resource struct {
 	MemMin       float64
 	MemAvg       float64
 	MemDeviation float64
+
+	cpuCostValid bool
+	CpuCost      float64
 }
 
 func (r *Resource) Reset() {
@@ -39,6 +42,9 @@ func (r *Resource) Reset() {
 	r.P = 0
 	r.M = 0
 	r.PM = 0
+
+	r.CpuCost = 0
+	r.cpuCostValid = true
 }
 
 func (r *Resource) DebugPrint() {
@@ -64,6 +70,8 @@ func (r *Resource) AddResource(p *Resource) {
 	r.M += p.M
 	r.P += p.P
 	r.PM += p.PM
+
+	r.cpuCostValid = false
 }
 
 func (r *Resource) RemoveResource(p *Resource) {
@@ -77,6 +85,8 @@ func (r *Resource) RemoveResource(p *Resource) {
 	r.M -= p.M
 	r.P -= p.P
 	r.PM -= p.PM
+
+	r.cpuCostValid = false
 }
 
 func (r *Resource) CalcTimedResourceStatistics() {
@@ -132,7 +142,11 @@ func (r *Resource) GetCpuDerivation() float64 {
 	return d
 }
 
-func (r *Resource) GetCost(cpuLimit float64) float64 {
+func (r *Resource) GetCpuCost(cpuLimit float64) float64 {
+	if r.cpuCostValid {
+		return r.CpuCost
+	}
+
 	totalCost := float64(0)
 	for i := 0; i < TimeSampleCount; i++ {
 		r := r.Cpu[i] / cpuLimit
@@ -143,7 +157,10 @@ func (r *Resource) GetCost(cpuLimit float64) float64 {
 		}
 	}
 
-	return totalCost / TimeSampleCount
+	r.CpuCost = totalCost / TimeSampleCount
+	r.cpuCostValid = true
+
+	return r.CpuCost
 }
 
 func (r *Resource) GetLinearCpuCost(cpuLimit float64) float64 {
