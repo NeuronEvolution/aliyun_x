@@ -34,7 +34,7 @@ func NewMachine(r *ResourceManagement, machineId int, levelConfig *MachineLevelC
 
 func (m *Machine) ClearInstances() {
 	m.InstanceArrayCount = 0
-	m.appCountCollection.Clear()
+	m.appCountCollection.Reset()
 	for i := 0; i < len(m.Cpu); i++ {
 		m.Cpu[i] = 0
 	}
@@ -145,7 +145,7 @@ func (m *Machine) HasBadConstraint() bool {
 	return !ConstraintCheckAppInterference(m.appCountCollection, m.R.AppInterferenceConfigMap)
 }
 
-func (m *Machine) GetCostReal() float64 {
+func (m *Machine) GetCpuCostReal() float64 {
 	totalCost := float64(0)
 	for i := 0; i < TimeSampleCount; i++ {
 		r := m.Cpu[i] / m.LevelConfig.Cpu
@@ -338,7 +338,7 @@ func (m *Machine) debugValidation() {
 
 func (m *Machine) DebugPrint() {
 	fmt.Printf("Machine.DebugPrint %d %v cost=%f linearCost=%f\n",
-		m.MachineId, m.LevelConfig, m.GetCostReal(), m.GetLinearCpuCost(m.LevelConfig.Cpu))
+		m.MachineId, m.LevelConfig, m.GetCpuCostReal(), m.GetLinearCpuCost(m.LevelConfig.Cpu))
 	for i := 0; i < m.appCountCollection.ListCount; i++ {
 		fmt.Printf("    %v,", m.appCountCollection.List[i])
 		m.R.AppResourcesConfigMap[m.appCountCollection.List[i].AppId].DebugPrint()

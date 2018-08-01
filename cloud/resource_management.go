@@ -70,7 +70,7 @@ func (r *ResourceManagement) CalculateTotalCostScore() float64 {
 	totalCost := float64(0)
 	for _, m := range r.MachineMap {
 		if m != nil && m.InstanceArrayCount > 0 {
-			totalCost += m.GetCostReal()
+			totalCost += m.GetCpuCostReal()
 		}
 	}
 

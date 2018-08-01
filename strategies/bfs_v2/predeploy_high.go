@@ -18,7 +18,7 @@ func (s *Strategy) preDeployHigh(instances []*cloud.Instance) (restInstances []*
 			fmt.Println("predploy", i, len(restInstances))
 		}
 		restInstances, err = s.preDeployHighMachine(m, restInstances)
-		//fmt.Println(m.Resource.GetCpuCost(m.LevelConfig.Cpu), m.Resource.GetLinearCpuCost(m.LevelConfig.Cpu))
+		//fmt.Println(m.Resource.GetCost(m.LevelConfig.Cpu), m.Resource.GetLinearCpuCost(m.LevelConfig.Cpu))
 		if err != nil {
 			return nil, err
 		}

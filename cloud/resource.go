@@ -26,6 +26,21 @@ type Resource struct {
 	MemDeviation float64
 }
 
+func (r *Resource) Reset() {
+	for i := 0; i < len(r.Cpu); i++ {
+		r.Cpu[i] = 0
+	}
+
+	for i := 0; i < len(r.Mem); i++ {
+		r.Mem[i] = 0
+	}
+
+	r.Disk = 0
+	r.P = 0
+	r.M = 0
+	r.PM = 0
+}
+
 func (r *Resource) DebugPrint() {
 	r.CalcTimedResourceStatistics()
 
@@ -117,7 +132,7 @@ func (r *Resource) GetCpuDerivation() float64 {
 	return d
 }
 
-func (r *Resource) GetCpuCost(cpuLimit float64) float64 {
+func (r *Resource) GetCost(cpuLimit float64) float64 {
 	totalCost := float64(0)
 	for i := 0; i < TimeSampleCount; i++ {
 		r := r.Cpu[i] / cpuLimit

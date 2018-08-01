@@ -32,7 +32,7 @@ func (c *AppCountCollection) debugPrint() {
 	}
 }
 
-func (c *AppCountCollection) Clear() {
+func (c *AppCountCollection) Reset() {
 	c.ListCount = 0
 }
 
@@ -96,4 +96,8 @@ func (c *AppCountCollection) GetAppCount(appId int) int {
 	}
 
 	return 0
+}
+
+func (c *AppCountCollection) Debug() {
+	fmt.Println("AppCountCollection", c.List[:c.ListCount])
 }
