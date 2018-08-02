@@ -3,9 +3,11 @@ package cloud
 import (
 	"bytes"
 	"fmt"
+	"math/rand"
 )
 
 type ResourceManagement struct {
+	Rand                        *rand.Rand
 	Strategy                    Strategy
 	InitialInstanceDeployConfig []*InstanceDeployConfig
 	AppResourcesConfigMap       [MaxAppId]*AppResourcesConfig
@@ -27,6 +29,7 @@ type ResourceManagement struct {
 
 func NewResourceManagement() *ResourceManagement {
 	r := &ResourceManagement{}
+	r.Rand = rand.New(rand.NewSource(0))
 	r.Strategy = &defaultStrategy{}
 	r.AppInterferenceConfigMap = make([][MaxAppId]int, MaxAppId)
 	for i := 0; i < MaxAppId; i++ {

@@ -6,6 +6,7 @@ import (
 )
 
 func (s *Strategy) AddInstanceList(instances []*cloud.Instance) (err error) {
+
 	s.machineDeployList = s.R.MachineFreePool.PeekMachineList(MachineDeployCount)
 	if len(s.machineDeployList) != MachineDeployCount {
 		panic("BestFitStrategy.AddInstanceList getDeployMachineList failed")

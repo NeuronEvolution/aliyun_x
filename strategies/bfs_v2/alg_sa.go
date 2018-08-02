@@ -12,7 +12,11 @@ import (
 //TODO 实例的概率分布
 //TODO 一次调整多个实例
 
-const SALoopCount = 100000
+const SALoopCount = 1000000
+const SATemperature = 100000
+const SARatio = 0.9995
+const SANewStatusMoveCount = 3
+const SANewStatusRetry = 100
 
 type SAMachine struct {
 	Machine       *cloud.Machine
@@ -67,6 +71,16 @@ func (m *SAMachine) Debug() {
 	m.AppCount.Debug()
 }
 
+func (m *SAMachine) Validate() {
+
+}
+
+type SAMove struct {
+	Instance   *cloud.Instance
+	OldMachine *SAMachine
+	NewMachine *SAMachine
+}
+
 type SAContext struct {
 	Machines  []*cloud.Machine
 	Instances []*cloud.Instance
@@ -77,10 +91,12 @@ type SAContext struct {
 	BestCost        float64
 	BestMap         map[*cloud.Instance]*SAMachine
 	InferenceMap    [][cloud.MaxAppId]int
+	HasBest         bool
 }
 
-func NewSAContext(machines []*cloud.Machine, inferenceMap [][cloud.MaxAppId]int) *SAContext {
+func NewSAContext(rand *rand.Rand, machines []*cloud.Machine, inferenceMap [][cloud.MaxAppId]int) *SAContext {
 	ctx := &SAContext{}
+	ctx.Rand = rand
 	ctx.Machines = machines
 	ctx.InferenceMap = inferenceMap
 
@@ -88,12 +104,12 @@ func NewSAContext(machines []*cloud.Machine, inferenceMap [][cloud.MaxAppId]int)
 }
 
 func (ctx *SAContext) init() {
+	ctx.HasBest = false
 	machineCount := len(ctx.Machines)
 	ctx.Instances = make([]*cloud.Instance, 0)
 	for _, m := range ctx.Machines {
 		ctx.Instances = append(ctx.Instances, m.InstanceArray[:m.InstanceArrayCount]...)
 	}
-	ctx.Rand = rand.New(rand.NewSource(0))
 	ctx.CurrentMachines = make([]*SAMachine, machineCount)
 	ctx.CurrentMap = make(map[*cloud.Instance]*SAMachine)
 	ctx.BestMap = make(map[*cloud.Instance]*SAMachine)
@@ -109,58 +125,117 @@ func (ctx *SAContext) init() {
 	}
 }
 
-func (ctx *SAContext) newStatus() (instance *cloud.Instance, oldMachine *SAMachine, newMachine *SAMachine) {
-	for i := 0; i < 100; i++ {
-		instanceRand := ctx.Rand.Intn(len(ctx.Instances))
-		instance := ctx.Instances[instanceRand]
-		oldMachine = ctx.CurrentMap[instance]
+func (ctx *SAContext) validate() {
+	for _, m := range ctx.CurrentMachines {
+		m.Validate()
+	}
 
-		machineRand := ctx.Rand.Intn(len(ctx.Machines))
-		pos := machineRand
-		for {
-			m := ctx.CurrentMachines[pos]
-			if m != oldMachine && m.ConstraintCheck(instance, ctx.InferenceMap) {
-				newMachine = m
-				break
+	machineResourceMap := make(map[*SAMachine]*SAMachine)
+	for instance, machine := range ctx.CurrentMap {
+		resource := machineResourceMap[machine]
+		if resource == nil {
+			resource = NewSAMachine(machine.Machine)
+			machineResourceMap[machine] = resource
+		}
+
+		if !resource.ConstraintCheck(instance, ctx.InferenceMap) {
+			panic("ConstraintCheck")
+		}
+
+		resource.Add(instance)
+	}
+
+	machineResourceMap = make(map[*SAMachine]*SAMachine)
+	for instance, machine := range ctx.BestMap {
+		resource := machineResourceMap[machine]
+		if resource == nil {
+			resource = NewSAMachine(machine.Machine)
+			machineResourceMap[machine] = resource
+		}
+
+		if !resource.ConstraintCheck(instance, ctx.InferenceMap) {
+			panic("ConstraintCheck")
+		}
+
+		resource.Add(instance)
+	}
+}
+
+func (ctx *SAContext) newStatus() (moves []*SAMove, delta float64) {
+	r := SANewStatusMoveCount
+	for i := 0; i < r; i++ {
+		has := false
+		for loop := 0; loop < SANewStatusRetry; loop++ {
+			instanceRand := ctx.Rand.Intn(len(ctx.Instances))
+			instance := ctx.Instances[instanceRand]
+
+			already := false
+			for _, move := range moves {
+				if move.Instance == instance {
+					already = true
+				}
+			}
+			if already {
+				continue
 			}
 
-			pos++
-			if pos == len(ctx.Machines) {
-				pos = 0
+			var newMachine *SAMachine
+			oldMachine := ctx.CurrentMap[instance]
+			machineRand := ctx.Rand.Intn(len(ctx.Machines))
+			pos := machineRand
+			for {
+				m := ctx.CurrentMachines[pos]
+				if m != oldMachine && m.ConstraintCheck(instance, ctx.InferenceMap) {
+					newMachine = m
+					break
+				}
+
+				pos++
+				if pos == len(ctx.Machines) {
+					pos = 0
+				}
+				if pos == machineRand {
+					break
+				}
 			}
-			if pos == machineRand {
+
+			if newMachine != nil {
+				oldCost := oldMachine.GetCpuCost() + newMachine.GetCpuCost()
+				oldMachine.Remove(instance)
+				newMachine.Add(instance)
+				ctx.CurrentMap[instance] = newMachine
+				newCost := oldMachine.GetCpuCost() + newMachine.GetCpuCost()
+				delta += oldCost - newCost
+				moves = append(moves, &SAMove{Instance: instance, OldMachine: oldMachine, NewMachine: newMachine})
+				has = true
 				break
 			}
 		}
-
-		if newMachine != nil {
-			return instance, oldMachine, newMachine
+		if !has {
+			break
 		}
 	}
 
-	return nil, nil, nil
+	return moves, delta
 }
 
 func (ctx *SAContext) Run() {
 	ctx.init()
 
-	T := float64(1000000)
-	r := float64(0.999)
-	for i := 0; i < SALoopCount; i++ {
-		fmt.Printf("SA loop %d %f\n", i, T)
-		instance, oldMachine, newMachine := ctx.newStatus()
-		if instance == nil {
+	T := float64(SATemperature)
+	r := float64(SARatio)
+	for loop := 0; loop < SALoopCount; loop++ {
+		if loop > 0 && loop%100000 == 0 {
+			fmt.Printf("SA loop %d %f\n", loop, T)
+		}
+
+		moves, dE := ctx.newStatus()
+		if len(moves) == 0 {
 			fmt.Println("SA new state failed")
 			break
 		}
 
-		oldCost := oldMachine.GetCpuCost() + newMachine.GetCpuCost()
-		oldMachine.Remove(instance)
-		newMachine.Add(instance)
-		newCost := oldMachine.GetCpuCost() + newMachine.GetCpuCost()
-
 		accept := false
-		dE := oldCost - newCost
 		if dE > 0 {
 			//fmt.Println("SA accept", dE)
 			accept = true
@@ -171,13 +246,13 @@ func (ctx *SAContext) Run() {
 		}
 
 		if accept {
-			ctx.CurrentMap[instance] = newMachine
 			cost := float64(0)
 			for _, m := range ctx.CurrentMachines {
 				cost += m.GetCpuCost()
 			}
 			if cost < ctx.BestCost {
 				fmt.Println("SA best", ctx.BestCost, cost)
+				ctx.HasBest = true
 				ctx.BestCost = cost
 				ctx.BestMap = make(map[*cloud.Instance]*SAMachine)
 				for instance, m := range ctx.CurrentMap {
@@ -185,15 +260,26 @@ func (ctx *SAContext) Run() {
 				}
 			}
 		} else {
-			newMachine.Remove(instance)
-			oldMachine.Add(instance)
+			for i := len(moves) - 1; i >= 0; i-- {
+				move := moves[i]
+				move.NewMachine.Remove(move.Instance)
+				if !move.OldMachine.ConstraintCheck(move.Instance, ctx.InferenceMap) {
+					panic("bbb")
+				}
+				move.OldMachine.Add(move.Instance)
+				ctx.CurrentMap[move.Instance] = move.OldMachine
+			}
 		}
 
 		T = r * T
 	}
 }
 
-func (s *Strategy) mergeMachineSA(machines []*cloud.Machine) bool {
+func (s *Strategy) mergeMachineSA(machines []*cloud.Machine) (ok bool, delta float64) {
+	//for _, m := range machines {
+	//	m.DebugPrint()
+	//}
+
 	cost := float64(0)
 
 	for _, m := range machines {
@@ -212,14 +298,13 @@ func (s *Strategy) mergeMachineSA(machines []*cloud.Machine) bool {
 		}
 	}
 
-	ctx := NewSAContext(machines, s.R.AppInterferenceConfigMap)
+	ctx := NewSAContext(s.R.Rand, machines, s.R.AppInterferenceConfigMap)
 	ctx.Run()
-	if ctx.BestCost >= cost {
-		fmt.Printf("mergeMachineSA failed,cost=%f,sa cost=%f\n", cost, ctx.BestCost)
-		return false
+	if !ctx.HasBest {
+		return false, 0
 	}
 
-	fmt.Printf("mergeMachineSA cost=%f best=%f", cost, ctx.BestCost)
+	fmt.Printf("mergeMachineSA cost=%f best=%f\n", cost, ctx.BestCost)
 
 	//将所有实例迁出
 	for _, m := range machines {
@@ -228,7 +313,6 @@ func (s *Strategy) mergeMachineSA(machines []*cloud.Machine) bool {
 		}
 	}
 
-	cloud.SetDebug(true)
 	for instance, mSA := range ctx.BestMap {
 		//mSA.Machine.DebugPrint()
 		if !mSA.Machine.ConstraintCheck(instance, 1) {
@@ -237,7 +321,6 @@ func (s *Strategy) mergeMachineSA(machines []*cloud.Machine) bool {
 
 		mSA.Machine.AddInstance(instance)
 	}
-	cloud.SetDebug(false)
 
-	return true
+	return true, ctx.BestCost - cost
 }

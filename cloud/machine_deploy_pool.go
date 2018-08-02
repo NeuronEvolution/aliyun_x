@@ -128,10 +128,28 @@ func (p *MachineDeployPool) DebugPrint(buf *bytes.Buffer) {
 			v.LevelConfig, v.MachineCollection.ListCount))
 	}
 
-	SortMachineByCpuCost(machineDeployed)
+	sort.Slice(machineDeployed, func(i, j int) bool {
+		m1 := machineDeployed[i]
+		m2 := machineDeployed[j]
+		cpu1 := m1.GetCpuCostReal()
+		cpu2 := m2.GetCpuCostReal()
+		linearCpu1 := m1.GetLinearCpuCost(m1.LevelConfig.Cpu)
+		linearCpu2 := m2.GetLinearCpuCost(m2.LevelConfig.Cpu)
+		if cpu1 > 1.01 || cpu2 > 1.01 {
+			return cpu1 > cpu2
+		}
+
+		return linearCpu1 > linearCpu2
+	})
+
 	for i, m := range machineDeployed {
-		if i < 10 {
-			buf.WriteString(fmt.Sprintf("    cpuCost=%f,machineId=%d\n", m.GetCpuCost(), m.MachineId))
+		if i < 32 {
+			//buf.WriteString(fmt.Sprintf("    cpuCost=%f,machineId=%d\n", m.GetCpuCost(), m.MachineId))
+			m.DebugPrint()
+		}
+
+		if i >= len(machineDeployed)-32 {
+			m.DebugPrint()
 		}
 	}
 	buf.WriteString(fmt.Sprintf("total high cpu(%f) count=%d\n", highCpuLimit, cpuHighCount))

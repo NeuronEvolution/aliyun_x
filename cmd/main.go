@@ -75,7 +75,7 @@ func main() {
 
 	machineResourceDataList, instanceDeployDataList = testCase(
 		machineResourceDataList, instanceDeployDataList,
-		100, 100, 2000)
+		1000, 1000, 20000)
 
 	fmt.Printf("DataSize\n")
 	fmt.Printf("   appInterferenceDataList=%d\n", len(appInterferenceDataList))

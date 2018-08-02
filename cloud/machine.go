@@ -209,7 +209,7 @@ func (m *Machine) GetDerivationWithInstance(instance *Instance) float64 {
 	}
 	d = math.Sqrt(d / TimeSampleCount)
 
-	return d / avg
+	return d
 }
 
 func (r *Resource) GetDerivationWithInstances(instances []*Instance) float64 {
@@ -345,4 +345,22 @@ func (m *Machine) DebugPrint() {
 	}
 
 	m.Resource.DebugPrint()
+}
+
+func MachinesRemove(machines []*Machine, removes []*Machine) (rest []*Machine) {
+	rest = make([]*Machine, 0)
+	for _, v := range machines {
+		has := false
+		for _, i := range removes {
+			if i.MachineId == v.MachineId {
+				has = true
+				break
+			}
+		}
+		if !has {
+			rest = append(rest, v)
+		}
+	}
+
+	return rest
 }
