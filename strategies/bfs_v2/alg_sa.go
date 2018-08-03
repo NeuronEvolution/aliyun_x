@@ -8,9 +8,8 @@ import (
 	"sort"
 )
 
-//TODO 机器的概率分布
 //TODO 实例的概率分布
-//TODO 一次调整多个实例
+//TODO 分批优化
 
 const SALoopCount = 1000000
 const SATemperature = 100000
@@ -263,9 +262,6 @@ func (ctx *SAContext) Run() {
 			for i := len(moves) - 1; i >= 0; i-- {
 				move := moves[i]
 				move.NewMachine.Remove(move.Instance)
-				if !move.OldMachine.ConstraintCheck(move.Instance, ctx.InferenceMap) {
-					panic("bbb")
-				}
 				move.OldMachine.Add(move.Instance)
 				ctx.CurrentMap[move.Instance] = move.OldMachine
 			}
@@ -314,11 +310,6 @@ func (s *Strategy) mergeMachineSA(machines []*cloud.Machine) (ok bool, delta flo
 	}
 
 	for instance, mSA := range ctx.BestMap {
-		//mSA.Machine.DebugPrint()
-		if !mSA.Machine.ConstraintCheck(instance, 1) {
-			panic("mergeMachineSA ConstraintCheck failed")
-		}
-
 		mSA.Machine.AddInstance(instance)
 	}
 

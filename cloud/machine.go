@@ -347,6 +347,16 @@ func (m *Machine) DebugPrint() {
 	m.Resource.DebugPrint()
 }
 
+func MachinesContaines(machines []*Machine, machineId int) bool {
+	for _, v := range machines {
+		if v.MachineId == machineId {
+			return true
+		}
+	}
+
+	return false
+}
+
 func MachinesRemove(machines []*Machine, removes []*Machine) (rest []*Machine) {
 	rest = make([]*Machine, 0)
 	for _, v := range machines {

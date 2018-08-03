@@ -3,61 +3,104 @@ package bfs_v2
 import (
 	"fmt"
 	"github.com/NeuronEvolution/aliyun_x/cloud"
-	"sort"
+	"math"
 )
+
+func (s *Strategy) randMachinesByCpu(pool []*cloud.Machine, count int) (machines []*cloud.Machine) {
+	machines = make([]*cloud.Machine, 0)
+
+	machineCount := len(pool)
+	pTable := make([]float64, machineCount)
+	for i := 0; i < machineCount; i++ {
+		pTable[i] = math.Exp((math.Abs(float64(i)-float64(machineCount)/2) - float64(machineCount)/2) /
+			(float64(machineCount) / 8))
+		if i > 0 {
+			pTable[i] += pTable[i-1]
+		}
+	}
+	maxP := pTable[len(pTable)-1]
+	for i := 0; i < count; i++ {
+		r := s.R.Rand.Float64() * maxP
+		for machineIndex, p := range pTable {
+			if p < r {
+				continue
+			}
+
+			if cloud.MachinesContaines(machines, pool[machineIndex].MachineId) {
+				if i == count-1 {
+					i = -1
+				}
+				continue
+			}
+
+			machines = append(machines, pool[machineIndex])
+			break
+		}
+	}
+
+	return machines
+}
+
+func (s *Strategy) randMachinesByDerivation(pool []*cloud.Machine, count int) (machines []*cloud.Machine) {
+	machines = make([]*cloud.Machine, 0)
+
+	machineCount := len(pool)
+	pTable := make([]float64, machineCount)
+	for i := 0; i < machineCount; i++ {
+		pTable[i] = math.Exp(-float64(i) * 8 / float64(machineCount))
+		if i > 0 {
+			pTable[i] += pTable[i-1]
+		}
+	}
+	maxP := pTable[len(pTable)-1]
+	for i := 0; i < count; i++ {
+		r := s.R.Rand.Float64() * maxP
+		for machineIndex, p := range pTable {
+			if p < r {
+				continue
+			}
+
+			if cloud.MachinesContaines(machines, pool[machineIndex].MachineId) {
+				if i == count-1 {
+					i = -1
+				}
+				continue
+			}
+
+			machines = append(machines, pool[machineIndex])
+			break
+		}
+	}
+
+	return machines
+}
 
 func (s *Strategy) merge() {
 	startCost := s.R.CalculateTotalCostScore()
 	fmt.Println("merge start cpu cost", startCost)
 
 	currentCost := startCost
-	count := 32
 	loop := 0
 	deadLoop := 0
 	for ; ; loop++ {
+		machines := make([]*cloud.Machine, 0)
 		machinePool := append(make([]*cloud.Machine, 0), s.machineDeployList...)
 
-		//CPU头部和尾部
-		sort.Slice(machinePool, func(i, j int) bool {
-			m1 := machinePool[i]
-			m2 := machinePool[j]
-			cpu1 := m1.GetCpuCostReal()
-			cpu2 := m2.GetCpuCostReal()
-			linearCpu1 := m1.GetLinearCpuCost(m1.LevelConfig.Cpu)
-			linearCpu2 := m2.GetLinearCpuCost(m2.LevelConfig.Cpu)
-			if cpu1 > 1.01 || cpu2 > 1.01 {
-				return cpu1 > cpu2
-			}
+		//CPU头部和尾部概率大
+		machinesByCpu := s.randMachinesByCpu(machinePool, 32)
+		machines = append(machines, machinesByCpu...)
+		machinePool = cloud.MachinesRemove(machinePool, machinesByCpu)
 
-			return linearCpu1 > linearCpu2
-		})
-		machines := make([]*cloud.Machine, 0)
-		machines = append(machines, machinePool[:count]...)
-		machines = append(machines, machinePool[len(machinePool)-count:]...)
-		machinePool = machinePool[count : len(machinePool)-count]
-		//fmt.Println("machinePool len 1", len(machinePool))
-
-		//CPU方差头部
-		sort.Slice(machinePool, func(i, j int) bool {
-			return machinePool[i].GetCpuDerivation() > machinePool[j].GetCpuDerivation()
-		})
-		machines = append(machines, machinePool[:count]...)
-		machinePool = machinePool[count:]
-		//fmt.Println("machinePool len 2", len(machinePool))
-
-		//随机取若干台
-		for i := 0; i < count; i++ {
-			//fmt.Println("machinePool len 3", len(machinePool))
-			m := machinePool[s.R.Rand.Intn(len(machinePool))]
-			machines = append(machines, m)
-			machinePool = cloud.MachinesRemove(machinePool, []*cloud.Machine{m})
-		}
+		//CPU方差头部概率大
+		machinesByDerivation := s.randMachinesByDerivation(machinePool, 32)
+		machines = append(machines, machinesByDerivation...)
+		machinePool = cloud.MachinesRemove(machinePool, machinesByDerivation)
 
 		ok, delta := s.mergeMachineSA(machines)
 		if !ok {
 			fmt.Println("merge dead loop", deadLoop)
 			deadLoop++
-			if deadLoop > 10 {
+			if deadLoop > 32 {
 				break
 			}
 
