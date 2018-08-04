@@ -14,7 +14,7 @@ import (
 const SALoopCount = 1000000
 const SATemperature = 100000
 const SARatio = 0.9995
-const SANewStatusMoveCount = 3
+const SANewStatusMoveCount = 4
 const SANewStatusRetry = 100
 
 type SAMachine struct {
@@ -161,8 +161,7 @@ func (ctx *SAContext) validate() {
 }
 
 func (ctx *SAContext) newStatus() (moves []*SAMove, delta float64) {
-	r := SANewStatusMoveCount
-	for i := 0; i < r; i++ {
+	for i := 0; i < SANewStatusMoveCount; i++ {
 		has := false
 		for loop := 0; loop < SANewStatusRetry; loop++ {
 			instanceRand := ctx.Rand.Intn(len(ctx.Instances))
@@ -277,7 +276,6 @@ func (s *Strategy) mergeMachineSA(machines []*cloud.Machine) (ok bool, delta flo
 	//}
 
 	cost := float64(0)
-
 	for _, m := range machines {
 		cost += m.GetCpuCost()
 	}

@@ -49,9 +49,9 @@ func (c *AppCountCollection) Add(appId int) {
 	item.Count = 1
 	c.ListCount++
 
-	if DebugEnabled {
-		//c.debugValidation()
-	}
+	//if DebugEnabled {
+	c.debugValidation()
+	//}
 }
 
 func (c *AppCountCollection) Remove(appId int) {
@@ -68,22 +68,24 @@ func (c *AppCountCollection) Remove(appId int) {
 					last := &c.List[c.ListCount-1]
 					item.AppId = last.AppId
 					item.Count = last.Count
+					last.AppId = 0
+					last.Count = 0
 				}
 
 				c.ListCount--
 			}
 
-			if DebugEnabled {
-				//c.debugValidation()
-			}
+			//if DebugEnabled {
+			c.debugValidation()
+			//}
 
 			return
 		}
 	}
 
-	if DebugEnabled {
-		//c.debugValidation()
-	}
+	//if DebugEnabled {
+	c.debugValidation()
+	//}
 
 	panic(fmt.Errorf("AppCountCollection.Remove appId %d not exists", appId))
 }

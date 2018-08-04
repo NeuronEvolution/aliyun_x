@@ -4,11 +4,13 @@ import (
 	"fmt"
 	"github.com/NeuronEvolution/aliyun_x/cloud"
 	"math"
+	"sort"
 )
 
 func (s *Strategy) randMachinesByCpu(pool []*cloud.Machine, count int) (machines []*cloud.Machine) {
-	machines = make([]*cloud.Machine, 0)
+	cloud.SortMachineByCpuCost(pool)
 
+	machines = make([]*cloud.Machine, 0)
 	machineCount := len(pool)
 	pTable := make([]float64, machineCount)
 	for i := 0; i < machineCount; i++ {
@@ -42,8 +44,11 @@ func (s *Strategy) randMachinesByCpu(pool []*cloud.Machine, count int) (machines
 }
 
 func (s *Strategy) randMachinesByDerivation(pool []*cloud.Machine, count int) (machines []*cloud.Machine) {
-	machines = make([]*cloud.Machine, 0)
+	sort.Slice(pool, func(i, j int) bool {
+		return pool[i].GetCpuDerivation() > pool[j].GetCpuDerivation()
+	})
 
+	machines = make([]*cloud.Machine, 0)
 	machineCount := len(pool)
 	pTable := make([]float64, machineCount)
 	for i := 0; i < machineCount; i++ {
@@ -87,16 +92,16 @@ func (s *Strategy) merge() {
 		machinePool := append(make([]*cloud.Machine, 0), s.machineDeployList...)
 
 		//CPU头部和尾部概率大
-		machinesByCpu := s.randMachinesByCpu(machinePool, 32)
+		machinesByCpu := s.randMachinesByCpu(machinePool, 2)
 		machines = append(machines, machinesByCpu...)
 		machinePool = cloud.MachinesRemove(machinePool, machinesByCpu)
 
 		//CPU方差头部概率大
-		machinesByDerivation := s.randMachinesByDerivation(machinePool, 32)
+		machinesByDerivation := s.randMachinesByDerivation(machinePool, 0)
 		machines = append(machines, machinesByDerivation...)
 		machinePool = cloud.MachinesRemove(machinePool, machinesByDerivation)
 
-		ok, delta := s.mergeMachineSA(machines)
+		ok, delta := s.BestMergeMachines(machines)
 		if !ok {
 			fmt.Println("merge dead loop", deadLoop)
 			deadLoop++
