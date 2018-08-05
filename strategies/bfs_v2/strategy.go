@@ -19,3 +19,16 @@ func NewStrategy(r *cloud.ResourceManagement) *Strategy {
 func (s *Strategy) Name() string {
 	return "BestFitV2"
 }
+
+func (s *Strategy) AddInstanceList(instances []*cloud.Instance) (err error) {
+	err = s.stageDeploy(instances)
+	if err != nil {
+		return err
+	}
+
+	//s.merge()
+
+	s.mergeFinal()
+
+	return nil
+}

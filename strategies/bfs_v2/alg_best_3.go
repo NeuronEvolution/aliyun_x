@@ -6,7 +6,7 @@ import (
 	"math"
 )
 
-func (s *Strategy) BestMergeMachines(machines []*cloud.Machine, deadLoop int) (has bool, delta float64) {
+func (s *Strategy) Best3MergeMachines(machines []*cloud.Machine) (has bool, delta float64) {
 	instances := make([]*cloud.Instance, 0)
 	for _, m := range machines {
 		instances = append(instances, m.InstanceArray[:m.InstanceArrayCount]...)
@@ -17,7 +17,8 @@ func (s *Strategy) BestMergeMachines(machines []*cloud.Machine, deadLoop int) (h
 		cost += m.GetCpuCost()
 	}
 
-	bestPos, bestCost := s.Best(machines, instances, deadLoop)
+	cloud.SortInstanceByTotalMaxLow(instances)
+	bestPos, bestCost := s.Best3(machines, instances)
 	if bestCost >= cost {
 		return false, 0
 	}
@@ -40,34 +41,7 @@ func (s *Strategy) BestMergeMachines(machines []*cloud.Machine, deadLoop int) (h
 	return true, bestCost - cost
 }
 
-func (s *Strategy) bestCheck(pos []int, machines []*cloud.Machine, instances []*cloud.Instance) {
-	machineCount := len(machines)
-	resources := make([]*cloud.Resource, machineCount)
-	appCounts := make([]*cloud.AppCountCollection, machineCount)
-	for i := 0; i < machineCount; i++ {
-		resources[i] = &cloud.Resource{}
-		appCounts[i] = cloud.NewAppCountCollection()
-	}
-	for i, instance := range instances {
-		machineIndex := pos[i]
-		m := machines[machineIndex]
-
-		if !cloud.ConstraintCheckResourceLimit(resources[machineIndex], &instance.Config.Resource, m.LevelConfig, 1) ||
-			!cloud.ConstraintCheckAppInterferenceAddInstance(instance.Config.AppId, appCounts[machineIndex], s.R.AppInterferenceConfigMap) {
-			panic("111")
-		}
-
-		resources[machineIndex].AddResource(&instance.Config.Resource)
-		appCounts[machineIndex].Add(instance.Config.AppId)
-	}
-}
-
-func (s *Strategy) Best(machines []*cloud.Machine, instances []*cloud.Instance, deadLoop int) (bestPos []int, bestCost float64) {
-	totalLoopLimit := 1024 * 32 * int(math.Pow(float64(2), float64(deadLoop)))
-	if totalLoopLimit > 1024*1024 {
-		totalLoopLimit = 1024 * 1024
-	}
-
+func (s *Strategy) Best3(machines []*cloud.Machine, instances []*cloud.Instance) (bestPos []int, bestCost float64) {
 	fmt.Printf("best machines=%d,instance=%d\n", len(machines), len(instances))
 
 	//for _, instance := range instances {
@@ -77,6 +51,10 @@ func (s *Strategy) Best(machines []*cloud.Machine, instances []*cloud.Instance, 
 	machineCount := len(machines)
 	instanceCount := len(instances)
 	pos := make([]int, instanceCount)
+	offsets := make([]int, instanceCount)
+	for i := 0; i < instanceCount; i++ {
+		offsets[i] = s.R.Rand.Intn(machineCount)
+	}
 	bestPos = make([]int, instanceCount)
 	bestCost = math.MaxFloat64
 	resources := make([]*cloud.Resource, machineCount)
@@ -173,8 +151,7 @@ func (s *Strategy) Best(machines []*cloud.Machine, instances []*cloud.Instance, 
 				}
 			}
 		}
-
-		if end || (instanceCount > 20 && totalLoop > totalLoopLimit) {
+		if end || (instanceCount > 20 && totalLoop > 1024*32) {
 			break
 		}
 	}

@@ -70,7 +70,7 @@ func (s *Strategy) preDeployHighMachine(m *cloud.Machine, instances []*cloud.Ins
 					continue
 				}
 
-				if resource.GetCostWithInstance(instance, m.LevelConfig.Cpu) > 10 {
+				if resource.GetCostWithInstance(instance, m.LevelConfig.Cpu) > 1 {
 					continue
 				}
 
