@@ -1,10 +1,40 @@
 package bfs_v2
 
 import (
-	"fmt"
 	"github.com/NeuronEvolution/aliyun_x/cloud"
 	"math"
+	"sync"
 )
+
+func (s *Strategy) BatchBestMergeMachines(machines []*cloud.Machine, deadLoop int) (has bool, delta float64) {
+	wg := &sync.WaitGroup{}
+	max := len(machines)
+	if len(machines)%2 == 1 {
+		max = len(machines) - 1
+	}
+	for i := 0; i < max; i += 2 {
+		batchMachines := []*cloud.Machine{machines[i], machines[i+1]}
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+
+			ok, d := s.BestMergeMachines(batchMachines, deadLoop)
+			if ok {
+				has = true
+				bestLock2.Lock()
+				defer bestLock2.Unlock()
+				delta += d
+			}
+		}()
+	}
+
+	wg.Wait()
+
+	return has, delta
+}
+
+var bestLock = &sync.Mutex{}
+var bestLock2 = &sync.Mutex{}
 
 func (s *Strategy) BestMergeMachines(machines []*cloud.Machine, deadLoop int) (has bool, delta float64) {
 	instances := make([]*cloud.Instance, 0)
@@ -21,6 +51,9 @@ func (s *Strategy) BestMergeMachines(machines []*cloud.Machine, deadLoop int) (h
 	if bestCost >= cost {
 		return false, 0
 	}
+
+	bestLock.Lock()
+	defer bestLock.Unlock()
 
 	//将所有实例迁出
 	for _, m := range machines {
@@ -68,7 +101,7 @@ func (s *Strategy) Best(machines []*cloud.Machine, instances []*cloud.Instance, 
 		totalLoopLimit = 1024 * 1024
 	}
 
-	fmt.Printf("best machines=%d,instance=%d\n", len(machines), len(instances))
+	//fmt.Printf("best machines=%d,instance=%d\n", len(machines), len(instances))
 
 	//for _, instance := range instances {
 	//	fmt.Println("instance", instance.InstanceId, instance.Config.AppId)
@@ -179,7 +212,7 @@ func (s *Strategy) Best(machines []*cloud.Machine, instances []*cloud.Instance, 
 		}
 	}
 
-	fmt.Println("BEST total loop", totalLoop)
+	//fmt.Println("BEST total loop", totalLoop)
 
 	return bestPos, bestCost
 }
