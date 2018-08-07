@@ -125,11 +125,13 @@ func (s *Strategy) merge() {
 	startCost := s.R.CalculateTotalCostScore()
 	fmt.Println("merge start cpu cost", startCost)
 
+	pTable := s.randBig2Big(len(s.machineDeployList))
+
 	currentCost := startCost
 	loop := 0
 	for ; loop < 1000; loop++ {
 		cloud.SortMachineByCpuCost(s.machineDeployList)
-		machinesByCpu := s.randMachinesBig2Big(s.machineDeployList, 128)
+		machinesByCpu := s.randMachinesBig2Big(s.machineDeployList, pTable, 128)
 		has, delta := s.mergeBestFitMachines(machinesByCpu)
 		if !has {
 			fmt.Printf("merge loop failed %d %f\n", loop, startCost)

@@ -13,17 +13,19 @@ func (s *Strategy) mergeFinal() {
 
 	lastSaveTime := time.Date(2000, 1, 1, 0, 0, 0, 0, time.Local)
 
+	pTable := s.randBig2Big(len(s.machineDeployList))
+
 	currentCost := startCost
 	loop := 0
 	deadLoop := 0
 	for ; ; loop++ {
 		cloud.SortMachineByCpuCost(s.machineDeployList)
-		machinesByCpu := s.randMachinesBig2Big(s.machineDeployList, 32)
+		machinesByCpu := s.randMachinesBig2Big(s.machineDeployList, pTable, 32)
 		ok, delta := s.BatchBestMergeMachines(machinesByCpu, deadLoop)
 		if !ok {
 			fmt.Println("mergeFinal dead loop", deadLoop)
 			deadLoop++
-			if deadLoop > 128 {
+			if deadLoop > 256 {
 				break
 			}
 

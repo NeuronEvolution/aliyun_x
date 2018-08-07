@@ -5,17 +5,21 @@ import (
 	"math"
 )
 
-func (s *Strategy) randMachinesBig2Big(pool []*cloud.Machine, count int) (machines []*cloud.Machine) {
-	machines = make([]*cloud.Machine, 0)
-	machineCount := len(pool)
-	pTable := make([]float64, machineCount)
-	for i := 0; i < machineCount; i++ {
-		pTable[i] = math.Exp((math.Abs(float64(i)-float64(machineCount)/2) - float64(machineCount)/2) /
-			(float64(machineCount) / 8))
+func (s *Strategy) randBig2Big(count int) []float64 {
+	pTable := make([]float64, count)
+	for i := 0; i < count; i++ {
+		pTable[i] = math.Exp((math.Abs(float64(i)-float64(count)/2) - float64(count)/2) /
+			(float64(count) / 8))
 		if i > 0 {
 			pTable[i] += pTable[i-1]
 		}
 	}
+
+	return pTable
+}
+
+func (s *Strategy) randMachinesBig2Big(pool []*cloud.Machine, pTable []float64, count int) (machines []*cloud.Machine) {
+	machines = make([]*cloud.Machine, 0)
 	maxP := pTable[len(pTable)-1]
 	for i := 0; i < count; i++ {
 		r := s.R.Rand.Float64() * maxP
