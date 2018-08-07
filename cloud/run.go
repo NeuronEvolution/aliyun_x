@@ -22,6 +22,7 @@ func Run(machineResourcesList []*MachineResourcesConfig,
 
 	fmt.Printf("---------------------------------------------DEPLOY-----------------------------------------\n")
 	deploy := NewResourceManagement()
+	deploy.tempInstanceDeployConfig = instanceMachineList
 	deploy.SetStrategy(strategyCreator(deploy))
 	err = deploy.Init(machineResourcesList, appResourcesList, appInterferenceList, nil)
 	if err != nil {

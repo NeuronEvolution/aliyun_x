@@ -37,7 +37,7 @@ func (s *Strategy) mergeFinal() {
 		fmt.Printf("mergeFinal loop %d %f %f\n", loop, startCost, currentCost)
 
 		now := time.Now()
-		if now.Sub(lastSaveTime).Seconds() > 60 {
+		if now.Sub(lastSaveTime).Seconds() > 60*30 {
 			fmt.Printf("mergeFinal save loop %d %f %f\n", loop, startCost, currentCost)
 			err := s.R.MergeAndOutput()
 			if err != nil {
