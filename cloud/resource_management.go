@@ -25,6 +25,11 @@ type ResourceManagement struct {
 	instanceDeployedOrderByCostDescList      [MaxInstanceId]*Instance
 	instanceDeployedOrderByCostDescListCount int
 	instanceDeployedOrderByCostDescValid     bool
+
+	machineResourcesConfig   []*MachineResourcesConfig
+	appResourcesConfig       []*AppResourcesConfig
+	appInterferenceConfig    []*AppInterferenceConfig
+	tempInstanceDeployConfig []*InstanceDeployConfig
 }
 
 func NewResourceManagement() *ResourceManagement {

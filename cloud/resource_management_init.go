@@ -6,6 +6,10 @@ func (r *ResourceManagement) Init(
 	appInterferenceConfig []*AppInterferenceConfig,
 	instanceDeployConfig []*InstanceDeployConfig) (err error) {
 
+	r.machineResourcesConfig = machineResourcesConfig
+	r.appResourcesConfig = appResourcesConfig
+	r.appInterferenceConfig = appInterferenceConfig
+
 	r.Initializing = true
 	defer func() { r.Initializing = false }()
 

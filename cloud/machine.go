@@ -347,7 +347,7 @@ func (m *Machine) DebugPrint() {
 	m.Resource.DebugPrint()
 }
 
-func MachinesContaines(machines []*Machine, machineId int) bool {
+func MachinesContains(machines []*Machine, machineId int) bool {
 	for _, v := range machines {
 		if v.MachineId == machineId {
 			return true

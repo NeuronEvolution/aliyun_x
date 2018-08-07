@@ -142,16 +142,16 @@ func (p *MachineDeployPool) DebugPrint(buf *bytes.Buffer) {
 		return linearCpu1 > linearCpu2
 	})
 
-	for i, m := range machineDeployed {
-		if i < 32 {
-			//buf.WriteString(fmt.Sprintf("    cpuCost=%f,machineId=%d\n", m.GetCpuCost(), m.MachineId))
-			m.DebugPrint()
-		}
+	//for i, m := range machineDeployed {
+	//	if i < 32 {
+	//buf.WriteString(fmt.Sprintf("    cpuCost=%f,machineId=%d\n", m.GetCpuCost(), m.MachineId))
+	//m.DebugPrint()
+	//	}
 
-		if i >= len(machineDeployed)-32 {
-			m.DebugPrint()
-		}
-	}
+	//	if i >= len(machineDeployed)-32 {
+	//m.DebugPrint()
+	//	}
+	//}
 	buf.WriteString(fmt.Sprintf("total high cpu(%f) count=%d\n", highCpuLimit, cpuHighCount))
 
 	buf.WriteString(fmt.Sprintf("MachineDeployPool.DebugPrint machineCount=%d,instanceCount=%d\n",

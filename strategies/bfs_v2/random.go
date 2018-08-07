@@ -24,7 +24,7 @@ func (s *Strategy) randMachinesBig2Big(pool []*cloud.Machine, count int) (machin
 				continue
 			}
 
-			if cloud.MachinesContaines(machines, pool[machineIndex].MachineId) {
+			if cloud.MachinesContains(machines, pool[machineIndex].MachineId) {
 				if i == count-1 {
 					i = -1
 				}
@@ -57,7 +57,7 @@ func (s *Strategy) randMachinesBig2Small(pool []*cloud.Machine, count int) (mach
 				continue
 			}
 
-			if cloud.MachinesContaines(machines, pool[machineIndex].MachineId) {
+			if cloud.MachinesContains(machines, pool[machineIndex].MachineId) {
 				if i == count-1 {
 					i = -1
 				}
